@@ -1,0 +1,159 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --chart-green: #3ba55d;
+    --chart-red: #ed4245;
+    --chart-grid: #2a2d31;
+  }
+
+  html {
+    @apply bg-background text-foreground antialiased;
+  }
+
+  body {
+    @apply min-h-screen;
+  }
+
+  /* Custom scrollbar for dark theme */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-background-secondary;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-border-hover;
+  }
+
+  /* Firefox scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #2a2d31 #1a1a1a;
+  }
+}
+
+@layer components {
+  /* Card styles */
+  .card {
+    @apply bg-background-secondary border border-border rounded-lg shadow-card;
+  }
+
+  .card-hover {
+    @apply card transition-all duration-200 hover:border-border-hover hover:shadow-lg;
+  }
+
+  /* Metric display */
+  .metric-value {
+    @apply text-2xl font-bold font-mono tracking-tight;
+  }
+
+  .metric-label {
+    @apply text-xs text-foreground-muted uppercase tracking-wide;
+  }
+
+  .metric-change-positive {
+    @apply text-profit font-medium;
+  }
+
+  .metric-change-negative {
+    @apply text-loss font-medium;
+  }
+
+  /* Badge styles */
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium;
+  }
+
+  .badge-bullish {
+    @apply badge bg-sentiment-bullish/20 text-sentiment-bullish;
+  }
+
+  .badge-bearish {
+    @apply badge bg-sentiment-bearish/20 text-sentiment-bearish;
+  }
+
+  .badge-neutral {
+    @apply badge bg-sentiment-neutral/20 text-sentiment-neutral;
+  }
+
+  /* Button styles */
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-md font-medium transition-colors;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background;
+  }
+
+  .btn-primary {
+    @apply btn bg-primary text-white hover:bg-primary-hover;
+  }
+
+  .btn-secondary {
+    @apply btn bg-background-elevated text-foreground hover:bg-background-hover border border-border;
+  }
+
+  .btn-ghost {
+    @apply btn text-foreground-muted hover:text-foreground hover:bg-background-hover;
+  }
+
+  /* Input styles */
+  .input {
+    @apply w-full px-3 py-2 bg-background-secondary border border-border rounded-md;
+    @apply text-foreground placeholder-foreground-subtle;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent;
+    @apply transition-colors;
+  }
+
+  /* Table styles */
+  .table-row {
+    @apply border-b border-border hover:bg-background-hover transition-colors;
+  }
+
+  .table-cell {
+    @apply px-4 py-3 text-sm;
+  }
+
+  .table-header {
+    @apply px-4 py-3 text-xs font-medium text-foreground-muted uppercase tracking-wider;
+  }
+
+  /* Skeleton loading */
+  .skeleton {
+    @apply animate-pulse bg-background-hover rounded;
+  }
+}
+
+@layer utilities {
+  /* P/L color utilities */
+  .text-pnl {
+    @apply text-foreground;
+  }
+
+  .text-pnl-positive {
+    @apply text-profit;
+  }
+
+  .text-pnl-negative {
+    @apply text-loss;
+  }
+
+  /* Gradient text */
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-profit;
+  }
+
+  /* Glass effect */
+  .glass {
+    @apply bg-background-secondary/80 backdrop-blur-md;
+  }
+}
