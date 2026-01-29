@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { IdeasResponse, ApiError } from '@/types/api';
-
-// API Configuration
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+import { backendFetch, authGuard } from '@/lib/api-client';
 
 interface RouteParams {
   params: Promise<{ ticker: string }>;
@@ -11,6 +9,9 @@ interface RouteParams {
 // GET /api/stocks/[ticker]/ideas - Get parsed trading ideas
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
+    // Verify user is authenticated
+    await authGuard();
+
     const { ticker } = await params;
     const normalizedTicker = ticker.toUpperCase();
 
@@ -24,12 +25,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     queryParams.set('limit', limit);
     if (direction) queryParams.set('direction', direction);
 
-    const response = await fetch(
-      `${API_URL}/stocks/${normalizedTicker}/ideas?${queryParams.toString()}`,
+    const response = await backendFetch(
+      `/stocks/${normalizedTicker}/ideas?${queryParams.toString()}`,
       {
-        headers: {
-          'Content-Type': 'application/json',
-        },
         // Cache for 60 seconds
         next: { revalidate: 60 },
       }
@@ -48,6 +46,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const data: IdeasResponse = await response.json();
     return NextResponse.json(data);
   } catch (error) {
+    if (error instanceof Response) {
+      return error;
+    }
     console.error('Ideas fetch error:', error);
     return NextResponse.json(
       { error: 'Failed to connect to backend API' } as ApiError,

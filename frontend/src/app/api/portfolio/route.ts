@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { PortfolioResponse, ApiError } from '@/types/api';
-
-// API Configuration
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+import { backendFetch, authGuard } from '@/lib/api-client';
 
 // GET /api/portfolio - Get portfolio summary and positions
 export async function GET(request: NextRequest) {
   try {
-    const response = await fetch(`${API_URL}/portfolio`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    // Verify user is authenticated
+    await authGuard();
+
+    const response = await backendFetch('/portfolio', {
       // Cache for 30 seconds on the edge
       next: { revalidate: 30 },
     });
@@ -27,6 +25,10 @@ export async function GET(request: NextRequest) {
     const data: PortfolioResponse = await response.json();
     return NextResponse.json(data);
   } catch (error) {
+    // Check if it's an auth error (Response object thrown by authGuard)
+    if (error instanceof Response) {
+      return error;
+    }
     console.error('Portfolio fetch error:', error);
     return NextResponse.json(
       { error: 'Failed to connect to backend API' } as ApiError,
@@ -38,13 +40,13 @@ export async function GET(request: NextRequest) {
 // POST /api/portfolio/sync - Trigger data sync
 export async function POST(request: NextRequest) {
   try {
+    // Verify user is authenticated
+    await authGuard();
+
     const body = await request.json().catch(() => ({}));
 
-    const response = await fetch(`${API_URL}/portfolio/sync`, {
+    const response = await backendFetch('/portfolio/sync', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(body),
     });
 
@@ -59,6 +61,9 @@ export async function POST(request: NextRequest) {
     const result = await response.json();
     return NextResponse.json(result);
   } catch (error) {
+    if (error instanceof Response) {
+      return error;
+    }
     console.error('Portfolio sync error:', error);
     return NextResponse.json(
       { error: 'Failed to connect to backend API' } as ApiError,

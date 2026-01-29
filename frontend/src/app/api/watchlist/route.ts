@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { ApiError } from '@/types/api';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+import { backendFetch, authGuard } from '@/lib/api-client';
 
 // Watchlist item from backend
 interface WatchlistItem {
@@ -25,6 +24,9 @@ interface ValidationResponse {
 // GET /api/watchlist - Get watchlist with current prices
 export async function GET(request: NextRequest) {
   try {
+    // Verify user is authenticated
+    await authGuard();
+
     const { searchParams } = new URL(request.url);
     const tickers = searchParams.get('tickers') || '';
     
@@ -32,10 +34,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ items: [] });
     }
     
-    const response = await fetch(
-      `${API_URL}/watchlist?tickers=${encodeURIComponent(tickers)}`,
+    const response = await backendFetch(
+      `/watchlist?tickers=${encodeURIComponent(tickers)}`,
       {
-        headers: { 'Content-Type': 'application/json' },
         next: { revalidate: 30 }, // Refresh every 30 seconds for price updates
       }
     );
@@ -51,6 +52,9 @@ export async function GET(request: NextRequest) {
     const data: WatchlistResponse = await response.json();
     return NextResponse.json(data);
   } catch (error) {
+    if (error instanceof Response) {
+      return error;
+    }
     console.error('Watchlist error:', error);
     return NextResponse.json(
       { error: 'Watchlist service unavailable', statusCode: 503 },
@@ -62,6 +66,9 @@ export async function GET(request: NextRequest) {
 // POST /api/watchlist/validate - Validate ticker symbols
 export async function POST(request: NextRequest) {
   try {
+    // Verify user is authenticated
+    await authGuard();
+
     const body = await request.json();
     const { ticker } = body;
     
@@ -72,9 +79,8 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const response = await fetch(`${API_URL}/watchlist/validate`, {
+    const response = await backendFetch('/watchlist/validate', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ticker }),
     });
     
@@ -89,6 +95,9 @@ export async function POST(request: NextRequest) {
     const data: ValidationResponse = await response.json();
     return NextResponse.json(data);
   } catch (error) {
+    if (error instanceof Response) {
+      return error;
+    }
     console.error('Validation error:', error);
     return NextResponse.json(
       { error: 'Validation service unavailable', statusCode: 503 },

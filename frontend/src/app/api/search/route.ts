@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { ApiError } from '@/types/api';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+import { backendFetch, authGuard } from '@/lib/api-client';
 
 // Response types for search
 interface SearchResult {
@@ -20,6 +19,9 @@ interface SearchResponse {
 // GET /api/search - Search for stocks/tickers
 export async function GET(request: NextRequest) {
   try {
+    // Verify user is authenticated
+    await authGuard();
+
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q') || '';
     const limit = searchParams.get('limit') || '10';
@@ -28,10 +30,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ results: [], query: '', total: 0 });
     }
     
-    const response = await fetch(
-      `${API_URL}/search?q=${encodeURIComponent(query)}&limit=${limit}`,
+    const response = await backendFetch(
+      `/search?q=${encodeURIComponent(query)}&limit=${limit}`,
       {
-        headers: { 'Content-Type': 'application/json' },
         next: { revalidate: 60 }, // Cache for 1 minute (symbol data is static)
       }
     );
@@ -47,6 +48,9 @@ export async function GET(request: NextRequest) {
     const data: SearchResponse = await response.json();
     return NextResponse.json(data);
   } catch (error) {
+    if (error instanceof Response) {
+      return error;
+    }
     console.error('Search error:', error);
     return NextResponse.json(
       { error: 'Search service unavailable', status: 503 } as ApiError,

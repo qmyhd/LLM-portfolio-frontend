@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { OHLCVSeries, ApiError } from '@/types/api';
-
-// API Configuration
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+import { backendFetch, authGuard } from '@/lib/api-client';
 
 interface RouteParams {
   params: Promise<{ ticker: string }>;
@@ -11,6 +9,9 @@ interface RouteParams {
 // GET /api/stocks/[ticker]/ohlcv - Get OHLCV data with orders for charting
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
+    // Verify user is authenticated
+    await authGuard();
+
     const { ticker } = await params;
     const normalizedTicker = ticker.toUpperCase();
 
@@ -18,12 +19,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const { searchParams } = new URL(request.url);
     const period = searchParams.get('period') || '1M';
 
-    const response = await fetch(
-      `${API_URL}/stocks/${normalizedTicker}/ohlcv?period=${period}`,
+    const response = await backendFetch(
+      `/stocks/${normalizedTicker}/ohlcv?period=${period}`,
       {
-        headers: {
-          'Content-Type': 'application/json',
-        },
         // Cache for 5 minutes (OHLCV data updates less frequently)
         next: { revalidate: 300 },
       }
@@ -49,6 +47,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const data: OHLCVSeries = await response.json();
     return NextResponse.json(data);
   } catch (error) {
+    if (error instanceof Response) {
+      return error;
+    }
     console.error('OHLCV fetch error:', error);
     return NextResponse.json(
       { error: 'Failed to connect to backend API' } as ApiError,
