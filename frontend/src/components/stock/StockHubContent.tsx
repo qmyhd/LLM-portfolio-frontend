@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { StockMetrics } from './StockMetrics';
 import { StockChart } from './StockChart';
+import { TradingViewChart } from './TradingViewChart';
 import { IdeasPanel } from './IdeasPanel';
 import { ChatWidget } from './ChatWidget';
 import { RawMessagesPanel } from './RawMessagesPanel';
@@ -14,8 +15,11 @@ import {
   ArrowPathIcon,
   ShareIcon,
   EllipsisHorizontalIcon,
+  ChartBarIcon,
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
+
+type ChartProvider = 'lightweight' | 'tradingview';
 
 interface StockHubContentProps {
   ticker: string;
@@ -47,6 +51,7 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
   const [activeTab, setActiveTab] = useState<'ideas' | 'chat' | 'raw'>('ideas');
   const [isFavorite, setIsFavorite] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [chartProvider, setChartProvider] = useState<ChartProvider>('tradingview');
 
   // Check if ticker is in favorites
   useEffect(() => {
@@ -58,6 +63,12 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
       } catch {
         setIsFavorite(false);
       }
+    }
+    
+    // Load chart provider preference
+    const chartPref = localStorage.getItem('chart-provider');
+    if (chartPref === 'lightweight' || chartPref === 'tradingview') {
+      setChartProvider(chartPref);
     }
   }, [ticker]);
 
@@ -80,6 +91,12 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
 
     localStorage.setItem('portfolio-watchlist', JSON.stringify(watchlist));
     setIsFavorite(!isFavorite);
+  };
+
+  const toggleChartProvider = () => {
+    const newProvider = chartProvider === 'lightweight' ? 'tradingview' : 'lightweight';
+    setChartProvider(newProvider);
+    localStorage.setItem('chart-provider', newProvider);
   };
 
   const handleRefresh = () => {
@@ -105,6 +122,17 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
           </button>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={toggleChartProvider}
+            className={`p-2 rounded-lg transition-colors ${
+              chartProvider === 'tradingview' 
+                ? 'bg-primary/20 text-primary' 
+                : 'text-muted hover:text-foreground hover:bg-tertiary'
+            }`}
+            title={`Switch to ${chartProvider === 'lightweight' ? 'TradingView' : 'Lightweight'} chart`}
+          >
+            <ChartBarIcon className="h-4 w-4" />
+          </button>
           <button
             onClick={handleRefresh}
             className="p-2 rounded-lg hover:bg-tertiary text-muted hover:text-foreground transition-colors"
@@ -155,7 +183,17 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
         {/* Middle Column - Chart (owns height) */}
         <div className="flex-1 min-w-0 border-b lg:border-b-0 lg:border-r border-border overflow-hidden flex flex-col">
           <Suspense fallback={<ChartSkeleton />}>
-            <StockChart ticker={ticker} key={`chart-${refreshKey}`} />
+            {chartProvider === 'tradingview' ? (
+              <TradingViewChart 
+                symbol={ticker} 
+                key={`tv-chart-${refreshKey}`}
+                theme="dark"
+                height={500}
+                autosize={true}
+              />
+            ) : (
+              <StockChart ticker={ticker} key={`chart-${refreshKey}`} />
+            )}
           </Suspense>
         </div>
 

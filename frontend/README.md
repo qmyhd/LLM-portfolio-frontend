@@ -86,11 +86,15 @@ frontend/
 │   │       ├── orders/           # Orders data endpoint
 │   │       ├── search/           # Symbol search endpoint
 │   │       ├── watchlist/        # Watchlist data endpoint
+│   │       ├── chart-data/       # OHLCV data in TradingView format
 │   │       └── stocks/[ticker]/  # Stock profile, OHLCV, ideas
 │   ├── components/
 │   │   ├── layout/               # Sidebar, TopBar navigation
-│   │   ├── dashboard/            # Portfolio summary, positions, orders
+│   │   ├── dashboard/            # Portfolio summary, positions, orders, pie chart
+│   │   │   └── PortfolioPieChart.tsx  # Donut chart with holdings breakdown
 │   │   ├── stock/                # Chart, metrics, ideas, chat widgets
+│   │   │   ├── StockChart.tsx    # Lightweight-charts implementation
+│   │   │   └── TradingViewChart.tsx  # TradingView widget integration
 │   │   └── ui/                   # Reusable UI components
 │   ├── hooks/                    # Custom React hooks
 │   │   ├── usePortfolio.ts       # Portfolio data with polling
@@ -139,6 +143,73 @@ import { LiveUpdatesToggle } from '@/components/ui/LiveUpdatesToggle';
 ```
 
 Users can turn live updates on/off, and their preference is saved to localStorage.
+
+## 📊 Chart Providers
+
+The frontend supports two chart implementations that can be toggled by users:
+
+### 1. TradingView Widget (Default)
+
+Uses TradingView's official embed widgets for professional-grade charts:
+- Full-featured candlestick charts with drawing tools
+- Volume indicators and technical studies
+- Real-time data from TradingView
+- Symbol auto-detection (NASDAQ, NYSE, Crypto, Forex)
+
+```tsx
+import { TradingViewChart, TradingViewMiniChart } from '@/components/stock/TradingViewChart';
+
+// Full chart with all features
+<TradingViewChart 
+  symbol="AAPL"
+  theme="dark"
+  height={500}
+  autosize={true}
+  showToolbar={true}
+/>
+
+// Mini chart for cards/widgets
+<TradingViewMiniChart symbol="AAPL" height={220} />
+```
+
+### 2. Lightweight Charts (Fallback)
+
+Uses `lightweight-charts` library with custom OHLCV data from our backend:
+- Lower latency (uses our cached data)
+- Order markers overlaid on chart
+- Custom styling matching our theme
+- Works with the `/api/chart-data` endpoint
+
+```tsx
+import { StockChart } from '@/components/stock/StockChart';
+
+<StockChart ticker="AAPL" onOrderSelect={handleOrderSelect} />
+```
+
+### Switching Chart Providers
+
+Users can toggle between providers via the chart icon in the stock hub header. The preference is saved to localStorage (`chart-provider`).
+
+## 📈 Portfolio Pie Chart
+
+The `PortfolioPieChart` component displays portfolio allocation:
+
+```tsx
+import { PortfolioPieChart, mockPortfolioHoldings } from '@/components/dashboard/PortfolioPieChart';
+
+<PortfolioPieChart
+  holdings={mockPortfolioHoldings}
+  totalReturn={23.52}
+  positionCount={183}
+/>
+```
+
+Features:
+- SVG donut chart with color-coded segments
+- Time period selector (All Time, 1Y, 6M, 3M, 1M, 1W)
+- Company logos via Clearbit API (with fallback initials)
+- Gain/loss badges with theme-consistent colors
+- Responsive layout (chart left, list right on desktop)
 
 The frontend uses a **Backend for Frontend (BFF)** pattern. API routes in `src/app/api/` proxy to your Python backend:
 
