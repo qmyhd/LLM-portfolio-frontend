@@ -43,6 +43,8 @@ interface BackendOHLCVResponse {
 // GET /api/chart-data?symbol=AAPL&from=2025-01-01&to=2026-02-05
 export async function GET(request: NextRequest) {
   try {
+    await authGuard();
+
     // Parse query parameters
     const { searchParams } = new URL(request.url);
     const symbol = searchParams.get('symbol');

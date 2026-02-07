@@ -7,17 +7,7 @@ import {
   BanknotesIcon,
   ChartBarIcon,
 } from '@heroicons/react/24/outline';
-
-// Mock data - will be replaced with API calls
-const portfolioData = {
-  totalValue: 125847.32,
-  dailyChange: 2341.56,
-  dailyChangePct: 1.89,
-  totalPnL: 18432.15,
-  totalPnLPct: 17.15,
-  positionsCount: 24,
-  cashBalance: 8432.50,
-};
+import { usePortfolio } from '@/hooks';
 
 interface MetricCardProps {
   title: string;
@@ -79,36 +69,83 @@ function MetricCard({ title, value, change, changePct, icon: Icon, trend }: Metr
   );
 }
 
+function MetricCardSkeleton() {
+  return (
+    <div className="card p-5 animate-pulse">
+      <div className="flex items-start justify-between">
+        <div className="space-y-2">
+          <div className="h-3 w-20 bg-background-hover rounded" />
+          <div className="h-6 w-32 bg-background-hover rounded" />
+          <div className="h-4 w-24 bg-background-hover rounded mt-1" />
+        </div>
+        <div className="p-3 rounded-lg bg-background-hover">
+          <div className="w-6 h-6" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function PortfolioSummary() {
-  const dailyTrend = portfolioData.dailyChange >= 0 ? 'up' : 'down';
-  const totalTrend = portfolioData.totalPnL >= 0 ? 'up' : 'down';
+  const { data, error, isLoading } = usePortfolio();
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <MetricCardSkeleton key={i} />
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="card p-6 text-center">
+        <p className="text-loss font-medium">Failed to load portfolio</p>
+        <p className="text-sm text-foreground-muted mt-1">{error.message}</p>
+      </div>
+    );
+  }
+
+  if (!data?.summary) {
+    return (
+      <div className="card p-6 text-center">
+        <p className="text-foreground-muted">No portfolio data available</p>
+      </div>
+    );
+  }
+
+  const { summary } = data;
+  const dailyTrend = summary.dayChange >= 0 ? 'up' : 'down';
+  const totalTrend = summary.unrealizedPL >= 0 ? 'up' : 'down';
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <MetricCard
         title="Portfolio Value"
-        value={`$${portfolioData.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
-        change={portfolioData.dailyChange}
-        changePct={portfolioData.dailyChangePct}
+        value={`$${summary.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+        change={summary.dayChange}
+        changePct={summary.dayChangePercent}
         icon={ChartBarIcon}
         trend={dailyTrend}
       />
       <MetricCard
         title="Total P/L"
-        value={`${portfolioData.totalPnL >= 0 ? '+' : ''}$${Math.abs(portfolioData.totalPnL).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
-        changePct={portfolioData.totalPnLPct}
-        icon={portfolioData.totalPnL >= 0 ? ArrowTrendingUpIcon : ArrowTrendingDownIcon}
+        value={`${summary.unrealizedPL >= 0 ? '+' : ''}$${Math.abs(summary.unrealizedPL).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+        changePct={summary.unrealizedPLPercent}
+        icon={summary.unrealizedPL >= 0 ? ArrowTrendingUpIcon : ArrowTrendingDownIcon}
         trend={totalTrend}
       />
       <MetricCard
         title="Positions"
-        value={portfolioData.positionsCount.toString()}
+        value={summary.positionsCount.toString()}
         icon={ChartBarIcon}
         trend="neutral"
       />
       <MetricCard
         title="Cash Balance"
-        value={`$${portfolioData.cashBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+        value={`$${summary.cashBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
         icon={BanknotesIcon}
         trend="neutral"
       />

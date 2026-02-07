@@ -2,62 +2,57 @@
 
 import { clsx } from 'clsx';
 import Link from 'next/link';
+import useSWR from 'swr';
+import type { OrdersResponse, Order } from '@/types/api';
 
-// Mock orders data
-const ordersData = [
-  { 
-    id: 'ORD-001', 
-    symbol: 'NVDA', 
-    action: 'BUY', 
-    qty: 10, 
-    price: 850.25, 
-    total: 8502.50,
-    status: 'executed',
-    time: '2026-01-26 10:32:45'
-  },
-  { 
-    id: 'ORD-002', 
-    symbol: 'AAPL', 
-    action: 'SELL', 
-    qty: 25, 
-    price: 178.50, 
-    total: 4462.50,
-    status: 'executed',
-    time: '2026-01-25 14:15:22'
-  },
-  { 
-    id: 'ORD-003', 
-    symbol: 'TSLA', 
-    action: 'BUY', 
-    qty: 15, 
-    price: 242.30, 
-    total: 3634.50,
-    status: 'executed',
-    time: '2026-01-24 09:45:10'
-  },
-  { 
-    id: 'ORD-004', 
-    symbol: 'AMD', 
-    action: 'BUY', 
-    qty: 50, 
-    price: 165.80, 
-    total: 8290.00,
-    status: 'executed',
-    time: '2026-01-23 11:20:33'
-  },
-  { 
-    id: 'ORD-005', 
-    symbol: 'META', 
-    action: 'SELL', 
-    qty: 5, 
-    price: 580.00, 
-    total: 2900.00,
-    status: 'executed',
-    time: '2026-01-22 15:50:18'
-  },
-];
+const fetcher = async (url: string): Promise<OrdersResponse> => {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to fetch orders: ${res.status}`);
+  return res.json();
+};
 
 export function RecentOrders() {
+  const { data, error, isLoading } = useSWR<OrdersResponse>(
+    '/api/orders?limit=5',
+    fetcher,
+    { revalidateOnFocus: false, dedupingInterval: 10000, errorRetryCount: 3 }
+  );
+
+  if (isLoading) {
+    return (
+      <div className="card overflow-hidden animate-pulse">
+        <div className="px-5 py-4 border-b border-border flex justify-between">
+          <div className="h-5 w-28 bg-background-hover rounded" />
+          <div className="h-5 w-16 bg-background-hover rounded" />
+        </div>
+        <div className="p-4 space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="h-10 bg-background-hover rounded" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="card p-6 text-center">
+        <p className="text-loss font-medium">Failed to load orders</p>
+        <p className="text-sm text-foreground-muted mt-1">{error.message}</p>
+      </div>
+    );
+  }
+
+  const orders: Order[] = data?.orders ?? [];
+
+  if (orders.length === 0) {
+    return (
+      <div className="card p-6 text-center">
+        <p className="text-foreground-muted">No recent orders</p>
+      </div>
+    );
+  }
+
   return (
     <div className="card overflow-hidden">
       {/* Header */}
@@ -85,42 +80,52 @@ export function RecentOrders() {
             </tr>
           </thead>
           <tbody>
-            {ordersData.map((order) => (
-              <tr key={order.id} className="table-row">
-                <td className="table-cell">
-                  <Link 
-                    href={`/stock/${order.symbol}`}
-                    className="font-mono font-semibold hover:text-primary transition-colors"
-                  >
-                    {order.symbol}
-                  </Link>
-                </td>
-                <td className="table-cell text-center">
-                  <span
-                    className={clsx(
-                      'inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold',
-                      order.action === 'BUY'
-                        ? 'bg-profit/20 text-profit'
-                        : 'bg-loss/20 text-loss'
-                    )}
-                  >
-                    {order.action === 'BUY' ? '▲' : '▼'} {order.action}
-                  </span>
-                </td>
-                <td className="table-cell text-right font-mono hidden sm:table-cell">
-                  {order.qty}
-                </td>
-                <td className="table-cell text-right font-mono hidden md:table-cell">
-                  ${order.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                </td>
-                <td className="table-cell text-right font-mono font-medium">
-                  ${order.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                </td>
-                <td className="table-cell text-right text-foreground-muted text-sm hidden lg:table-cell">
-                  {order.time}
-                </td>
-              </tr>
-            ))}
+            {orders.map((order) => {
+              const price = order.executionPrice ?? order.limitPrice ?? 0;
+              const total = order.totalQuantity * price;
+              const time = order.timeExecuted ?? order.timePlaced ?? '';
+
+              return (
+                <tr key={order.brokerageOrderId} className="table-row">
+                  <td className="table-cell">
+                    <Link 
+                      href={`/stock/${order.symbol}`}
+                      className="font-mono font-semibold hover:text-primary transition-colors"
+                    >
+                      {order.symbol}
+                    </Link>
+                  </td>
+                  <td className="table-cell text-center">
+                    <span
+                      className={clsx(
+                        'inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold',
+                        order.action === 'BUY'
+                          ? 'bg-profit/20 text-profit'
+                          : 'bg-loss/20 text-loss'
+                      )}
+                    >
+                      {order.action === 'BUY' ? '▲' : '▼'} {order.action}
+                    </span>
+                  </td>
+                  <td className="table-cell text-right font-mono hidden sm:table-cell">
+                    {order.totalQuantity}
+                  </td>
+                  <td className="table-cell text-right font-mono hidden md:table-cell">
+                    {price > 0
+                      ? `$${price.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+                      : '—'}
+                  </td>
+                  <td className="table-cell text-right font-mono font-medium">
+                    {total > 0
+                      ? `$${total.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+                      : '—'}
+                  </td>
+                  <td className="table-cell text-right text-foreground-muted text-sm hidden lg:table-cell">
+                    {time ? new Date(time).toLocaleString() : '—'}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

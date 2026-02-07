@@ -7,6 +7,8 @@ import {
   ArrowPathIcon,
   ChartBarIcon,
 } from '@heroicons/react/24/outline';
+import { Sidebar } from '@/components/layout/Sidebar';
+import { TopBar } from '@/components/layout/TopBar';
 
 interface Position {
   symbol: string;
@@ -90,7 +92,12 @@ export default function PositionsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="flex h-screen">
+      <Sidebar />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <TopBar />
+        <main className="flex-1 overflow-y-auto p-6">
+    <div className="max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -282,6 +289,9 @@ export default function PositionsPage() {
           </div>
         </div>
       )}
+    </div>
+        </main>
+      </div>
     </div>
   );
 }

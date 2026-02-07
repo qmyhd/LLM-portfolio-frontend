@@ -1,4 +1,8 @@
-// Shared TypeScript types for the frontend
+// Frontend Display Types
+//
+// These types represent the FRONTEND display shapes (UI-friendly field names).
+// For raw backend API response types, see ./api.ts
+// When consuming API responses, transform api.ts types into these for display.
 
 // Portfolio & Positions
 export interface Position {
@@ -78,19 +82,22 @@ export interface OHLCV {
 }
 
 // Ideas
-export type Direction = 'bullish' | 'bearish' | 'neutral';
+export type Direction = 'bullish' | 'bearish' | 'neutral' | 'mixed';
 
 export type TradingLabel =
-  | 'TRADE_PLAN'
   | 'TRADE_EXECUTION'
+  | 'TRADE_PLAN'
   | 'TECHNICAL_ANALYSIS'
+  | 'FUNDAMENTAL_THESIS'
   | 'CATALYST_NEWS'
   | 'EARNINGS'
+  | 'INSTITUTIONAL_FLOW'
   | 'OPTIONS'
-  | 'SECTOR_MACRO'
-  | 'EDUCATIONAL'
-  | 'MISC_CHATTER'
-  | 'TRADE_OUTCOME';
+  | 'RISK_MANAGEMENT'
+  | 'SENTIMENT_CONVICTION'
+  | 'PORTFOLIO_UPDATE'
+  | 'QUESTION_REQUEST'
+  | 'RESOURCE_LINK';
 
 export interface ParsedIdea {
   id: number;

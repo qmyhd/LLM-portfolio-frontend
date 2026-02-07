@@ -8,24 +8,15 @@ import {
   ChevronDownIcon,
   FunnelIcon,
 } from '@heroicons/react/24/outline';
+import { usePortfolio } from '@/hooks';
+import type { Position } from '@/types/api';
 
-// Mock positions data
-const positionsData = [
-  { symbol: 'NVDA', name: 'NVIDIA Corporation', qty: 50, price: 875.43, value: 43771.50, avgCost: 485.20, pnl: 19511.50, pnlPct: 80.41 },
-  { symbol: 'AAPL', name: 'Apple Inc.', qty: 100, price: 178.52, value: 17852.00, avgCost: 145.30, pnl: 3322.00, pnlPct: 22.86 },
-  { symbol: 'MSFT', name: 'Microsoft Corp.', qty: 45, price: 425.18, value: 19133.10, avgCost: 380.50, pnl: 2010.60, pnlPct: 11.74 },
-  { symbol: 'TSLA', name: 'Tesla Inc.', qty: 30, price: 248.75, value: 7462.50, avgCost: 195.40, pnl: 1600.50, pnlPct: 27.29 },
-  { symbol: 'GOOGL', name: 'Alphabet Inc.', qty: 25, price: 175.32, value: 4383.00, avgCost: 158.75, pnl: 414.25, pnlPct: 10.44 },
-  { symbol: 'META', name: 'Meta Platforms', qty: 20, price: 585.42, value: 11708.40, avgCost: 450.20, pnl: 2704.40, pnlPct: 30.02 },
-  { symbol: 'AMD', name: 'AMD Inc.', qty: 75, price: 165.80, value: 12435.00, avgCost: 142.50, pnl: 1747.50, pnlPct: 16.35 },
-  { symbol: 'PLTR', name: 'Palantir', qty: 200, price: 25.43, value: 5086.00, avgCost: 28.50, pnl: -614.00, pnlPct: -10.77 },
-];
-
-type SortKey = 'symbol' | 'value' | 'pnl' | 'pnlPct';
+type SortKey = 'symbol' | 'equity' | 'openPnl' | 'openPnlPercent';
 type FilterMode = 'all' | 'winners' | 'losers';
 
 export function PositionsTable() {
-  const [sortKey, setSortKey] = useState<SortKey>('value');
+  const { data, error, isLoading } = usePortfolio();
+  const [sortKey, setSortKey] = useState<SortKey>('equity');
   const [sortAsc, setSortAsc] = useState(false);
   const [filter, setFilter] = useState<FilterMode>('all');
 
@@ -38,9 +29,53 @@ export function PositionsTable() {
     }
   };
 
-  const filteredData = positionsData.filter(p => {
-    if (filter === 'winners') return p.pnl > 0;
-    if (filter === 'losers') return p.pnl < 0;
+  const SortIcon = ({ column }: { column: SortKey }) => {
+    if (sortKey !== column) return null;
+    return sortAsc ? (
+      <ChevronUpIcon className="w-4 h-4 inline ml-1" />
+    ) : (
+      <ChevronDownIcon className="w-4 h-4 inline ml-1" />
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="card overflow-hidden animate-pulse">
+        <div className="px-5 py-4 border-b border-border flex justify-between">
+          <div className="h-5 w-24 bg-background-hover rounded" />
+          <div className="h-5 w-20 bg-background-hover rounded" />
+        </div>
+        <div className="p-4 space-y-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-10 bg-background-hover rounded" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="card p-6 text-center">
+        <p className="text-loss font-medium">Failed to load positions</p>
+        <p className="text-sm text-foreground-muted mt-1">{error.message}</p>
+      </div>
+    );
+  }
+
+  const positions: Position[] = data?.positions ?? [];
+
+  if (positions.length === 0) {
+    return (
+      <div className="card p-6 text-center">
+        <p className="text-foreground-muted">No open positions</p>
+      </div>
+    );
+  }
+
+  const filteredData = positions.filter(p => {
+    if (filter === 'winners') return p.openPnl > 0;
+    if (filter === 'losers') return p.openPnl < 0;
     return true;
   });
 
@@ -50,17 +85,10 @@ export function PositionsTable() {
     if (typeof aVal === 'string' && typeof bVal === 'string') {
       return sortAsc ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
     }
-    return sortAsc ? (aVal as number) - (bVal as number) : (bVal as number) - (aVal as number);
+    return sortAsc
+      ? ((aVal as number) ?? 0) - ((bVal as number) ?? 0)
+      : ((bVal as number) ?? 0) - ((aVal as number) ?? 0);
   });
-
-  const SortIcon = ({ column }: { column: SortKey }) => {
-    if (sortKey !== column) return null;
-    return sortAsc ? (
-      <ChevronUpIcon className="w-4 h-4 inline ml-1" />
-    ) : (
-      <ChevronDownIcon className="w-4 h-4 inline ml-1" />
-    );
-  };
 
   return (
     <div className="card overflow-hidden">
@@ -96,21 +124,21 @@ export function PositionsTable() {
               <th className="table-header text-right hidden md:table-cell">Price</th>
               <th
                 className="table-header text-right cursor-pointer hover:text-foreground"
-                onClick={() => handleSort('value')}
+                onClick={() => handleSort('equity')}
               >
-                Value <SortIcon column="value" />
+                Value <SortIcon column="equity" />
               </th>
               <th
                 className="table-header text-right cursor-pointer hover:text-foreground"
-                onClick={() => handleSort('pnl')}
+                onClick={() => handleSort('openPnl')}
               >
-                P/L <SortIcon column="pnl" />
+                P/L <SortIcon column="openPnl" />
               </th>
               <th
                 className="table-header text-right cursor-pointer hover:text-foreground"
-                onClick={() => handleSort('pnlPct')}
+                onClick={() => handleSort('openPnlPercent')}
               >
-                P/L % <SortIcon column="pnlPct" />
+                P/L % <SortIcon column="openPnlPercent" />
               </th>
             </tr>
           </thead>
@@ -123,37 +151,36 @@ export function PositionsTable() {
                     className="hover:text-primary transition-colors"
                   >
                     <div className="font-mono font-semibold">{position.symbol}</div>
-                    <div className="text-xs text-foreground-muted hidden sm:block">{position.name}</div>
                   </Link>
                 </td>
                 <td className="table-cell text-right font-mono hidden sm:table-cell">
-                  {position.qty}
+                  {position.quantity}
                 </td>
                 <td className="table-cell text-right font-mono hidden md:table-cell">
-                  ${position.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  ${position.currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </td>
                 <td className="table-cell text-right font-mono">
-                  ${position.value.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  ${position.equity.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </td>
                 <td
                   className={clsx(
                     'table-cell text-right font-mono',
-                    position.pnl >= 0 ? 'text-profit' : 'text-loss'
+                    position.openPnl >= 0 ? 'text-profit' : 'text-loss'
                   )}
                 >
-                  {position.pnl >= 0 ? '+' : ''}${position.pnl.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  {position.openPnl >= 0 ? '+' : ''}${position.openPnl.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </td>
                 <td
                   className={clsx(
                     'table-cell text-right font-mono font-medium',
-                    position.pnlPct >= 0 ? 'text-profit' : 'text-loss'
+                    position.openPnlPercent >= 0 ? 'text-profit' : 'text-loss'
                   )}
                 >
                   <span className={clsx(
                     'px-2 py-1 rounded',
-                    position.pnlPct >= 0 ? 'bg-profit/10' : 'bg-loss/10'
+                    position.openPnlPercent >= 0 ? 'bg-profit/10' : 'bg-loss/10'
                   )}>
-                    {position.pnlPct >= 0 ? '+' : ''}{position.pnlPct.toFixed(2)}%
+                    {position.openPnlPercent >= 0 ? '+' : ''}{position.openPnlPercent.toFixed(2)}%
                   </span>
                 </td>
               </tr>
@@ -165,7 +192,7 @@ export function PositionsTable() {
       {/* Footer */}
       <div className="px-5 py-3 border-t border-border bg-background-tertiary">
         <p className="text-sm text-foreground-muted">
-          Showing {sortedData.length} of {positionsData.length} positions
+          Showing {sortedData.length} of {positions.length} positions
         </p>
       </div>
     </div>
