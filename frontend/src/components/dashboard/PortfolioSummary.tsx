@@ -8,6 +8,7 @@ import {
   ChartBarIcon,
 } from '@heroicons/react/24/outline';
 import { usePortfolio } from '@/hooks';
+import { CardSpotlight } from '@/components/ui/CardSpotlight';
 
 interface MetricCardProps {
   title: string;
@@ -20,7 +21,7 @@ interface MetricCardProps {
 
 function MetricCard({ title, value, change, changePct, icon: Icon, trend }: MetricCardProps) {
   return (
-    <div className="card p-5">
+    <CardSpotlight className="card p-5">
       <div className="flex items-start justify-between">
         <div>
           <p className="metric-label">{title}</p>
@@ -65,13 +66,13 @@ function MetricCard({ title, value, change, changePct, icon: Icon, trend }: Metr
           )} />
         </div>
       </div>
-    </div>
+    </CardSpotlight>
   );
 }
 
 function MetricCardSkeleton() {
   return (
-    <div className="card p-5 animate-pulse">
+    <CardSpotlight className="card p-5 animate-pulse">
       <div className="flex items-start justify-between">
         <div className="space-y-2">
           <div className="h-3 w-20 bg-background-hover rounded" />
@@ -82,7 +83,7 @@ function MetricCardSkeleton() {
           <div className="w-6 h-6" />
         </div>
       </div>
-    </div>
+    </CardSpotlight>
   );
 }
 
@@ -101,18 +102,18 @@ export function PortfolioSummary() {
 
   if (error) {
     return (
-      <div className="card p-6 text-center">
+      <CardSpotlight className="card p-6 text-center">
         <p className="text-loss font-medium">Failed to load portfolio</p>
         <p className="text-sm text-foreground-muted mt-1">{error.message}</p>
-      </div>
+      </CardSpotlight>
     );
   }
 
   if (!data?.summary) {
     return (
-      <div className="card p-6 text-center">
+      <CardSpotlight className="card p-6 text-center">
         <p className="text-foreground-muted">No portfolio data available</p>
-      </div>
+      </CardSpotlight>
     );
   }
 

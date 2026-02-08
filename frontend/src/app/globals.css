@@ -54,6 +54,32 @@
     @apply card transition-all duration-200 hover:border-border-hover hover:shadow-lg;
   }
 
+  .card-spotlight {
+    @apply relative overflow-hidden;
+    --spotlight-x: 50%;
+    --spotlight-y: 50%;
+  }
+
+  .card-spotlight::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      180px circle at var(--spotlight-x) var(--spotlight-y),
+      rgba(255, 255, 255, 0.12),
+      transparent 65%
+    );
+    opacity: 0.9;
+    pointer-events: none;
+    transition: opacity 200ms ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card-spotlight::before {
+      opacity: 0;
+    }
+  }
+
   /* Metric display */
   .metric-value {
     @apply text-2xl font-bold font-mono tracking-tight;

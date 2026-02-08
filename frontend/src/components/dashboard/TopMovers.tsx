@@ -1,13 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { clsx } from 'clsx';
 import {
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
 } from '@heroicons/react/24/outline';
 import { usePortfolio } from '@/hooks';
 import type { Position } from '@/types/api';
+import { CardSpotlight } from '@/components/ui/CardSpotlight';
 
 /** Derive top gainers/losers from portfolio positions using dayChangePercent. */
 function deriveMovers(positions: Position[]) {
@@ -46,7 +46,7 @@ export function TopMovers() {
 
   if (isLoading) {
     return (
-      <div className="card animate-pulse">
+      <CardSpotlight className="card animate-pulse">
         <div className="px-5 py-4 border-b border-border">
           <div className="h-5 w-24 bg-background-hover rounded" />
         </div>
@@ -55,15 +55,15 @@ export function TopMovers() {
             <div key={i} className="h-8 bg-background-hover rounded" />
           ))}
         </div>
-      </div>
+      </CardSpotlight>
     );
   }
 
   if (error) {
     return (
-      <div className="card p-5 text-center">
+      <CardSpotlight className="card p-5 text-center">
         <p className="text-loss text-sm">Failed to load movers</p>
-      </div>
+      </CardSpotlight>
     );
   }
 
@@ -73,14 +73,14 @@ export function TopMovers() {
 
   if (!hasData) {
     return (
-      <div className="card p-5 text-center">
+      <CardSpotlight className="card p-5 text-center">
         <p className="text-foreground-muted text-sm">No day-change data available</p>
-      </div>
+      </CardSpotlight>
     );
   }
 
   return (
-    <div className="card">
+    <CardSpotlight className="card">
       {/* Header */}
       <div className="px-5 py-4 border-b border-border">
         <h2 className="text-lg font-semibold">Top Movers</h2>
@@ -148,6 +148,6 @@ export function TopMovers() {
           </div>
         </div>
       )}
-    </div>
+    </CardSpotlight>
   );
 }
