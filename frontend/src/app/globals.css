@@ -160,6 +160,47 @@
 }
 
 @layer utilities {
+  /* ── Scroll-snap card rail ── */
+  .scroll-snap-x {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 1rem;
+    padding-bottom: 0.5rem; /* space for scrollbar */
+    scrollbar-width: thin;
+  }
+
+  .scroll-snap-x::-webkit-scrollbar {
+    height: 4px;
+  }
+  .scroll-snap-x::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  .scroll-snap-x::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+
+  .scroll-snap-x > * {
+    scroll-snap-align: start;
+    flex-shrink: 0;
+  }
+
+  /* Pre-defined snap card widths */
+  .snap-card {
+    @apply bg-background-secondary border border-border rounded-xl shadow-card;
+    min-width: 280px;
+    max-width: 340px;
+    padding: 1rem;
+    scroll-snap-align: start;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .snap-card:hover {
+    @apply border-border-hover;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  }
+
   /* P/L color utilities */
   .text-pnl {
     @apply text-foreground;
