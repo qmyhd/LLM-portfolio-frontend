@@ -9,25 +9,12 @@ import {
 } from '@heroicons/react/24/outline';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
-
-interface Order {
-  id: string;
-  symbol: string;
-  side: 'buy' | 'sell';
-  type: string;
-  status: 'filled' | 'pending' | 'cancelled';
-  quantity: number;
-  filledQuantity: number;
-  price: number;
-  limitPrice: number | null;
-  stopPrice: number | null;
-  createdAt: string;
-  filledAt: string | null;
-  totalValue: number;
-}
+import type { Order as ApiOrder } from '@/types/api';
+import { toUiOrder, type UiOrder } from '@/lib/mappers';
+import { formatMoney } from '@/lib/format';
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<UiOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
@@ -43,7 +30,8 @@ export default function OrdersPage() {
       
       const res = await fetch(`/api/orders?${params}`);
       const data = await res.json();
-      setOrders(data.orders || []);
+      const apiOrders: ApiOrder[] = data.orders || [];
+      setOrders(apiOrders.map(toUiOrder));
     } catch (error) {
       console.error('Failed to fetch orders:', error);
     } finally {
@@ -177,10 +165,10 @@ export default function OrdersPage() {
                       {order.status === 'filled' ? order.quantity : `${order.filledQuantity}/${order.quantity}`}
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-sm">
-                      ${order.price.toFixed(2)}
+                      {formatMoney(order.price)}
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-sm font-medium">
-                      ${order.totalValue.toLocaleString()}
+                      {formatMoney(order.totalValue)}
                     </td>
                     <td className="px-4 py-3">
                       <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${

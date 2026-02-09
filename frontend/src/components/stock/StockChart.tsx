@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { clsx } from 'clsx';
+import { formatNumber } from '@/lib/format';
 import useSWR from 'swr';
 import {
   ArrowUpIcon,
@@ -313,8 +314,8 @@ export function StockChart({ ticker, onOrderSelect }: StockChartProps) {
             )}
           >
             {stats.isPositive ? '+' : ''}
-            {stats.change.toFixed(2)} ({stats.isPositive ? '+' : ''}
-            {stats.changePct.toFixed(2)}%)
+            {formatNumber(stats.change)} ({stats.isPositive ? '+' : ''}
+            {formatNumber(stats.changePct)}%)
           </div>
         )}
       </div>
@@ -375,7 +376,7 @@ export function StockChart({ ticker, onOrderSelect }: StockChartProps) {
                 {hoveredOrder.action} {hoveredOrder.quantity} shares
               </div>
               <div className="text-muted mt-1">
-                @ ${hoveredOrder.price.toFixed(2)}
+                @ ${formatNumber(hoveredOrder.price)}
               </div>
               <div className="text-muted">
                 {new Date(hoveredOrder.date).toLocaleDateString()}
@@ -413,7 +414,7 @@ export function StockChart({ ticker, onOrderSelect }: StockChartProps) {
                     {selectedOrder.action}
                   </span>
                   <span className="text-foreground font-medium">
-                    {selectedOrder.quantity} shares @ ${selectedOrder.price.toFixed(2)}
+                    {selectedOrder.quantity} shares @ ${formatNumber(selectedOrder.price)}
                   </span>
                 </div>
                 <div className="text-sm text-muted">
@@ -443,7 +444,7 @@ export function StockChart({ ticker, onOrderSelect }: StockChartProps) {
               <div>
                 <p className="text-xs text-muted">Current Price</p>
                 <p className="text-sm font-mono font-medium text-foreground">
-                  ${selectedOrder.performanceSince.currentPrice.toFixed(2)}
+                  ${formatNumber(selectedOrder.performanceSince.currentPrice)}
                 </p>
               </div>
               <div>
@@ -457,9 +458,9 @@ export function StockChart({ ticker, onOrderSelect }: StockChartProps) {
                   )}
                 >
                   {selectedOrder.performanceSince.priceDiff >= 0 ? '+' : ''}$
-                  {selectedOrder.performanceSince.priceDiff.toFixed(2)} (
+                  {formatNumber(selectedOrder.performanceSince.priceDiff)} (
                   {selectedOrder.performanceSince.percentDiff >= 0 ? '+' : ''}
-                  {selectedOrder.performanceSince.percentDiff.toFixed(2)}%)
+                  {formatNumber(selectedOrder.performanceSince.percentDiff)}%)
                 </p>
               </div>
               <div>

@@ -5,6 +5,7 @@ import {
   ShieldCheckIcon,
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
+import { formatNumber } from '@/lib/format';
 
 interface RiskMetrics {
   beta: number | null;
@@ -92,20 +93,20 @@ export function RiskCard({ ticker }: RiskCardProps) {
         {risk.beta !== null && (
           <div className="flex justify-between text-sm">
             <span className="text-muted">Beta</span>
-            <span className="font-mono text-foreground">{risk.beta.toFixed(2)}</span>
+            <span className="font-mono text-foreground">{formatNumber(risk.beta)}</span>
           </div>
         )}
 
         {/* Volatility */}
         <div className="flex justify-between text-sm">
           <span className="text-muted">30D Volatility</span>
-          <span className="font-mono text-foreground">{risk.volatility.toFixed(1)}%</span>
+          <span className="font-mono text-foreground">{formatNumber(risk.volatility, 1)}%</span>
         </div>
 
         {/* Max Drawdown */}
         <div className="flex justify-between text-sm">
           <span className="text-muted">Max Drawdown</span>
-          <span className="font-mono text-loss">{risk.maxDrawdown.toFixed(1)}%</span>
+          <span className="font-mono text-loss">{formatNumber(risk.maxDrawdown, 1)}%</span>
         </div>
 
         {/* Sharpe Ratio */}
@@ -113,7 +114,7 @@ export function RiskCard({ ticker }: RiskCardProps) {
           <div className="flex justify-between text-sm">
             <span className="text-muted">Sharpe Ratio</span>
             <span className={`font-mono ${risk.sharpeRatio > 1 ? 'text-profit' : 'text-foreground'}`}>
-              {risk.sharpeRatio.toFixed(2)}
+              {formatNumber(risk.sharpeRatio)}
             </span>
           </div>
         )}

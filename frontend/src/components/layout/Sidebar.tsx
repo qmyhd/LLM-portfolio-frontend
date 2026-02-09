@@ -8,10 +8,10 @@ import {
   HomeIcon,
   ChartBarIcon,
   ClipboardDocumentListIcon,
-  BanknotesIcon,
-  ChatBubbleLeftRightIcon,
   Cog6ToothIcon,
   StarIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from '@heroicons/react/24/outline';
 import {
   HomeIcon as HomeIconSolid,
@@ -19,6 +19,7 @@ import {
   ClipboardDocumentListIcon as ClipboardDocumentListIconSolid,
   StarIcon as StarIconSolid,
 } from '@heroicons/react/24/solid';
+import { formatNumber } from '@/lib/format';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: HomeIcon, activeIcon: HomeIconSolid },
@@ -35,6 +36,19 @@ interface FavoriteStock {
 export function Sidebar() {
   const pathname = usePathname();
   const [favorites, setFavorites] = useState<FavoriteStock[]>([]);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // Load collapse state from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem('sidebar-collapsed');
+    if (stored === 'true') setIsCollapsed(true);
+  }, []);
+
+  const toggleCollapse = () => {
+    const next = !isCollapsed;
+    setIsCollapsed(next);
+    localStorage.setItem('sidebar-collapsed', String(next));
+  };
 
   // Load favorites from localStorage and fetch prices
   useEffect(() => {
@@ -70,16 +84,41 @@ export function Sidebar() {
 
   return (
     <aside className="hidden md:flex md:flex-shrink-0">
-      <div className="flex flex-col w-64 bg-background-secondary border-r border-border">
-        {/* Logo */}
-        <div className="h-16 flex items-center px-6 border-b border-border">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+      <div className={clsx(
+        'flex flex-col bg-background-secondary border-r border-border transition-all duration-300',
+        isCollapsed ? 'w-16' : 'w-64'
+      )}>
+        {/* Logo + Collapse Toggle */}
+        <div className="h-16 flex items-center justify-between px-3 border-b border-border">
+          <Link href="/" className={clsx('flex items-center gap-3', isCollapsed && 'justify-center w-full')}>
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
               <ChartBarIcon className="w-5 h-5 text-white" />
             </div>
-            <span className="font-semibold text-lg">Portfolio</span>
+            {!isCollapsed && <span className="font-semibold text-lg">Portfolio</span>}
           </Link>
+          {!isCollapsed && (
+            <button
+              onClick={toggleCollapse}
+              className="p-1.5 rounded-lg hover:bg-background-hover text-foreground-muted hover:text-foreground transition-colors"
+              title="Collapse sidebar"
+            >
+              <ChevronLeftIcon className="w-4 h-4" />
+            </button>
+          )}
         </div>
+
+        {/* Expand button when collapsed */}
+        {isCollapsed && (
+          <div className="px-3 py-2">
+            <button
+              onClick={toggleCollapse}
+              className="w-full flex items-center justify-center p-1.5 rounded-lg hover:bg-background-hover text-foreground-muted hover:text-foreground transition-colors"
+              title="Expand sidebar"
+            >
+              <ChevronRightIcon className="w-4 h-4" />
+            </button>
+          </div>
+        )}
 
         {/* Navigation */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
@@ -87,7 +126,7 @@ export function Sidebar() {
             {navigation.map((item) => {
               const isActive = pathname === item.href;
               const Icon = isActive ? item.activeIcon : item.icon;
-              
+
               return (
                 <Link
                   key={item.name}
@@ -96,64 +135,72 @@ export function Sidebar() {
                     'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                     isActive
                       ? 'bg-primary/10 text-primary'
-                      : 'text-foreground-muted hover:text-foreground hover:bg-background-hover'
+                      : 'text-foreground-muted hover:text-foreground hover:bg-background-hover',
+                    isCollapsed && 'justify-center px-0'
                   )}
+                  title={isCollapsed ? item.name : undefined}
                 >
-                  <Icon className="w-5 h-5" />
-                  {item.name}
+                  <Icon className="w-5 h-5 flex-shrink-0" />
+                  {!isCollapsed && item.name}
                 </Link>
               );
             })}
           </div>
 
-          {/* Favorites section */}
-          <div className="pt-6">
-            <h3 className="px-3 text-xs font-semibold text-foreground-subtle uppercase tracking-wider">
-              Favorites
-            </h3>
-            <div className="mt-2 space-y-1">
-              {favorites.length === 0 ? (
-                <p className="px-3 py-2 text-xs text-muted">
-                  No favorites yet. Use ⌘K to search and star tickers.
-                </p>
-              ) : (
-                favorites.map((stock) => (
-                  <Link
-                    key={stock.ticker}
-                    href={`/stock/${stock.ticker}`}
-                    className={clsx(
-                      'flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors',
-                    pathname === `/stock/${stock.ticker}`
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-foreground-muted hover:text-foreground hover:bg-background-hover'
-                  )}
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono font-medium">{stock.ticker}</span>
-                  </div>
-                  <span
-                    className={clsx(
-                      'text-xs font-mono',
-                      stock.change >= 0 ? 'text-profit' : 'text-loss'
-                    )}
-                  >
-                    {stock.change >= 0 ? '+' : ''}{stock.change.toFixed(2)}%
-                  </span>
-                </Link>
-                ))
-              )}
+          {/* Favorites section - hidden when collapsed */}
+          {!isCollapsed && (
+            <div className="pt-6">
+              <h3 className="px-3 text-xs font-semibold text-foreground-subtle uppercase tracking-wider">
+                Favorites
+              </h3>
+              <div className="mt-2 space-y-1">
+                {favorites.length === 0 ? (
+                  <p className="px-3 py-2 text-xs text-muted">
+                    No favorites yet. Use ⌘K to search and star tickers.
+                  </p>
+                ) : (
+                  favorites.map((stock) => (
+                    <Link
+                      key={stock.ticker}
+                      href={`/stock/${stock.ticker}`}
+                      className={clsx(
+                        'flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors',
+                        pathname === `/stock/${stock.ticker}`
+                          ? 'bg-primary/10 text-primary'
+                          : 'text-foreground-muted hover:text-foreground hover:bg-background-hover'
+                      )}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-medium">{stock.ticker}</span>
+                      </div>
+                      <span
+                        className={clsx(
+                          'text-xs font-mono',
+                          stock.change >= 0 ? 'text-profit' : 'text-loss'
+                        )}
+                      >
+                        {stock.change >= 0 ? '+' : ''}{formatNumber(stock.change)}%
+                      </span>
+                    </Link>
+                  ))
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </nav>
 
         {/* Bottom section */}
         <div className="p-3 border-t border-border">
           <Link
             href="/settings"
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-foreground-muted hover:text-foreground hover:bg-background-hover transition-colors"
+            className={clsx(
+              'flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-foreground-muted hover:text-foreground hover:bg-background-hover transition-colors',
+              isCollapsed && 'justify-center px-0'
+            )}
+            title={isCollapsed ? 'Settings' : undefined}
           >
-            <Cog6ToothIcon className="w-5 h-5" />
-            Settings
+            <Cog6ToothIcon className="w-5 h-5 flex-shrink-0" />
+            {!isCollapsed && 'Settings'}
           </Link>
         </div>
       </div>

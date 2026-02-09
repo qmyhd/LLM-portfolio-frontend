@@ -1,6 +1,7 @@
 'use client';
 
 import { clsx } from 'clsx';
+import { formatNumber } from '@/lib/format';
 
 // Mock sentiment data
 const sentimentData = {
@@ -34,7 +35,7 @@ export function SentimentOverview() {
               sentimentData.overallScore >= 0.5 ? 'text-profit' : 'text-loss'
             )}
           >
-            {sentimentData.overallScore.toFixed(2)}
+            {formatNumber(sentimentData.overallScore)}
           </div>
           <div className="text-sm text-foreground-muted mt-1">
             Overall Score
@@ -59,10 +60,10 @@ export function SentimentOverview() {
           </div>
           <div className="flex justify-between mt-2 text-xs">
             <span className="text-profit">
-              Bullish {bullishPct.toFixed(0)}%
+              Bullish {formatNumber(bullishPct, 0)}%
             </span>
             <span className="text-loss">
-              Bearish {bearishPct.toFixed(0)}%
+              Bearish {formatNumber(bearishPct, 0)}%
             </span>
           </div>
         </div>

@@ -4,18 +4,19 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { signIn } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
-import { StarfieldBackground } from '@/components/ui/StarfieldBackground';
+import { LiquidGradientBackground } from '@/components/ui/LiquidGradientBackground';
 
 /**
  * SigninIntro - Animated sign-in experience.
  *
- * Inspired by the anime.js v2.0 logo animation gist.
  * Sequence:
- *   1. Three-letter "QQQ" animation (stroke draw → fill → reveal)
- *   2. "LLM Portfolio" text fades in below
- *   3. Entire intro fades out → starfield + Google sign-in button
+ *   1. Three large "QQQ" text characters animate in with gradient fill
+ *   2. "LLM Portfolio" subtitle fades in below
+ *   3. Entire intro fades out → liquid gradient + Google sign-in
  *
  * - Uses anime.js v4 for animations
+ * - Liquid gradient background (replaces starfield)
+ * - Glassmorphism sign-in card
  * - Respects `prefers-reduced-motion`
  * - `signIn("google")` from NextAuth
  */
@@ -28,6 +29,7 @@ function SigninIntroContent() {
   const error = searchParams.get('error');
 
   const [phase, setPhase] = useState<Phase>('intro');
+  const [fontLoaded, setFontLoaded] = useState(false);
   const introRef = useRef<HTMLDivElement>(null);
   const subtitleRef = useRef<HTMLDivElement>(null);
   const hasAnimated = useRef(false);
@@ -35,6 +37,18 @@ function SigninIntroContent() {
   const reducedMotion =
     typeof window !== 'undefined' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Load display font for QQQ letters
+  useEffect(() => {
+    const link = document.createElement('link');
+    link.href = 'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@900&display=swap';
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+    link.onload = () => setFontLoaded(true);
+    return () => {
+      document.head.removeChild(link);
+    };
+  }, []);
 
   const runIntroAnimation = useCallback(async () => {
     if (hasAnimated.current) return;
@@ -45,6 +59,9 @@ function SigninIntroContent() {
       setPhase('signin');
       return;
     }
+
+    // Wait a tick for font to be ready
+    await new Promise((r) => setTimeout(r, 300));
 
     try {
       const { animate, stagger } = await import('animejs');
@@ -58,30 +75,33 @@ function SigninIntroContent() {
           animate(targets, { ...params, onComplete: () => resolve() });
         });
 
-      // Phase 1: Scale + fade in each Q letter sequentially
+      // Phase 1: Scale + fade in each Q letter with spring physics
       const letters = document.querySelectorAll('.qqq-letter');
 
       // Start letters hidden
       letters.forEach((el) => {
         (el as HTMLElement).style.opacity = '0';
-        (el as HTMLElement).style.transform = 'scale(0.3) translateY(20px)';
+        (el as HTMLElement).style.transform = 'scale(0.5) translateY(40px)';
       });
 
       // Animate each letter in with stagger
       await animateAsync(letters, {
         opacity: [0, 1],
-        scale: [0.3, 1],
-        translateY: [20, 0],
-        duration: 600,
+        scale: [0.5, 1],
+        translateY: [40, 0],
+        duration: 900,
         easing: 'easeOutBack',
-        delay: stagger(250),
+        delay: stagger(200),
       });
 
-      // Color pulse on all letters
-      await animateAsync('.qqq-letter path', {
-        stroke: ['#ffffff', '#5865f2'],
-        fill: ['rgba(88,101,242,0)', 'rgba(88,101,242,0.15)'],
-        duration: 500,
+      // Glow pulse effect
+      await animateAsync(letters, {
+        filter: [
+          'drop-shadow(0 0 20px rgba(88,101,242,0.2))',
+          'drop-shadow(0 0 60px rgba(88,101,242,0.5))',
+          'drop-shadow(0 0 30px rgba(88,101,242,0.3))',
+        ],
+        duration: 800,
         easing: 'easeInOutQuad',
       });
 
@@ -116,13 +136,15 @@ function SigninIntroContent() {
   }, [reducedMotion]);
 
   useEffect(() => {
-    runIntroAnimation();
-  }, [runIntroAnimation]);
+    if (fontLoaded) {
+      runIntroAnimation();
+    }
+  }, [fontLoaded, runIntroAnimation]);
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#0a0e1a]">
-      {/* Starfield always renders underneath */}
-      <StarfieldBackground visible={true} />
+      {/* Liquid gradient background */}
+      <LiquidGradientBackground />
 
       {/* Intro overlay */}
       {phase === 'intro' && (
@@ -131,41 +153,40 @@ function SigninIntroContent() {
           className="absolute inset-0 z-10 flex flex-col items-center justify-center"
           style={{ backgroundColor: '#0a0e1a' }}
         >
-          {/* QQQ Letters */}
-          <div className="flex items-center gap-[clamp(0.5rem,2vw,2rem)]">
-            {['Q', 'Q', 'Q'].map((_, i) => (
-              <svg
+          {/* QQQ Letters - Large text with gradient fill */}
+          <div className="flex items-center gap-[clamp(0.25rem,1.5vw,1.5rem)]">
+            {['Q', 'Q', 'Q'].map((letter, i) => (
+              <div
                 key={i}
                 className="qqq-letter"
-                viewBox="0 0 120 140"
-                width="clamp(60px, 12vw, 120px)"
-                height="clamp(70px, 14vw, 140px)"
+                style={{
+                  fontFamily: "'Playfair Display', Georgia, serif",
+                  fontSize: 'clamp(5rem, 14vw, 12rem)',
+                  fontWeight: 900,
+                  lineHeight: 1,
+                  letterSpacing: '-0.03em',
+                  background: 'linear-gradient(135deg, #5865f2, #9333ea, #5865f2)',
+                  backgroundSize: '200% 200%',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  filter: 'drop-shadow(0 0 30px rgba(88,101,242,0.3))',
+                }}
               >
-                <path
-                  d="M60 10 C30 10, 10 35, 10 70 C10 105, 30 130, 60 130 C90 130, 110 105, 110 70 C110 35, 90 10, 60 10 Z M75 100 L95 125"
-                  fill="none"
-                  stroke="#ffffff"
-                  strokeWidth="4"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+                {letter}
+              </div>
             ))}
           </div>
 
           {/* Subtitle */}
           <div
             ref={subtitleRef}
-            className="mt-6 text-center"
+            className="mt-4 text-center"
             style={{ opacity: 0 }}
           >
-            <h1 className="text-[clamp(1.5rem,4vw,3rem)] font-bold tracking-tight">
+            <h1 className="text-[clamp(1.25rem,3.5vw,2.5rem)] font-bold tracking-tight">
               <span className="text-white">LLM </span>
               <span className="text-[#5865f2]">Portfolio</span>
             </h1>
-            <p className="mt-2 text-[clamp(0.75rem,1.5vw,1rem)] text-gray-400">
-              Trading analytics & position tracking
-            </p>
           </div>
         </div>
       )}
@@ -173,20 +194,29 @@ function SigninIntroContent() {
       {/* Sign-in phase */}
       {phase === 'signin' && (
         <div className="absolute inset-0 z-10 flex items-center justify-center animate-fade-in">
-          <div className="relative z-10 max-w-md w-full mx-4 space-y-8 p-8">
+          <div className="relative z-10 max-w-md w-full mx-4 space-y-6">
             {/* Logo/Title */}
             <div className="text-center">
-              <h1 className="text-4xl font-bold text-white mb-2">
-                📊 Portfolio Journal
+              <h1
+                className="text-6xl font-black mb-3"
+                style={{
+                  fontFamily: "'Playfair Display', Georgia, serif",
+                  background: 'linear-gradient(135deg, #5865f2, #9333ea)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  filter: 'drop-shadow(0 0 20px rgba(88,101,242,0.3))',
+                }}
+              >
+                QQQ
               </h1>
-              <p className="text-gray-400">
-                Trading analytics and position tracking
+              <p className="text-gray-400 text-lg">
+                LLM Portfolio
               </p>
             </div>
 
             {/* Error Message */}
             {error && (
-              <div className="bg-red-900/50 border border-red-500 rounded-lg p-4 text-red-200 text-center">
+              <div className="bg-red-900/30 backdrop-blur-sm border border-red-500/30 rounded-xl p-4 text-red-200 text-center">
                 {error === 'AccessDenied' ? (
                   <>
                     <p className="font-semibold">Access Denied</p>
@@ -200,21 +230,18 @@ function SigninIntroContent() {
               </div>
             )}
 
-            {/* Sign In Card */}
-            <div className="bg-gray-800/60 backdrop-blur-md rounded-xl shadow-xl p-8 space-y-6 border border-gray-700/50">
+            {/* Sign In Card - Glassmorphism */}
+            <div className="bg-white/[0.04] backdrop-blur-xl rounded-2xl shadow-2xl p-8 space-y-6 border border-white/[0.08]">
               <div className="text-center">
                 <h2 className="text-xl font-semibold text-white">
                   Sign in to continue
                 </h2>
-                <p className="text-gray-400 text-sm mt-2">
-                  Use your authorized Google account
-                </p>
               </div>
 
               {/* Google Sign In Button */}
               <button
                 onClick={() => signIn('google', { callbackUrl })}
-                className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-white hover:bg-gray-100 text-gray-800 font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+                className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-white hover:bg-gray-100 text-gray-800 font-medium rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-[1.02]"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path
@@ -240,24 +267,18 @@ function SigninIntroContent() {
               {/* Divider */}
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-700"></div>
+                  <div className="w-full border-t border-white/10"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-gray-800/60 text-gray-500">
+                  <span className="px-3 text-gray-500 bg-transparent">
                     Authorized access only
                   </span>
                 </div>
               </div>
-
-              <p className="text-center text-gray-500 text-xs">
-                This dashboard is restricted to authorized users only.
-                <br />
-                Contact the administrator for access.
-              </p>
             </div>
 
             <p className="text-center text-gray-600 text-xs">
-              LLM Portfolio Journal &copy; {new Date().getFullYear()}
+              LLM Portfolio &copy; 2026
             </p>
           </div>
         </div>

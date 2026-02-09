@@ -8,6 +8,7 @@ import {
   BanknotesIcon,
   ChatBubbleLeftIcon,
 } from '@heroicons/react/24/outline';
+import { formatNumber, formatCompact } from '@/lib/format';
 
 interface StockMetricsProps {
   ticker: string;
@@ -98,7 +99,7 @@ export function StockMetrics({ ticker }: StockMetricsProps) {
         
         <div className="mt-4">
           <div className="text-3xl font-bold font-mono">
-            ${data.latestClose.toFixed(2)}
+            ${formatNumber(data.latestClose)}
           </div>
           <div className={clsx(
             'flex items-center gap-1 mt-1',
@@ -110,7 +111,7 @@ export function StockMetrics({ ticker }: StockMetricsProps) {
               <ArrowTrendingDownIcon className="w-4 h-4" />
             )}
             <span className="font-mono font-medium">
-              {data.dailyChange >= 0 ? '+' : ''}{data.dailyChange.toFixed(2)} ({data.dailyChangePct.toFixed(2)}%)
+              {data.dailyChange >= 0 ? '+' : ''}{formatNumber(data.dailyChange)} ({formatNumber(data.dailyChangePct)}%)
             </span>
           </div>
         </div>
@@ -119,14 +120,14 @@ export function StockMetrics({ ticker }: StockMetricsProps) {
       {/* Price Metrics */}
       <div>
         <SectionHeader title="Price" icon={ChartBarIcon} />
-        <MetricRow label="1W Return" value={`${data.return1w >= 0 ? '+' : ''}${data.return1w.toFixed(2)}%`} trend={data.return1w >= 0 ? 'up' : 'down'} />
-        <MetricRow label="1M Return" value={`${data.return1m >= 0 ? '+' : ''}${data.return1m.toFixed(2)}%`} trend={data.return1m >= 0 ? 'up' : 'down'} />
-        <MetricRow label="3M Return" value={`${data.return3m >= 0 ? '+' : ''}${data.return3m.toFixed(2)}%`} trend={data.return3m >= 0 ? 'up' : 'down'} />
-        <MetricRow label="1Y Return" value={`${data.return1y >= 0 ? '+' : ''}${data.return1y.toFixed(2)}%`} trend={data.return1y >= 0 ? 'up' : 'down'} />
-        <MetricRow label="30D Volatility" value={`${data.volatility30d.toFixed(1)}%`} />
-        <MetricRow label="52W High" value={`$${data.yearHigh.toFixed(2)}`} />
-        <MetricRow label="52W Low" value={`$${data.yearLow.toFixed(2)}`} />
-        <MetricRow label="Avg Volume" value={`${(data.avgVolume / 1000000).toFixed(1)}M`} />
+        <MetricRow label="1W Return" value={`${data.return1w >= 0 ? '+' : ''}${formatNumber(data.return1w)}%`} trend={data.return1w >= 0 ? 'up' : 'down'} />
+        <MetricRow label="1M Return" value={`${data.return1m >= 0 ? '+' : ''}${formatNumber(data.return1m)}%`} trend={data.return1m >= 0 ? 'up' : 'down'} />
+        <MetricRow label="3M Return" value={`${data.return3m >= 0 ? '+' : ''}${formatNumber(data.return3m)}%`} trend={data.return3m >= 0 ? 'up' : 'down'} />
+        <MetricRow label="1Y Return" value={`${data.return1y >= 0 ? '+' : ''}${formatNumber(data.return1y)}%`} trend={data.return1y >= 0 ? 'up' : 'down'} />
+        <MetricRow label="30D Volatility" value={`${formatNumber(data.volatility30d, 1)}%`} />
+        <MetricRow label="52W High" value={`$${formatNumber(data.yearHigh)}`} />
+        <MetricRow label="52W Low" value={`$${formatNumber(data.yearLow)}`} />
+        <MetricRow label="Avg Volume" value={formatCompact(data.avgVolume)} />
       </div>
 
       {/* Position Metrics */}
@@ -135,7 +136,7 @@ export function StockMetrics({ ticker }: StockMetricsProps) {
           <SectionHeader title="Your Position" icon={BanknotesIcon} />
           <MetricRow label="Shares" value={data.positionQty.toString()} />
           <MetricRow label="Value" value={`$${data.positionValue.toLocaleString()}`} />
-          <MetricRow label="Avg Cost" value={`$${data.avgBuyPrice.toFixed(2)}`} />
+          <MetricRow label="Avg Cost" value={`$${formatNumber(data.avgBuyPrice)}`} />
           <MetricRow 
             label="Unrealized P/L" 
             value={`${data.unrealizedPnl >= 0 ? '+' : ''}$${Math.abs(data.unrealizedPnl).toLocaleString()}`} 
@@ -143,7 +144,7 @@ export function StockMetrics({ ticker }: StockMetricsProps) {
           />
           <MetricRow 
             label="P/L %" 
-            value={`${data.unrealizedPnlPct >= 0 ? '+' : ''}${data.unrealizedPnlPct.toFixed(2)}%`} 
+            value={`${data.unrealizedPnlPct >= 0 ? '+' : ''}${formatNumber(data.unrealizedPnlPct)}%`} 
             trend={data.unrealizedPnlPct >= 0 ? 'up' : 'down'}
           />
         </div>
@@ -156,7 +157,7 @@ export function StockMetrics({ ticker }: StockMetricsProps) {
         <MetricRow label="Last 30 Days" value={data.mentions30d.toString()} />
         <MetricRow 
           label="Avg Score" 
-          value={data.avgSentiment.toFixed(2)} 
+          value={formatNumber(data.avgSentiment)} 
           trend={data.avgSentiment >= 0.5 ? 'up' : 'down'}
         />
         

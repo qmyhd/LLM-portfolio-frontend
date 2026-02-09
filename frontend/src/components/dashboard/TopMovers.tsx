@@ -8,6 +8,7 @@ import {
 import { usePortfolio } from '@/hooks';
 import type { Position } from '@/types/api';
 import { CardSpotlight } from '@/components/ui/CardSpotlight';
+import { formatNumber } from '@/lib/format';
 
 /** Derive top gainers/losers from portfolio positions using dayChangePercent. */
 function deriveMovers(positions: Position[]) {
@@ -103,10 +104,10 @@ export function TopMovers() {
                 <span className="font-mono font-semibold">{stock.symbol}</span>
                 <div className="text-right">
                   <div className="text-sm font-mono text-profit">
-                    +{stock.change.toFixed(2)}%
+                    +{formatNumber(stock.change)}%
                   </div>
                   <div className="text-xs text-foreground-muted font-mono">
-                    ${stock.price.toFixed(2)}
+                    ${formatNumber(stock.price)}
                   </div>
                 </div>
               </Link>
@@ -137,10 +138,10 @@ export function TopMovers() {
                 <span className="font-mono font-semibold">{stock.symbol}</span>
                 <div className="text-right">
                   <div className="text-sm font-mono text-loss">
-                    {stock.change.toFixed(2)}%
+                    {formatNumber(stock.change)}%
                   </div>
                   <div className="text-xs text-foreground-muted font-mono">
-                    ${stock.price.toFixed(2)}
+                    ${formatNumber(stock.price)}
                   </div>
                 </div>
               </Link>

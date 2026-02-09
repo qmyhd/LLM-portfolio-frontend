@@ -9,24 +9,12 @@ import {
 } from '@heroicons/react/24/outline';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
-
-interface Position {
-  symbol: string;
-  companyName: string;
-  quantity: number;
-  averageCost: number;
-  currentPrice: number;
-  marketValue: number;
-  totalCost: number;
-  unrealizedPL: number;
-  unrealizedPLPercent: number;
-  dayChange: number;
-  dayChangePercent: number;
-  sector: string;
-}
+import type { Position as ApiPosition } from '@/types/api';
+import { toUiPosition, type UiPosition } from '@/lib/mappers';
+import { formatMoney, formatPercent, formatNumber } from '@/lib/format';
 
 export default function PositionsPage() {
-  const [positions, setPositions] = useState<Position[]>([]);
+  const [positions, setPositions] = useState<UiPosition[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [sortBy, setSortBy] = useState<'value' | 'pl' | 'dayChange'>('value');
@@ -40,7 +28,8 @@ export default function PositionsPage() {
     try {
       const res = await fetch('/api/portfolio');
       const data = await res.json();
-      setPositions(data.positions || []);
+      const apiPositions: ApiPosition[] = data.positions || [];
+      setPositions(apiPositions.map(toUiPosition));
     } catch (error) {
       console.error('Failed to fetch positions:', error);
     } finally {
@@ -80,7 +69,7 @@ export default function PositionsPage() {
   const totalCost = positions.reduce((sum, p) => sum + p.totalCost, 0);
   const totalPL = totalValue - totalCost;
   const totalPLPercent = totalCost > 0 ? (totalPL / totalCost) * 100 : 0;
-  const totalDayChange = positions.reduce((sum, p) => sum + (p.dayChange * p.quantity), 0);
+  const totalDayChange = positions.reduce((sum, p) => sum + p.dayChange, 0);
 
   const toggleSort = (column: typeof sortBy) => {
     if (sortBy === column) {
@@ -120,28 +109,28 @@ export default function PositionsPage() {
         <div className="card p-4">
           <p className="text-sm text-muted">Total Value</p>
           <p className="mt-1 text-2xl font-bold text-foreground">
-            ${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            {formatMoney(totalValue)}
           </p>
         </div>
         <div className="card p-4">
           <p className="text-sm text-muted">Total Cost</p>
           <p className="mt-1 text-2xl font-bold text-foreground">
-            ${totalCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            {formatMoney(totalCost)}
           </p>
         </div>
         <div className="card p-4">
           <p className="text-sm text-muted">Unrealized P/L</p>
           <p className={`mt-1 text-2xl font-bold ${totalPL >= 0 ? 'text-profit' : 'text-loss'}`}>
-            {totalPL >= 0 ? '+' : ''}${totalPL.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            {totalPL >= 0 ? '+' : ''}{formatMoney(Math.abs(totalPL))}
             <span className="ml-2 text-sm">
-              ({totalPLPercent >= 0 ? '+' : ''}{totalPLPercent.toFixed(2)}%)
+              ({formatPercent(totalPLPercent, 2, { showSign: true })})
             </span>
           </p>
         </div>
         <div className="card p-4">
           <p className="text-sm text-muted">Day Change</p>
           <p className={`mt-1 text-2xl font-bold ${totalDayChange >= 0 ? 'text-profit' : 'text-loss'}`}>
-            {totalDayChange >= 0 ? '+' : ''}${totalDayChange.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            {totalDayChange >= 0 ? '+' : ''}{formatMoney(Math.abs(totalDayChange))}
           </p>
         </div>
       </div>
@@ -213,13 +202,13 @@ export default function PositionsPage() {
                       {pos.quantity}
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-sm text-muted">
-                      ${pos.averageCost.toFixed(2)}
+                      {formatMoney(pos.averageCost)}
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-sm">
-                      ${pos.currentPrice.toFixed(2)}
+                      {formatMoney(pos.currentPrice)}
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-sm font-medium">
-                      ${pos.marketValue.toLocaleString()}
+                      {formatMoney(pos.marketValue)}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <span className={`inline-flex items-center gap-1 font-mono text-sm font-medium ${
@@ -230,14 +219,14 @@ export default function PositionsPage() {
                         ) : (
                           <ArrowDownIcon className="h-3 w-3" />
                         )}
-                        {pos.unrealizedPLPercent >= 0 ? '+' : ''}{pos.unrealizedPLPercent.toFixed(2)}%
+                        {formatPercent(pos.unrealizedPLPercent, 2, { showSign: true })}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
                       <span className={`font-mono text-sm ${
                         pos.dayChangePercent >= 0 ? 'text-profit' : 'text-loss'
                       }`}>
-                        {pos.dayChangePercent >= 0 ? '+' : ''}{pos.dayChangePercent.toFixed(2)}%
+                        {formatPercent(pos.dayChangePercent, 2, { showSign: true })}
                       </span>
                     </td>
                     <td className="px-4 py-3">
@@ -270,12 +259,12 @@ export default function PositionsPage() {
             )
               .sort(([, a], [, b]) => b - a)
               .map(([sector, value]) => {
-                const percent = (value / totalValue) * 100;
+                const percent = totalValue > 0 ? (value / totalValue) * 100 : 0;
                 return (
                   <div key={sector}>
                     <div className="mb-1 flex justify-between text-sm">
                       <span className="text-muted">{sector}</span>
-                      <span className="text-foreground">{percent.toFixed(1)}%</span>
+                      <span className="text-foreground">{formatNumber(percent, 1)}%</span>
                     </div>
                     <div className="h-2 overflow-hidden rounded-full bg-tertiary">
                       <div

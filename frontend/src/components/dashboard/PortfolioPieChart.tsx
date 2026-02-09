@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { formatNumber, formatPercent } from '@/lib/format';
 
 interface PortfolioHolding {
   symbol: string;
@@ -175,7 +176,7 @@ function DonutChart({
           className={`text-3xl font-bold ${totalReturn >= 0 ? 'text-profit' : 'text-loss'}`}
         >
           {totalReturn >= 0 ? '+' : ''}
-          {totalReturn.toFixed(2)}%
+          {formatNumber(totalReturn)}%
         </span>
 
         {/* Period dropdown */}
@@ -228,14 +229,14 @@ function HoldingRow({ holding, color }: { holding: PortfolioHolding; color: stri
       </div>
 
       <div className="text-right">
-        <p className="font-semibold text-foreground">{holding.weight.toFixed(1)}%</p>
+        <p className="font-semibold text-foreground">{formatNumber(holding.weight, 1)}%</p>
         <span
           className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
             isPositive ? 'bg-profit-muted text-profit' : 'bg-loss-muted text-loss'
           }`}
         >
           {isPositive ? '+' : ''}
-          {holding.totalReturn.toFixed(2)}%
+          {formatNumber(holding.totalReturn)}%
         </span>
       </div>
     </div>

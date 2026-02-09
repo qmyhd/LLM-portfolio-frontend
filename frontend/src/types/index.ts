@@ -1,4 +1,13 @@
-// Frontend Display Types
+// ⚠️ DEPRECATED — This file is superseded by @/lib/mappers.ts
+//
+// All API→UI type transformations are now handled by toUiPosition(),
+// toUiOrder(), and toUiStockPosition() in lib/mappers.ts.
+// Backend API shapes live in @/types/api.ts (the sole source of truth).
+//
+// This file is kept temporarily to avoid breaking any stale imports.
+// TODO: Remove this file once confirmed no consumers remain.
+
+// Frontend Display Types (LEGACY — do not add new types here)
 //
 // These types represent the FRONTEND display shapes (UI-friendly field names).
 // For raw backend API response types, see ./api.ts

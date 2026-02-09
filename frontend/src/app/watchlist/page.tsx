@@ -11,6 +11,7 @@ import {
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
+import { formatNumber, formatCompact } from '@/lib/format';
 
 interface WatchlistItem {
   symbol: string;
@@ -110,11 +111,7 @@ export default function WatchlistPage() {
     setTickers(tickers.filter(t => t !== symbol));
   };
 
-  const formatVolume = (vol: number) => {
-    if (vol >= 1000000) return `${(vol / 1000000).toFixed(1)}M`;
-    if (vol >= 1000) return `${(vol / 1000).toFixed(1)}K`;
-    return vol.toString();
-  };
+  const formatVolume = (vol: number) => formatCompact(vol);
 
   return (
     <div className="flex h-screen">
@@ -209,7 +206,7 @@ export default function WatchlistPage() {
               {/* Price */}
               <div className="mt-2">
                 <span className="text-2xl font-bold text-foreground">
-                  ${item.price.toFixed(2)}
+                  ${formatNumber(item.price)}
                 </span>
               </div>
 
@@ -223,7 +220,7 @@ export default function WatchlistPage() {
                   <ArrowDownIcon className="h-3 w-3" />
                 )}
                 <span className="text-sm font-medium">
-                  ${Math.abs(item.change).toFixed(2)} ({item.changePercent >= 0 ? '+' : ''}{item.changePercent.toFixed(2)}%)
+                  ${formatNumber(Math.abs(item.change))} ({item.changePercent >= 0 ? '+' : ''}{formatNumber(item.changePercent)}%)
                 </span>
               </div>
 

@@ -9,6 +9,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { usePortfolio } from '@/hooks';
 import { CardSpotlight } from '@/components/ui/CardSpotlight';
+import { formatNumber, formatMoney, formatSignedMoney } from '@/lib/format';
 
 interface MetricCardProps {
   title: string;
@@ -21,15 +22,15 @@ interface MetricCardProps {
 
 function MetricCard({ title, value, change, changePct, icon: Icon, trend }: MetricCardProps) {
   return (
-    <CardSpotlight className="card p-5">
-      <div className="flex items-start justify-between">
-        <div>
+    <CardSpotlight className="card p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
           <p className="metric-label">{title}</p>
-          <p className="metric-value mt-1">{value}</p>
+          <p className="metric-value mt-0.5">{value}</p>
           {(change !== undefined || changePct !== undefined) && (
-            <div className="flex items-center gap-2 mt-2">
-              {trend === 'up' && <ArrowTrendingUpIcon className="w-4 h-4 text-profit" />}
-              {trend === 'down' && <ArrowTrendingDownIcon className="w-4 h-4 text-loss" />}
+            <div className="flex items-center gap-1.5 mt-1">
+              {trend === 'up' && <ArrowTrendingUpIcon className="w-3.5 h-3.5 text-profit" />}
+              {trend === 'down' && <ArrowTrendingDownIcon className="w-3.5 h-3.5 text-loss" />}
               <span
                 className={clsx(
                   'text-sm font-medium',
@@ -45,7 +46,7 @@ function MetricCard({ title, value, change, changePct, icon: Icon, trend }: Metr
                 )}
                 {changePct !== undefined && (
                   <span className="ml-1">
-                    ({changePct >= 0 ? '+' : ''}{changePct.toFixed(2)}%)
+                    ({changePct >= 0 ? '+' : ''}{formatNumber(changePct)}%)
                   </span>
                 )}
               </span>
@@ -53,13 +54,13 @@ function MetricCard({ title, value, change, changePct, icon: Icon, trend }: Metr
           )}
         </div>
         <div className={clsx(
-          'p-3 rounded-lg',
-          trend === 'up' && 'bg-profit/10',
-          trend === 'down' && 'bg-loss/10',
-          (!trend || trend === 'neutral') && 'bg-primary/10'
+          'p-2 rounded-lg flex-shrink-0',
+          trend === 'up' && 'bg-profit/5',
+          trend === 'down' && 'bg-loss/5',
+          (!trend || trend === 'neutral') && 'bg-primary/5'
         )}>
           <Icon className={clsx(
-            'w-6 h-6',
+            'w-5 h-5',
             trend === 'up' && 'text-profit',
             trend === 'down' && 'text-loss',
             (!trend || trend === 'neutral') && 'text-primary'
@@ -72,15 +73,15 @@ function MetricCard({ title, value, change, changePct, icon: Icon, trend }: Metr
 
 function MetricCardSkeleton() {
   return (
-    <CardSpotlight className="card p-5 animate-pulse">
-      <div className="flex items-start justify-between">
-        <div className="space-y-2">
+    <CardSpotlight className="card p-4 animate-pulse">
+      <div className="flex items-center justify-between gap-3">
+        <div className="space-y-1.5">
           <div className="h-3 w-20 bg-background-hover rounded" />
           <div className="h-6 w-32 bg-background-hover rounded" />
-          <div className="h-4 w-24 bg-background-hover rounded mt-1" />
+          <div className="h-3.5 w-24 bg-background-hover rounded" />
         </div>
-        <div className="p-3 rounded-lg bg-background-hover">
-          <div className="w-6 h-6" />
+        <div className="p-2 rounded-lg bg-background-hover">
+          <div className="w-5 h-5" />
         </div>
       </div>
     </CardSpotlight>
@@ -125,7 +126,7 @@ export function PortfolioSummary() {
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <MetricCard
         title="Portfolio Value"
-        value={`$${summary.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+        value={formatMoney(summary.totalValue)}
         change={summary.dayChange}
         changePct={summary.dayChangePercent}
         icon={ChartBarIcon}
@@ -133,7 +134,7 @@ export function PortfolioSummary() {
       />
       <MetricCard
         title="Total P/L"
-        value={`${summary.unrealizedPL >= 0 ? '+' : ''}$${Math.abs(summary.unrealizedPL).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+        value={formatSignedMoney(summary.unrealizedPL)}
         changePct={summary.unrealizedPLPercent}
         icon={summary.unrealizedPL >= 0 ? ArrowTrendingUpIcon : ArrowTrendingDownIcon}
         trend={totalTrend}
@@ -146,7 +147,7 @@ export function PortfolioSummary() {
       />
       <MetricCard
         title="Cash Balance"
-        value={`$${summary.cashBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+        value={formatMoney(summary.cashBalance)}
         icon={BanknotesIcon}
         trend="neutral"
       />

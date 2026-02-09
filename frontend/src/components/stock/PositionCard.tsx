@@ -6,24 +6,16 @@ import {
   ArrowDownIcon,
   BanknotesIcon,
 } from '@heroicons/react/24/outline';
-
-interface Position {
-  quantity: number;
-  averageCost: number;
-  currentPrice: number;
-  marketValue: number;
-  unrealizedPL: number;
-  unrealizedPLPercent: number;
-  dayChange: number;
-  dayChangePercent: number;
-}
+import type { StockProfileCurrent } from '@/types/api';
+import { toUiStockPosition, type UiStockPosition } from '@/lib/mappers';
+import { formatMoney, formatPercent } from '@/lib/format';
 
 interface PositionCardProps {
   ticker: string;
 }
 
 export function PositionCard({ ticker }: PositionCardProps) {
-  const [position, setPosition] = useState<Position | null>(null);
+  const [position, setPosition] = useState<UiStockPosition | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,13 +25,8 @@ export function PositionCard({ ticker }: PositionCardProps) {
   const fetchPosition = async () => {
     try {
       const res = await fetch(`/api/stocks/${ticker}`);
-      const data = await res.json();
-      
-      if (data.position && data.position.quantity > 0) {
-        setPosition(data.position);
-      } else {
-        setPosition(null);
-      }
+      const data: StockProfileCurrent = await res.json();
+      setPosition(toUiStockPosition(data));
     } catch (error) {
       console.error('Failed to fetch position:', error);
       setPosition(null);
@@ -89,7 +76,7 @@ export function PositionCard({ ticker }: PositionCardProps) {
       {/* Market Value */}
       <div className="mb-3">
         <p className="text-2xl font-bold text-foreground">
-          ${position.marketValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+          {formatMoney(position.marketValue)}
         </p>
       </div>
 
@@ -105,10 +92,10 @@ export function PositionCard({ ticker }: PositionCardProps) {
               <ArrowDownIcon className="h-3 w-3" />
             )}
             <span>
-              {isProfitable ? '+' : ''}${position.unrealizedPL.toFixed(2)}
+              {isProfitable ? '+' : ''}{formatMoney(Math.abs(position.unrealizedPL))}
             </span>
             <span className="text-xs">
-              ({isProfitable ? '+' : ''}{position.unrealizedPLPercent.toFixed(2)}%)
+              ({formatPercent(position.unrealizedPLPercent, 2, { showSign: true })})
             </span>
           </div>
         </div>
@@ -123,7 +110,7 @@ export function PositionCard({ ticker }: PositionCardProps) {
               <ArrowDownIcon className="h-3 w-3" />
             )}
             <span>
-              {isDayPositive ? '+' : ''}{position.dayChangePercent.toFixed(2)}%
+              {formatPercent(position.dayChangePercent, 2, { showSign: true })}
             </span>
           </div>
         </div>
@@ -133,11 +120,11 @@ export function PositionCard({ ticker }: PositionCardProps) {
       <div className="mt-3 pt-3 border-t border-border">
         <div className="flex justify-between text-xs">
           <span className="text-muted">Avg Cost</span>
-          <span className="font-mono text-foreground">${position.averageCost.toFixed(2)}</span>
+          <span className="font-mono text-foreground">{formatMoney(position.averageCost)}</span>
         </div>
         <div className="flex justify-between text-xs mt-1">
           <span className="text-muted">Current</span>
-          <span className="font-mono text-foreground">${position.currentPrice.toFixed(2)}</span>
+          <span className="font-mono text-foreground">{formatMoney(position.currentPrice)}</span>
         </div>
       </div>
     </div>

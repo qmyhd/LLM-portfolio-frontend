@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { clsx } from 'clsx';
+import { formatNumber } from '@/lib/format';
 import {
   FunnelIcon,
   ArrowTrendingUpIcon,
@@ -295,7 +296,7 @@ function IdeaCard({ idea, onAuthorClick }: IdeaCardProps) {
           <span className={clsx('text-sm font-medium capitalize', directionColor)}>
             {idea.direction}
           </span>
-          <span className="text-xs text-muted">{(idea.confidence * 100).toFixed(0)}%</span>
+          <span className="text-xs text-muted">{formatNumber((idea.confidence ?? 0) * 100, 0)}%</span>
         </div>
         <span className="text-xs text-muted">{formatTimeAgo(idea.createdAt)}</span>
       </div>
@@ -323,17 +324,17 @@ function IdeaCard({ idea, onAuthorClick }: IdeaCardProps) {
         <div className="flex flex-wrap gap-3 mt-2 text-xs font-mono">
           {idea.entryPrice && (
             <span className="text-muted">
-              Entry: <span className="text-foreground">${idea.entryPrice.toFixed(2)}</span>
+              Entry: <span className="text-foreground">${formatNumber(idea.entryPrice)}</span>
             </span>
           )}
           {idea.targetPrice && (
             <span className="text-muted">
-              Target: <span className="text-profit">${idea.targetPrice.toFixed(2)}</span>
+              Target: <span className="text-profit">${formatNumber(idea.targetPrice)}</span>
             </span>
           )}
           {idea.stopLoss && (
             <span className="text-muted">
-              Stop: <span className="text-loss">${idea.stopLoss.toFixed(2)}</span>
+              Stop: <span className="text-loss">${formatNumber(idea.stopLoss)}</span>
             </span>
           )}
         </div>

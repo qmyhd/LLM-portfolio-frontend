@@ -3,76 +3,67 @@
 import { useEffect, useRef, useCallback } from 'react';
 
 /**
- * CursorTrail - Animated trailing dots that follow the cursor.
+ * CursorTrail - Smooth glowing cursor follower.
  *
- * Inspired by the "Additive Creature" gist (anime.js v4 grid follow).
- * Simplified to a lightweight trail of fading circles using CSS transitions.
+ * Inspired by codepen juliangarnier/pen/JojxjwB.
+ * A single soft-glow circle that smoothly follows the cursor with easing.
  *
- * - Hides on touch/mobile devices (no mousemove support)
+ * Features:
+ * - Smooth lerp-based following with requestAnimationFrame
+ * - Radial gradient glow with mix-blend-mode for background blending
+ * - Subtle scale animation on mouse movement
+ * - Hides on touch/mobile devices
  * - Respects `prefers-reduced-motion`
- * - Fully self-contained (no anime.js dependency for perf)
  */
 
-const TRAIL_LENGTH = 12;
-const COLORS = [
-  '#5865f2', // primary
-  '#4752c4', // primary-hover
-  '#3ba55d', // profit green
-  '#5865f2',
-  '#4752c4',
-  '#3ba55d',
-  '#5865f2',
-  '#4752c4',
-  '#3ba55d',
-  '#5865f2',
-  '#4752c4',
-  '#3ba55d',
-];
-
 export function CursorTrail() {
-  const trailRef = useRef<HTMLDivElement[]>([]);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const cursorRef = useRef<HTMLDivElement>(null);
+  const ringRef = useRef<HTMLDivElement>(null);
   const coords = useRef({ x: 0, y: 0 });
-  const isTouch = useRef(false);
+  const cursorPos = useRef({ x: 0, y: 0 });
+  const ringPos = useRef({ x: 0, y: 0 });
   const animFrameRef = useRef<number>(0);
+  const velocity = useRef({ x: 0, y: 0 });
+  const lastCoords = useRef({ x: 0, y: 0 });
 
-  const positions = useRef<{ x: number; y: number }[]>(
-    Array.from({ length: TRAIL_LENGTH }, () => ({ x: 0, y: 0 }))
-  );
+  const animateCursor = useCallback(() => {
+    // Track velocity for scale effect
+    velocity.current.x = coords.current.x - lastCoords.current.x;
+    velocity.current.y = coords.current.y - lastCoords.current.y;
+    lastCoords.current.x = coords.current.x;
+    lastCoords.current.y = coords.current.y;
 
-  // Animation loop: each dot follows the one ahead with easing
-  const animateTrail = useCallback(() => {
-    // Lead dot follows cursor directly
-    positions.current[0].x += (coords.current.x - positions.current[0].x) * 0.3;
-    positions.current[0].y += (coords.current.y - positions.current[0].y) * 0.3;
+    const speed = Math.sqrt(velocity.current.x ** 2 + velocity.current.y ** 2);
+    const scaleFactor = 1 + Math.min(speed * 0.003, 0.15);
 
-    // Each subsequent dot follows the one ahead
-    for (let i = 1; i < TRAIL_LENGTH; i++) {
-      const prev = positions.current[i - 1];
-      const curr = positions.current[i];
-      curr.x += (prev.x - curr.x) * (0.25 - i * 0.012);
-      curr.y += (prev.y - curr.y) * (0.25 - i * 0.012);
+    // Inner dot: fast follow
+    cursorPos.current.x += (coords.current.x - cursorPos.current.x) * 0.25;
+    cursorPos.current.y += (coords.current.y - cursorPos.current.y) * 0.25;
+
+    // Outer ring: slower follow for trail feel
+    ringPos.current.x += (coords.current.x - ringPos.current.x) * 0.12;
+    ringPos.current.y += (coords.current.y - ringPos.current.y) * 0.12;
+
+    if (cursorRef.current) {
+      cursorRef.current.style.transform =
+        `translate(${cursorPos.current.x}px, ${cursorPos.current.y}px) translate(-50%, -50%) scale(${scaleFactor})`;
     }
 
-    // Apply positions to DOM
-    for (let i = 0; i < TRAIL_LENGTH; i++) {
-      const el = trailRef.current[i];
-      if (el) {
-        el.style.transform = `translate(${positions.current[i].x}px, ${positions.current[i].y}px) translate(-50%, -50%)`;
-      }
+    if (ringRef.current) {
+      ringRef.current.style.transform =
+        `translate(${ringPos.current.x}px, ${ringPos.current.y}px) translate(-50%, -50%) scale(${1 + Math.min(speed * 0.005, 0.2)})`;
     }
 
-    animFrameRef.current = requestAnimationFrame(animateTrail);
+    animFrameRef.current = requestAnimationFrame(animateCursor);
   }, []);
 
   useEffect(() => {
-    // Skip on touch devices or reduced motion
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
     if (reducedMotion || isTouchDevice) {
-      isTouch.current = true;
-      if (containerRef.current) containerRef.current.style.display = 'none';
+      if (cursorRef.current) cursorRef.current.style.display = 'none';
+      if (ringRef.current) ringRef.current.style.display = 'none';
       return;
     }
 
@@ -82,17 +73,17 @@ export function CursorTrail() {
     };
 
     document.addEventListener('mousemove', handleMouseMove, { passive: true });
-    animFrameRef.current = requestAnimationFrame(animateTrail);
+    animFrameRef.current = requestAnimationFrame(animateCursor);
 
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       cancelAnimationFrame(animFrameRef.current);
     };
-  }, [animateTrail]);
+  }, [animateCursor]);
 
   return (
     <>
-      {/* Hide default cursor on non-interactive elements */}
+      {/* Hide default cursor on desktop */}
       <style jsx global>{`
         @media (hover: hover) and (pointer: fine) {
           body {
@@ -104,42 +95,38 @@ export function CursorTrail() {
         }
       `}</style>
 
+      {/* Outer glow ring - slower follow */}
       <div
-        ref={containerRef}
+        ref={ringRef}
         aria-hidden="true"
-        className="pointer-events-none fixed inset-0"
-        style={{ zIndex: 9999 }}
-      >
-        {Array.from({ length: TRAIL_LENGTH }, (_, i) => {
-          // Size decreases along the trail
-          const size = Math.max(8 - i * 0.5, 2);
-          // Opacity decreases along the trail
-          const opacity = 1 - (i / TRAIL_LENGTH) * 0.85;
+        className="pointer-events-none fixed top-0 left-0"
+        style={{
+          width: '44px',
+          height: '44px',
+          borderRadius: '50%',
+          border: '1.5px solid rgba(88, 101, 242, 0.3)',
+          willChange: 'transform',
+          zIndex: 9999,
+          transition: 'width 0.2s, height 0.2s, border-color 0.2s',
+        }}
+      />
 
-          return (
-            <div
-              key={i}
-              ref={(el) => {
-                if (el) trailRef.current[i] = el;
-              }}
-              style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                width: `${size}px`,
-                height: `${size}px`,
-                borderRadius: '50%',
-                backgroundColor: COLORS[i],
-                opacity,
-                mixBlendMode: 'plus-lighter',
-                willChange: 'transform',
-                boxShadow: `0 0 ${size * 1.5}px ${COLORS[i]}`,
-                transition: 'none',
-              }}
-            />
-          );
-        })}
-      </div>
+      {/* Inner dot - fast follow */}
+      <div
+        ref={cursorRef}
+        aria-hidden="true"
+        className="pointer-events-none fixed top-0 left-0"
+        style={{
+          width: '8px',
+          height: '8px',
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(88,101,242,0.9), rgba(147,51,234,0.7))',
+          boxShadow: '0 0 20px rgba(88,101,242,0.4), 0 0 40px rgba(88,101,242,0.15)',
+          mixBlendMode: 'screen',
+          willChange: 'transform',
+          zIndex: 10000,
+        }}
+      />
     </>
   );
 }

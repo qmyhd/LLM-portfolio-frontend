@@ -10,6 +10,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { usePortfolio } from '@/hooks';
 import type { Position } from '@/types/api';
+import { formatMoney, formatPercent } from '@/lib/format';
 
 type SortKey = 'symbol' | 'equity' | 'openPnl' | 'openPnlPercent';
 type FilterMode = 'all' | 'winners' | 'losers';
@@ -122,6 +123,7 @@ export function PositionsTable() {
               </th>
               <th className="table-header text-right hidden sm:table-cell">Qty</th>
               <th className="table-header text-right hidden md:table-cell">Price</th>
+              <th className="table-header text-right hidden lg:table-cell">Avg Cost</th>
               <th
                 className="table-header text-right cursor-pointer hover:text-foreground"
                 onClick={() => handleSort('equity')}
@@ -157,10 +159,15 @@ export function PositionsTable() {
                   {position.quantity}
                 </td>
                 <td className="table-cell text-right font-mono hidden md:table-cell">
-                  ${position.currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  {formatMoney(position.currentPrice)}
+                </td>
+                <td className="table-cell text-right font-mono text-foreground-muted hidden lg:table-cell">
+                  {position.averageBuyPrice != null
+                    ? formatMoney(position.averageBuyPrice)
+                    : '—'}
                 </td>
                 <td className="table-cell text-right font-mono">
-                  ${position.equity.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  {formatMoney(position.equity)}
                 </td>
                 <td
                   className={clsx(
@@ -168,7 +175,7 @@ export function PositionsTable() {
                     position.openPnl >= 0 ? 'text-profit' : 'text-loss'
                   )}
                 >
-                  {position.openPnl >= 0 ? '+' : ''}${position.openPnl.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  {position.openPnl >= 0 ? '+' : ''}${(position.openPnl ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </td>
                 <td
                   className={clsx(
@@ -180,7 +187,7 @@ export function PositionsTable() {
                     'px-2 py-1 rounded',
                     position.openPnlPercent >= 0 ? 'bg-profit/10' : 'bg-loss/10'
                   )}>
-                    {position.openPnlPercent >= 0 ? '+' : ''}{position.openPnlPercent.toFixed(2)}%
+                    {position.openPnlPercent >= 0 ? '+' : ''}{formatPercent(position.openPnlPercent)}
                   </span>
                 </td>
               </tr>
