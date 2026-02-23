@@ -3,58 +3,52 @@
 import { useEffect, useRef, useCallback } from 'react';
 
 /**
- * CursorTrail - Smooth glowing cursor follower.
+ * CustomCursor - Clean, professional cursor replacement.
  *
- * Inspired by codepen juliangarnier/pen/JojxjwB.
- * A single soft-glow circle that smoothly follows the cursor with easing.
+ * A minimal dot + ring that smoothly follows the pointer with lerp easing.
+ * The ring expands subtly on interactive elements (links, buttons).
  *
- * Features:
- * - Smooth lerp-based following with requestAnimationFrame
- * - Radial gradient glow with mix-blend-mode for background blending
- * - Subtle scale animation on mouse movement
  * - Hides on touch/mobile devices
  * - Respects `prefers-reduced-motion`
+ * - 60 fps via requestAnimationFrame
  */
 
+const DOT_SIZE = 6;
+const RING_SIZE = 32;
+const DOT_EASE = 0.3;
+const RING_EASE = 0.15;
+
 export function CursorTrail() {
-  const cursorRef = useRef<HTMLDivElement>(null);
+  const dotRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
-  const coords = useRef({ x: 0, y: 0 });
-  const cursorPos = useRef({ x: 0, y: 0 });
+  const mouse = useRef({ x: 0, y: 0 });
+  const dotPos = useRef({ x: 0, y: 0 });
   const ringPos = useRef({ x: 0, y: 0 });
-  const animFrameRef = useRef<number>(0);
-  const velocity = useRef({ x: 0, y: 0 });
-  const lastCoords = useRef({ x: 0, y: 0 });
+  const raf = useRef<number>(0);
+  const hovering = useRef(false);
 
-  const animateCursor = useCallback(() => {
-    // Track velocity for scale effect
-    velocity.current.x = coords.current.x - lastCoords.current.x;
-    velocity.current.y = coords.current.y - lastCoords.current.y;
-    lastCoords.current.x = coords.current.x;
-    lastCoords.current.y = coords.current.y;
+  const animate = useCallback(() => {
+    dotPos.current.x += (mouse.current.x - dotPos.current.x) * DOT_EASE;
+    dotPos.current.y += (mouse.current.y - dotPos.current.y) * DOT_EASE;
 
-    const speed = Math.sqrt(velocity.current.x ** 2 + velocity.current.y ** 2);
-    const scaleFactor = 1 + Math.min(speed * 0.003, 0.15);
+    ringPos.current.x += (mouse.current.x - ringPos.current.x) * RING_EASE;
+    ringPos.current.y += (mouse.current.y - ringPos.current.y) * RING_EASE;
 
-    // Inner dot: fast follow
-    cursorPos.current.x += (coords.current.x - cursorPos.current.x) * 0.25;
-    cursorPos.current.y += (coords.current.y - cursorPos.current.y) * 0.25;
+    const ringScale = hovering.current ? 1.4 : 1;
+    const dotScale = hovering.current ? 0.6 : 1;
 
-    // Outer ring: slower follow for trail feel
-    ringPos.current.x += (coords.current.x - ringPos.current.x) * 0.12;
-    ringPos.current.y += (coords.current.y - ringPos.current.y) * 0.12;
-
-    if (cursorRef.current) {
-      cursorRef.current.style.transform =
-        `translate(${cursorPos.current.x}px, ${cursorPos.current.y}px) translate(-50%, -50%) scale(${scaleFactor})`;
+    if (dotRef.current) {
+      dotRef.current.style.transform =
+        `translate(${dotPos.current.x}px, ${dotPos.current.y}px) translate(-50%, -50%) scale(${dotScale})`;
     }
 
     if (ringRef.current) {
       ringRef.current.style.transform =
-        `translate(${ringPos.current.x}px, ${ringPos.current.y}px) translate(-50%, -50%) scale(${1 + Math.min(speed * 0.005, 0.2)})`;
+        `translate(${ringPos.current.x}px, ${ringPos.current.y}px) translate(-50%, -50%) scale(${ringScale})`;
+      ringRef.current.style.opacity = hovering.current ? '1' : '0.5';
     }
 
-    animFrameRef.current = requestAnimationFrame(animateCursor);
+    raf.current = requestAnimationFrame(animate);
   }, []);
 
   useEffect(() => {
@@ -62,69 +56,71 @@ export function CursorTrail() {
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
     if (reducedMotion || isTouchDevice) {
-      if (cursorRef.current) cursorRef.current.style.display = 'none';
+      if (dotRef.current) dotRef.current.style.display = 'none';
       if (ringRef.current) ringRef.current.style.display = 'none';
       return;
     }
 
-    const handleMouseMove = (e: MouseEvent) => {
-      coords.current.x = e.clientX;
-      coords.current.y = e.clientY;
+    const onMove = (e: MouseEvent) => {
+      mouse.current.x = e.clientX;
+      mouse.current.y = e.clientY;
     };
 
-    document.addEventListener('mousemove', handleMouseMove, { passive: true });
-    animFrameRef.current = requestAnimationFrame(animateCursor);
+    const onOver = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      hovering.current = !!target.closest('a, button, [role="button"], input, select, textarea, label, [data-cursor-hover]');
+    };
+
+    document.addEventListener('mousemove', onMove, { passive: true });
+    document.addEventListener('mouseover', onOver, { passive: true });
+    raf.current = requestAnimationFrame(animate);
 
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      cancelAnimationFrame(animFrameRef.current);
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseover', onOver);
+      cancelAnimationFrame(raf.current);
     };
-  }, [animateCursor]);
+  }, [animate]);
 
   return (
     <>
-      {/* Hide default cursor on desktop */}
+      {/* Hide native cursor on pointer devices */}
       <style jsx global>{`
         @media (hover: hover) and (pointer: fine) {
-          body {
-            cursor: none;
-          }
-          a, button, [role="button"], input, select, textarea, label {
-            cursor: none;
-          }
+          * { cursor: none !important; }
         }
       `}</style>
 
-      {/* Outer glow ring - slower follow */}
+      {/* Ring — subtle border circle */}
       <div
         ref={ringRef}
         aria-hidden="true"
         className="pointer-events-none fixed top-0 left-0"
         style={{
-          width: '44px',
-          height: '44px',
+          width: `${RING_SIZE}px`,
+          height: `${RING_SIZE}px`,
           borderRadius: '50%',
-          border: '1.5px solid rgba(88, 101, 242, 0.3)',
-          willChange: 'transform',
+          border: '1.5px solid rgba(255, 255, 255, 0.35)',
+          opacity: 0.5,
+          willChange: 'transform, opacity',
           zIndex: 9999,
-          transition: 'width 0.2s, height 0.2s, border-color 0.2s',
+          transition: 'opacity 0.2s ease, border-color 0.2s ease',
         }}
       />
 
-      {/* Inner dot - fast follow */}
+      {/* Dot — solid center point */}
       <div
-        ref={cursorRef}
+        ref={dotRef}
         aria-hidden="true"
         className="pointer-events-none fixed top-0 left-0"
         style={{
-          width: '8px',
-          height: '8px',
+          width: `${DOT_SIZE}px`,
+          height: `${DOT_SIZE}px`,
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(88,101,242,0.9), rgba(147,51,234,0.7))',
-          boxShadow: '0 0 20px rgba(88,101,242,0.4), 0 0 40px rgba(88,101,242,0.15)',
-          mixBlendMode: 'screen',
+          backgroundColor: 'rgba(255, 255, 255, 0.9)',
           willChange: 'transform',
           zIndex: 10000,
+          transition: 'background-color 0.2s ease',
         }}
       />
     </>
