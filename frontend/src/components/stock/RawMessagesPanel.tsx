@@ -89,9 +89,9 @@ export function RawMessagesPanel({ ticker }: RawMessagesPanelProps) {
   if (messages.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-        <ChatBubbleLeftIcon className="h-12 w-12 text-muted mb-4" />
+        <ChatBubbleLeftIcon className="h-12 w-12 text-foreground-muted mb-4" />
         <h3 className="text-lg font-medium text-foreground mb-2">No Messages</h3>
-        <p className="text-sm text-muted">
+        <p className="text-sm text-foreground-muted">
           No recent messages mentioning ${ticker}
         </p>
       </div>
@@ -104,15 +104,15 @@ export function RawMessagesPanel({ ticker }: RawMessagesPanelProps) {
         {messages.map((msg) => (
           <div
             key={msg.id}
-            className="p-3 rounded-lg bg-tertiary hover:bg-tertiary/80 transition-colors"
+            className="p-3 rounded-lg bg-background-tertiary hover:bg-background-tertiary/80 transition-colors"
           >
             {/* Header */}
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-foreground">{msg.author}</span>
-                <span className="text-xs text-muted">#{msg.channelName}</span>
+                <span className="text-xs text-foreground-muted">#{msg.channelName}</span>
               </div>
-              <span className="text-xs text-muted">{formatTime(msg.timestamp)}</span>
+              <span className="text-xs text-foreground-muted">{formatTime(msg.timestamp)}</span>
             </div>
 
             {/* Content */}
@@ -128,8 +128,8 @@ export function RawMessagesPanel({ ticker }: RawMessagesPanelProps) {
                     key={sym}
                     className={`text-xs px-1.5 py-0.5 rounded ${
                       sym === ticker
-                        ? 'bg-accent/20 text-accent'
-                        : 'bg-secondary text-muted'
+                        ? 'bg-primary/20 text-primary'
+                        : 'bg-background-secondary text-foreground-muted'
                     }`}
                   >
                     ${sym}

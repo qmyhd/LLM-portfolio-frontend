@@ -33,7 +33,7 @@ type FilterMode = 'all' | 'bullish' | 'bearish' | 'neutral';
 type SortMode = 'time' | 'confidence';
 
 const LABEL_COLORS: Record<string, string> = {
-  TRADE_PLAN: 'bg-accent/20 text-accent',
+  TRADE_PLAN: 'bg-primary/20 text-primary',
   TRADE_EXECUTION: 'bg-profit/20 text-profit',
   TECHNICAL_ANALYSIS: 'bg-purple-500/20 text-purple-400',
   CATALYST_NEWS: 'bg-blue-500/20 text-blue-400',
@@ -133,7 +133,7 @@ export function IdeasPanel({ ticker }: IdeasPanelProps) {
         {/* Direction + Sort row */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <FunnelIcon className="w-4 h-4 text-muted" />
+            <FunnelIcon className="w-4 h-4 text-foreground-muted" />
             <div className="flex gap-1">
               {(['all', 'bullish', 'bearish', 'neutral'] as FilterMode[]).map((f) => (
                 <button
@@ -148,8 +148,8 @@ export function IdeasPanel({ ticker }: IdeasPanelProps) {
                         ? 'bg-loss/20 text-loss'
                         : f === 'neutral'
                         ? 'bg-yellow-500/20 text-yellow-500'
-                        : 'bg-accent/20 text-accent'
-                      : 'text-muted hover:text-foreground hover:bg-tertiary'
+                        : 'bg-primary/20 text-primary'
+                      : 'text-foreground-muted hover:text-foreground hover:bg-background-tertiary'
                   )}
                 >
                   {f}
@@ -162,7 +162,7 @@ export function IdeasPanel({ ticker }: IdeasPanelProps) {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as SortMode)}
-            className="text-xs bg-tertiary text-foreground rounded px-2 py-1 border-none focus:ring-1 focus:ring-accent"
+            className="text-xs bg-background-tertiary text-foreground rounded px-2 py-1 border-none focus:ring-1 focus:ring-primary"
           >
             <option value="time">Latest</option>
             <option value="confidence">Confidence</option>
@@ -178,8 +178,8 @@ export function IdeasPanel({ ticker }: IdeasPanelProps) {
               className={clsx(
                 'flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors',
                 labelFilter
-                  ? LABEL_COLORS[labelFilter] || 'bg-tertiary text-foreground'
-                  : 'bg-tertiary text-muted hover:text-foreground'
+                  ? LABEL_COLORS[labelFilter] || 'bg-background-tertiary text-foreground'
+                  : 'bg-background-tertiary text-foreground-muted hover:text-foreground'
               )}
             >
               {labelFilter ? labelFilter.replace('_', ' ') : 'Label'}
@@ -187,13 +187,13 @@ export function IdeasPanel({ ticker }: IdeasPanelProps) {
             </button>
             
             {showLabelDropdown && (
-              <div className="absolute z-10 mt-1 w-48 bg-secondary border border-border rounded-lg shadow-lg overflow-hidden">
+              <div className="absolute z-10 mt-1 w-48 bg-background-secondary border border-border rounded-lg shadow-lg overflow-hidden">
                 <button
                   onClick={() => {
                     setLabelFilter(null);
                     setShowLabelDropdown(false);
                   }}
-                  className="w-full px-3 py-2 text-left text-xs text-muted hover:bg-tertiary"
+                  className="w-full px-3 py-2 text-left text-xs text-foreground-muted hover:bg-background-tertiary"
                 >
                   All Labels
                 </button>
@@ -204,7 +204,7 @@ export function IdeasPanel({ ticker }: IdeasPanelProps) {
                       setLabelFilter(label);
                       setShowLabelDropdown(false);
                     }}
-                    className="w-full px-3 py-2 text-left text-xs hover:bg-tertiary flex items-center gap-2"
+                    className="w-full px-3 py-2 text-left text-xs hover:bg-background-tertiary flex items-center gap-2"
                   >
                     <span className={clsx('px-1.5 py-0.5 rounded text-2xs', LABEL_COLORS[label])}>
                       {label.replace('_', ' ')}
@@ -220,7 +220,7 @@ export function IdeasPanel({ ticker }: IdeasPanelProps) {
             <select
               value={authorFilter || ''}
               onChange={(e) => setAuthorFilter(e.target.value || null)}
-              className="text-xs bg-tertiary text-foreground rounded px-2 py-1 border-none focus:ring-1 focus:ring-accent"
+              className="text-xs bg-background-tertiary text-foreground rounded px-2 py-1 border-none focus:ring-1 focus:ring-primary"
             >
               <option value="">All Authors</option>
               {authors.map((author) => (
@@ -235,7 +235,7 @@ export function IdeasPanel({ ticker }: IdeasPanelProps) {
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="flex items-center gap-1 px-2 py-1 text-xs text-muted hover:text-foreground"
+              className="flex items-center gap-1 px-2 py-1 text-xs text-foreground-muted hover:text-foreground"
             >
               <XMarkIcon className="h-3 w-3" />
               Clear
@@ -247,10 +247,10 @@ export function IdeasPanel({ ticker }: IdeasPanelProps) {
       {/* Ideas list */}
       <div className="flex-1 overflow-y-auto">
         {filteredIdeas.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-32 text-muted">
+          <div className="flex flex-col items-center justify-center h-32 text-foreground-muted">
             <p>No ideas found</p>
             {hasActiveFilters && (
-              <button onClick={clearFilters} className="text-xs text-accent mt-2 hover:underline">
+              <button onClick={clearFilters} className="text-xs text-primary mt-2 hover:underline">
                 Clear filters
               </button>
             )}
@@ -288,7 +288,7 @@ function IdeaCard({ idea, onAuthorClick }: IdeaCardProps) {
       : 'text-yellow-500';
 
   return (
-    <div className="p-4 hover:bg-tertiary/50 transition-colors">
+    <div className="p-4 hover:bg-background-tertiary/50 transition-colors">
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
@@ -296,9 +296,9 @@ function IdeaCard({ idea, onAuthorClick }: IdeaCardProps) {
           <span className={clsx('text-sm font-medium capitalize', directionColor)}>
             {idea.direction}
           </span>
-          <span className="text-xs text-muted">{formatNumber((idea.confidence ?? 0) * 100, 0)}%</span>
+          <span className="text-xs text-foreground-muted">{formatNumber((idea.confidence ?? 0) * 100, 0)}%</span>
         </div>
-        <span className="text-xs text-muted">{formatTimeAgo(idea.createdAt)}</span>
+        <span className="text-xs text-foreground-muted">{formatTimeAgo(idea.createdAt)}</span>
       </div>
 
       {/* Labels */}
@@ -308,7 +308,7 @@ function IdeaCard({ idea, onAuthorClick }: IdeaCardProps) {
             key={label}
             className={clsx(
               'px-1.5 py-0.5 text-2xs font-medium rounded',
-              LABEL_COLORS[label] || 'bg-tertiary text-muted'
+              LABEL_COLORS[label] || 'bg-background-tertiary text-foreground-muted'
             )}
           >
             {label.replace('_', ' ')}
@@ -323,17 +323,17 @@ function IdeaCard({ idea, onAuthorClick }: IdeaCardProps) {
       {(idea.entryPrice || idea.targetPrice || idea.stopLoss) && (
         <div className="flex flex-wrap gap-3 mt-2 text-xs font-mono">
           {idea.entryPrice && (
-            <span className="text-muted">
+            <span className="text-foreground-muted">
               Entry: <span className="text-foreground">${formatNumber(idea.entryPrice)}</span>
             </span>
           )}
           {idea.targetPrice && (
-            <span className="text-muted">
+            <span className="text-foreground-muted">
               Target: <span className="text-profit">${formatNumber(idea.targetPrice)}</span>
             </span>
           )}
           {idea.stopLoss && (
-            <span className="text-muted">
+            <span className="text-foreground-muted">
               Stop: <span className="text-loss">${formatNumber(idea.stopLoss)}</span>
             </span>
           )}
@@ -343,7 +343,7 @@ function IdeaCard({ idea, onAuthorClick }: IdeaCardProps) {
       {/* Author */}
       <button
         onClick={() => onAuthorClick(idea.author)}
-        className="mt-2 text-xs text-muted hover:text-accent transition-colors"
+        className="mt-2 text-xs text-foreground-muted hover:text-primary transition-colors"
       >
         @{idea.author}
       </button>

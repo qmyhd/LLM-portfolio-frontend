@@ -91,7 +91,7 @@ export default function PositionsPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Positions</h1>
-          <p className="text-muted">Your current holdings</p>
+          <p className="text-foreground-muted">Your current holdings</p>
         </div>
         
         <button
@@ -107,19 +107,19 @@ export default function PositionsPage() {
       {/* Summary Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="card p-4">
-          <p className="text-sm text-muted">Total Value</p>
+          <p className="text-sm text-foreground-muted">Total Value</p>
           <p className="mt-1 text-2xl font-bold text-foreground">
             {formatMoney(totalValue)}
           </p>
         </div>
         <div className="card p-4">
-          <p className="text-sm text-muted">Total Cost</p>
+          <p className="text-sm text-foreground-muted">Total Cost</p>
           <p className="mt-1 text-2xl font-bold text-foreground">
             {formatMoney(totalCost)}
           </p>
         </div>
         <div className="card p-4">
-          <p className="text-sm text-muted">Unrealized P/L</p>
+          <p className="text-sm text-foreground-muted">Unrealized P/L</p>
           <p className={`mt-1 text-2xl font-bold ${totalPL >= 0 ? 'text-profit' : 'text-loss'}`}>
             {totalPL >= 0 ? '+' : ''}{formatMoney(Math.abs(totalPL))}
             <span className="ml-2 text-sm">
@@ -128,7 +128,7 @@ export default function PositionsPage() {
           </p>
         </div>
         <div className="card p-4">
-          <p className="text-sm text-muted">Day Change</p>
+          <p className="text-sm text-foreground-muted">Day Change</p>
           <p className={`mt-1 text-2xl font-bold ${totalDayChange >= 0 ? 'text-profit' : 'text-loss'}`}>
             {totalDayChange >= 0 ? '+' : ''}{formatMoney(Math.abs(totalDayChange))}
           </p>
@@ -140,7 +140,7 @@ export default function PositionsPage() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-border text-left text-sm text-muted">
+              <tr className="border-b border-border text-left text-sm text-foreground-muted">
                 <th className="px-4 py-3 font-medium">Symbol</th>
                 <th className="px-4 py-3 font-medium">Company</th>
                 <th className="px-4 py-3 font-medium text-right">Qty</th>
@@ -180,7 +180,7 @@ export default function PositionsPage() {
                 ))
               ) : sortedPositions.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-12 text-center text-muted">
+                  <td colSpan={9} className="px-4 py-12 text-center text-foreground-muted">
                     No positions found
                   </td>
                 </tr>
@@ -190,18 +190,18 @@ export default function PositionsPage() {
                     <td className="px-4 py-3">
                       <a
                         href={`/stock/${pos.symbol}`}
-                        className="font-bold text-foreground hover:text-accent"
+                        className="font-bold text-foreground hover:text-primary"
                       >
                         {pos.symbol}
                       </a>
                     </td>
-                    <td className="px-4 py-3 text-sm text-muted">
+                    <td className="px-4 py-3 text-sm text-foreground-muted">
                       {pos.companyName}
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-sm">
                       {pos.quantity}
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-sm text-muted">
+                    <td className="px-4 py-3 text-right font-mono text-sm text-foreground-muted">
                       {formatMoney(pos.averageCost)}
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-sm">
@@ -232,7 +232,7 @@ export default function PositionsPage() {
                     <td className="px-4 py-3">
                       <a
                         href={`/stock/${pos.symbol}`}
-                        className="rounded p-1.5 text-muted transition-colors hover:bg-tertiary hover:text-foreground"
+                        className="rounded p-1.5 text-foreground-muted transition-colors hover:bg-background-tertiary hover:text-foreground"
                       >
                         <ChartBarIcon className="h-4 w-4" />
                       </a>
@@ -263,12 +263,12 @@ export default function PositionsPage() {
                 return (
                   <div key={sector}>
                     <div className="mb-1 flex justify-between text-sm">
-                      <span className="text-muted">{sector}</span>
+                      <span className="text-foreground-muted">{sector}</span>
                       <span className="text-foreground">{formatNumber(percent, 1)}%</span>
                     </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-tertiary">
+                    <div className="h-2 overflow-hidden rounded-full bg-background-tertiary">
                       <div
-                        className="h-full rounded-full bg-accent"
+                        className="h-full rounded-full bg-primary"
                         style={{ width: `${percent}%` }}
                       />
                     </div>

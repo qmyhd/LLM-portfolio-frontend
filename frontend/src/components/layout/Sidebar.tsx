@@ -155,7 +155,7 @@ export function Sidebar() {
               </h3>
               <div className="mt-2 space-y-1">
                 {favorites.length === 0 ? (
-                  <p className="px-3 py-2 text-xs text-muted">
+                  <p className="px-3 py-2 text-xs text-foreground-muted">
                     No favorites yet. Use ⌘K to search and star tickers.
                   </p>
                 ) : (
@@ -176,10 +176,11 @@ export function Sidebar() {
                       <span
                         className={clsx(
                           'text-xs font-mono',
-                          stock.change >= 0 ? 'text-profit' : 'text-loss'
+                          stock.change > 0 ? 'text-profit' :
+                          stock.change < 0 ? 'text-loss' : 'text-foreground-muted'
                         )}
                       >
-                        {stock.change >= 0 ? '+' : ''}{formatNumber(stock.change)}%
+                        {`${stock.change >= 0 ? '+' : ''}${formatNumber(stock.change)}%`}
                       </span>
                     </Link>
                   ))

@@ -11,6 +11,7 @@
 
 export interface PortfolioSummary {
   totalValue: number;
+  totalEquity: number; // Equity-only (positions market value, no cash)
   totalCost: number;
   unrealizedPL: number;
   unrealizedPLPercent: number;
@@ -18,7 +19,8 @@ export interface PortfolioSummary {
   dayChangePercent: number;
   cashBalance: number;
   positionsCount: number;
-  lastSync: string; // ISO timestamp
+  lastSync: string; // ISO timestamp (SnapTrade last sync)
+  source: string; // Data source: 'snaptrade' | 'cache'
 }
 
 export interface Position {

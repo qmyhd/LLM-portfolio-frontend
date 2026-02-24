@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { clsx } from 'clsx';
 import {
@@ -15,11 +15,30 @@ import { formatMoney, formatPercent } from '@/lib/format';
 type SortKey = 'symbol' | 'equity' | 'openPnl' | 'openPnlPercent';
 type FilterMode = 'all' | 'winners' | 'losers';
 
+const COLLAPSE_KEY = 'dashboard_positions_collapsed';
+
 export function PositionsTable() {
   const { data, error, isLoading } = usePortfolio();
   const [sortKey, setSortKey] = useState<SortKey>('equity');
   const [sortAsc, setSortAsc] = useState(false);
   const [filter, setFilter] = useState<FilterMode>('all');
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // Initialize from localStorage, default collapsed on mobile
+  useEffect(() => {
+    const stored = localStorage.getItem(COLLAPSE_KEY);
+    if (stored !== null) {
+      setIsCollapsed(stored === 'true');
+    } else {
+      setIsCollapsed(window.innerWidth < 1024);
+    }
+  }, []);
+
+  const toggleCollapse = () => {
+    const next = !isCollapsed;
+    setIsCollapsed(next);
+    localStorage.setItem(COLLAPSE_KEY, String(next));
+  };
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -93,25 +112,59 @@ export function PositionsTable() {
 
   return (
     <div className="card overflow-hidden">
-      {/* Header */}
+      {/* Header with collapse toggle */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-        <h2 className="text-lg font-semibold">Positions</h2>
-        <div className="flex items-center gap-2">
-          <FunnelIcon className="w-4 h-4 text-foreground-muted" />
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value as FilterMode)}
-            className="bg-background-hover border border-border rounded-md px-2 py-1 text-sm"
-          >
-            <option value="all">All</option>
-            <option value="winners">Winners</option>
-            <option value="losers">Losers</option>
-          </select>
-        </div>
+        <button
+          onClick={toggleCollapse}
+          className="flex items-center gap-2 hover:text-primary transition-colors"
+        >
+          <h2 className="text-lg font-semibold">Positions</h2>
+          <span className="text-sm text-foreground-muted">
+            ({positions.length})
+          </span>
+          {isCollapsed ? (
+            <ChevronDownIcon className="w-4 h-4 text-foreground-muted" />
+          ) : (
+            <ChevronUpIcon className="w-4 h-4 text-foreground-muted" />
+          )}
+        </button>
+        {!isCollapsed && (
+          <div className="flex items-center gap-2">
+            <FunnelIcon className="w-4 h-4 text-foreground-muted" />
+            <select
+              value={filter}
+              onChange={(e) => setFilter(e.target.value as FilterMode)}
+              className="bg-background-hover border border-border rounded-md px-2 py-1 text-sm"
+            >
+              <option value="all">All</option>
+              <option value="winners">Winners</option>
+              <option value="losers">Losers</option>
+            </select>
+          </div>
+        )}
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto">
+      {/* Collapsed summary: show totals even when hidden */}
+      {isCollapsed && (
+        <div className="px-5 py-3 flex items-center gap-6 text-sm border-b border-border">
+          <span className="text-foreground-muted">
+            Total Value: <span className="font-mono font-medium text-foreground">{formatMoney(positions.reduce((s, p) => s + p.equity, 0))}</span>
+          </span>
+          <span className="text-foreground-muted">
+            P/L:{' '}
+            <span className={clsx(
+              'font-mono font-medium',
+              positions.reduce((s, p) => s + p.openPnl, 0) >= 0 ? 'text-profit' : 'text-loss'
+            )}>
+              {positions.reduce((s, p) => s + p.openPnl, 0) >= 0 ? '+' : ''}
+              {formatMoney(Math.abs(positions.reduce((s, p) => s + p.openPnl, 0)))}
+            </span>
+          </span>
+        </div>
+      )}
+
+      {/* Table - hidden when collapsed */}
+      {!isCollapsed && <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="border-b border-border bg-background-tertiary">
@@ -194,14 +247,16 @@ export function PositionsTable() {
             ))}
           </tbody>
         </table>
-      </div>
+      </div>}
 
       {/* Footer */}
-      <div className="px-5 py-3 border-t border-border bg-background-tertiary">
-        <p className="text-sm text-foreground-muted">
-          Showing {sortedData.length} of {positions.length} positions
-        </p>
-      </div>
+      {!isCollapsed && (
+        <div className="px-5 py-3 border-t border-border bg-background-tertiary">
+          <p className="text-sm text-foreground-muted">
+            Showing {sortedData.length} of {positions.length} positions
+          </p>
+        </div>
+      )}
     </div>
   );
 }

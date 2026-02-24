@@ -104,20 +104,20 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
   };
 
   return (
-    <main className="flex-1 overflow-hidden bg-primary">
+    <main className="flex-1 overflow-hidden bg-background">
       {/* Stock Header Bar */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-secondary">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-background-secondary">
         <div className="flex items-center gap-3">
           <h1 className="text-xl font-bold text-foreground">{ticker}</h1>
           <button
             onClick={toggleFavorite}
-            className="p-1.5 rounded-lg hover:bg-tertiary transition-colors"
+            className="p-1.5 rounded-lg hover:bg-background-tertiary transition-colors"
             title={isFavorite ? 'Remove from watchlist' : 'Add to watchlist'}
           >
             {isFavorite ? (
               <StarIconSolid className="h-5 w-5 text-yellow-500" />
             ) : (
-              <StarIcon className="h-5 w-5 text-muted" />
+              <StarIcon className="h-5 w-5 text-foreground-muted" />
             )}
           </button>
         </div>
@@ -125,9 +125,9 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
           <button
             onClick={toggleChartProvider}
             className={`p-2 rounded-lg transition-colors ${
-              chartProvider === 'tradingview' 
-                ? 'bg-primary/20 text-primary' 
-                : 'text-muted hover:text-foreground hover:bg-tertiary'
+              chartProvider === 'tradingview'
+                ? 'bg-primary/20 text-primary'
+                : 'text-foreground-muted hover:text-foreground hover:bg-background-tertiary'
             }`}
             title={`Switch to ${chartProvider === 'lightweight' ? 'TradingView' : 'Lightweight'} chart`}
           >
@@ -135,19 +135,19 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
           </button>
           <button
             onClick={handleRefresh}
-            className="p-2 rounded-lg hover:bg-tertiary text-muted hover:text-foreground transition-colors"
+            className="p-2 rounded-lg hover:bg-background-tertiary text-foreground-muted hover:text-foreground transition-colors"
             title="Refresh data"
           >
             <ArrowPathIcon className="h-4 w-4" />
           </button>
           <button
-            className="p-2 rounded-lg hover:bg-tertiary text-muted hover:text-foreground transition-colors"
+            className="p-2 rounded-lg hover:bg-background-tertiary text-foreground-muted hover:text-foreground transition-colors"
             title="Share"
           >
             <ShareIcon className="h-4 w-4" />
           </button>
           <button
-            className="p-2 rounded-lg hover:bg-tertiary text-muted hover:text-foreground transition-colors"
+            className="p-2 rounded-lg hover:bg-background-tertiary text-foreground-muted hover:text-foreground transition-colors"
             title="More options"
           >
             <EllipsisHorizontalIcon className="h-4 w-4" />
@@ -158,7 +158,7 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
       {/* Three-column layout */}
       <div className="h-[calc(100%-56px)] flex flex-col lg:flex-row">
         {/* Left Column - Stacked Cards */}
-        <aside className="w-full lg:w-72 xl:w-80 border-b lg:border-b-0 lg:border-r border-border overflow-y-auto flex-shrink-0 p-4 space-y-4">
+        <aside className="w-full lg:w-72 xl:w-80 border-b lg:border-b-0 lg:border-r border-border overflow-y-auto flex-shrink-0 p-4 space-y-4 bg-background-secondary/80 backdrop-blur-md">
           {/* Profile Card - loads first (critical info) */}
           <Suspense fallback={<CardSkeleton lines={4} />}>
             <StockMetrics ticker={ticker} key={`metrics-${refreshKey}`} />
@@ -198,15 +198,15 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
         </div>
 
         {/* Right Column - Tabbed Panel */}
-        <aside className="w-full lg:w-80 xl:w-96 overflow-hidden flex flex-col flex-shrink-0">
+        <aside className="w-full lg:w-80 xl:w-96 overflow-hidden flex flex-col flex-shrink-0 bg-background-secondary/80 backdrop-blur-md">
           {/* Tab switcher */}
-          <div className="flex border-b border-border bg-secondary">
+          <div className="flex border-b border-border bg-background-secondary">
             <button
               onClick={() => setActiveTab('chat')}
               className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                 activeTab === 'chat'
-                  ? 'text-accent border-b-2 border-accent bg-accent/5'
-                  : 'text-muted hover:text-foreground hover:bg-tertiary'
+                  ? 'text-primary border-b-2 border-primary bg-primary/5'
+                  : 'text-foreground-muted hover:text-foreground hover:bg-background-tertiary'
               }`}
             >
               Chat
@@ -215,8 +215,8 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
               onClick={() => setActiveTab('ideas')}
               className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                 activeTab === 'ideas'
-                  ? 'text-accent border-b-2 border-accent bg-accent/5'
-                  : 'text-muted hover:text-foreground hover:bg-tertiary'
+                  ? 'text-primary border-b-2 border-primary bg-primary/5'
+                  : 'text-foreground-muted hover:text-foreground hover:bg-background-tertiary'
               }`}
             >
               Ideas
@@ -225,8 +225,8 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
               onClick={() => setActiveTab('raw')}
               className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                 activeTab === 'raw'
-                  ? 'text-accent border-b-2 border-accent bg-accent/5'
-                  : 'text-muted hover:text-foreground hover:bg-tertiary'
+                  ? 'text-primary border-b-2 border-primary bg-primary/5'
+                  : 'text-foreground-muted hover:text-foreground hover:bg-background-tertiary'
               }`}
             >
               Raw

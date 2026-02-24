@@ -12,9 +12,9 @@ export default function SettingsPage() {
         <TopBar />
         <main className="flex-1 overflow-y-auto p-6">
           <div className="max-w-2xl mx-auto text-center py-20">
-            <Cog6ToothIcon className="mx-auto h-16 w-16 text-muted" />
+            <Cog6ToothIcon className="mx-auto h-16 w-16 text-foreground-muted" />
             <h1 className="mt-6 text-2xl font-bold text-foreground">Settings</h1>
-            <p className="mt-2 text-muted">
+            <p className="mt-2 text-foreground-muted">
               Account preferences, API keys, and display options are coming soon.
             </p>
           </div>

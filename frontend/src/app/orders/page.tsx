@@ -65,13 +65,13 @@ export default function OrdersPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Orders</h1>
-          <p className="text-muted">Your trading history and pending orders</p>
+          <p className="text-foreground-muted">Your trading history and pending orders</p>
         </div>
         
         <div className="flex gap-3">
           {/* Search */}
           <div className="relative">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-muted" />
             <input
               type="text"
               placeholder="Search symbol..."
@@ -83,7 +83,7 @@ export default function OrdersPage() {
           
           {/* Filter */}
           <div className="relative">
-            <FunnelIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+            <FunnelIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-muted" />
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
@@ -103,7 +103,7 @@ export default function OrdersPage() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-border text-left text-sm text-muted">
+              <tr className="border-b border-border text-left text-sm text-foreground-muted">
                 <th className="px-4 py-3 font-medium">Date</th>
                 <th className="px-4 py-3 font-medium">Symbol</th>
                 <th className="px-4 py-3 font-medium">Side</th>
@@ -128,20 +128,20 @@ export default function OrdersPage() {
                 ))
               ) : filteredOrders.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-muted">
+                  <td colSpan={8} className="px-4 py-12 text-center text-foreground-muted">
                     No orders found
                   </td>
                 </tr>
               ) : (
                 filteredOrders.map((order) => (
                   <tr key={order.id} className="table-row">
-                    <td className="px-4 py-3 text-sm text-muted">
+                    <td className="px-4 py-3 text-sm text-foreground-muted">
                       {formatDate(order.createdAt)}
                     </td>
                     <td className="px-4 py-3">
                       <a
                         href={`/stock/${order.symbol}`}
-                        className="font-medium text-foreground hover:text-accent"
+                        className="font-medium text-foreground hover:text-primary"
                       >
                         {order.symbol}
                       </a>
@@ -158,7 +158,7 @@ export default function OrdersPage() {
                         {order.side.toUpperCase()}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm capitalize text-muted">
+                    <td className="px-4 py-3 text-sm capitalize text-foreground-muted">
                       {order.type.replace('_', ' ')}
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-sm">
@@ -176,7 +176,7 @@ export default function OrdersPage() {
                           ? 'bg-profit/20 text-profit'
                           : order.status === 'pending'
                           ? 'bg-yellow-500/20 text-yellow-500'
-                          : 'bg-muted/20 text-muted'
+                          : 'bg-foreground-muted/20 text-foreground-muted'
                       }`}>
                         {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                       </span>
@@ -192,24 +192,24 @@ export default function OrdersPage() {
       {/* Summary Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="card p-4">
-          <p className="text-sm text-muted">Total Orders</p>
+          <p className="text-sm text-foreground-muted">Total Orders</p>
           <p className="mt-1 text-2xl font-bold text-foreground">{orders.length}</p>
         </div>
         <div className="card p-4">
-          <p className="text-sm text-muted">Filled</p>
+          <p className="text-sm text-foreground-muted">Filled</p>
           <p className="mt-1 text-2xl font-bold text-profit">
             {orders.filter(o => o.status === 'filled').length}
           </p>
         </div>
         <div className="card p-4">
-          <p className="text-sm text-muted">Pending</p>
+          <p className="text-sm text-foreground-muted">Pending</p>
           <p className="mt-1 text-2xl font-bold text-yellow-500">
             {orders.filter(o => o.status === 'pending').length}
           </p>
         </div>
         <div className="card p-4">
-          <p className="text-sm text-muted">Cancelled</p>
-          <p className="mt-1 text-2xl font-bold text-muted">
+          <p className="text-sm text-foreground-muted">Cancelled</p>
+          <p className="mt-1 text-2xl font-bold text-foreground-muted">
             {orders.filter(o => o.status === 'cancelled').length}
           </p>
         </div>

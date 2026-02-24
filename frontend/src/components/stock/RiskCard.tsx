@@ -64,7 +64,7 @@ export function RiskCard({ ticker }: RiskCardProps) {
   if (!risk) {
     return (
       <div className="card p-4">
-        <p className="text-sm text-muted">No risk data available</p>
+        <p className="text-sm text-foreground-muted">No risk data available</p>
       </div>
     );
   }
@@ -80,7 +80,7 @@ export function RiskCard({ ticker }: RiskCardProps) {
   return (
     <div className="card p-4">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-sm font-medium text-muted">Risk Profile</span>
+        <span className="text-sm font-medium text-foreground-muted">Risk Profile</span>
         <div className={`flex items-center gap-1 ${riskColor}`}>
           <RiskIcon className="h-4 w-4" />
           <span className="text-sm font-medium capitalize">{risk.riskLevel}</span>
@@ -92,27 +92,27 @@ export function RiskCard({ ticker }: RiskCardProps) {
         {/* Beta */}
         {risk.beta !== null && (
           <div className="flex justify-between text-sm">
-            <span className="text-muted">Beta</span>
+            <span className="text-foreground-muted">Beta</span>
             <span className="font-mono text-foreground">{formatNumber(risk.beta)}</span>
           </div>
         )}
 
         {/* Volatility */}
         <div className="flex justify-between text-sm">
-          <span className="text-muted">30D Volatility</span>
+          <span className="text-foreground-muted">30D Volatility</span>
           <span className="font-mono text-foreground">{formatNumber(risk.volatility, 1)}%</span>
         </div>
 
         {/* Max Drawdown */}
         <div className="flex justify-between text-sm">
-          <span className="text-muted">Max Drawdown</span>
+          <span className="text-foreground-muted">Max Drawdown</span>
           <span className="font-mono text-loss">{formatNumber(risk.maxDrawdown, 1)}%</span>
         </div>
 
         {/* Sharpe Ratio */}
         {risk.sharpeRatio !== null && (
           <div className="flex justify-between text-sm">
-            <span className="text-muted">Sharpe Ratio</span>
+            <span className="text-foreground-muted">Sharpe Ratio</span>
             <span className={`font-mono ${risk.sharpeRatio > 1 ? 'text-profit' : 'text-foreground'}`}>
               {formatNumber(risk.sharpeRatio)}
             </span>
@@ -122,7 +122,7 @@ export function RiskCard({ ticker }: RiskCardProps) {
 
       {/* Risk Description */}
       <div className="mt-3 pt-3 border-t border-border">
-        <p className="text-xs text-muted">
+        <p className="text-xs text-foreground-muted">
           {risk.riskLevel === 'low' && 'Lower volatility compared to market average.'}
           {risk.riskLevel === 'medium' && 'Average volatility, typical market risk.'}
           {risk.riskLevel === 'high' && 'Higher volatility, consider position sizing carefully.'}

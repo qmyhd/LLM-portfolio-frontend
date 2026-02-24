@@ -3,13 +3,11 @@
 import { useEffect, useRef, useCallback } from 'react';
 
 /**
- * CustomCursor - Clean, professional cursor replacement.
+ * CustomCursor — minimal dot + ring that follows the pointer with lerp easing.
  *
- * A minimal dot + ring that smoothly follows the pointer with lerp easing.
- * The ring expands subtly on interactive elements (links, buttons).
- *
- * - Hides on touch/mobile devices
- * - Respects `prefers-reduced-motion`
+ * - Hidden until first mousemove (no flash at 0,0)
+ * - Hides on touch devices (pointer: coarse) and prefers-reduced-motion
+ * - Ring expands on interactive elements
  * - 60 fps via requestAnimationFrame
  */
 
@@ -21,11 +19,12 @@ const RING_EASE = 0.15;
 export function CursorTrail() {
   const dotRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
-  const mouse = useRef({ x: 0, y: 0 });
-  const dotPos = useRef({ x: 0, y: 0 });
-  const ringPos = useRef({ x: 0, y: 0 });
+  const mouse = useRef({ x: -100, y: -100 });
+  const dotPos = useRef({ x: -100, y: -100 });
+  const ringPos = useRef({ x: -100, y: -100 });
   const raf = useRef<number>(0);
   const hovering = useRef(false);
+  const visible = useRef(false);
 
   const animate = useCallback(() => {
     dotPos.current.x += (mouse.current.x - dotPos.current.x) * DOT_EASE;
@@ -53,9 +52,9 @@ export function CursorTrail() {
 
   useEffect(() => {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
 
-    if (reducedMotion || isTouchDevice) {
+    if (reducedMotion || isCoarsePointer) {
       if (dotRef.current) dotRef.current.style.display = 'none';
       if (ringRef.current) ringRef.current.style.display = 'none';
       return;
@@ -64,6 +63,15 @@ export function CursorTrail() {
     const onMove = (e: MouseEvent) => {
       mouse.current.x = e.clientX;
       mouse.current.y = e.clientY;
+
+      // Show on first move — snap so there's no lerp from offscreen
+      if (!visible.current) {
+        visible.current = true;
+        dotPos.current = { x: e.clientX, y: e.clientY };
+        ringPos.current = { x: e.clientX, y: e.clientY };
+        if (dotRef.current) dotRef.current.style.opacity = '1';
+        if (ringRef.current) ringRef.current.style.opacity = '0.5';
+      }
     };
 
     const onOver = (e: MouseEvent) => {
@@ -71,13 +79,29 @@ export function CursorTrail() {
       hovering.current = !!target.closest('a, button, [role="button"], input, select, textarea, label, [data-cursor-hover]');
     };
 
+    const onLeave = () => {
+      if (dotRef.current) dotRef.current.style.opacity = '0';
+      if (ringRef.current) ringRef.current.style.opacity = '0';
+    };
+
+    const onEnter = () => {
+      if (visible.current) {
+        if (dotRef.current) dotRef.current.style.opacity = '1';
+        if (ringRef.current) ringRef.current.style.opacity = '0.5';
+      }
+    };
+
     document.addEventListener('mousemove', onMove, { passive: true });
     document.addEventListener('mouseover', onOver, { passive: true });
+    document.addEventListener('mouseleave', onLeave);
+    document.addEventListener('mouseenter', onEnter);
     raf.current = requestAnimationFrame(animate);
 
     return () => {
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseover', onOver);
+      document.removeEventListener('mouseleave', onLeave);
+      document.removeEventListener('mouseenter', onEnter);
       cancelAnimationFrame(raf.current);
     };
   }, [animate]);
@@ -91,7 +115,7 @@ export function CursorTrail() {
         }
       `}</style>
 
-      {/* Ring — subtle border circle */}
+      {/* Ring — starts invisible, shown on first mousemove */}
       <div
         ref={ringRef}
         aria-hidden="true"
@@ -101,14 +125,14 @@ export function CursorTrail() {
           height: `${RING_SIZE}px`,
           borderRadius: '50%',
           border: '1.5px solid rgba(255, 255, 255, 0.35)',
-          opacity: 0.5,
+          opacity: 0,
           willChange: 'transform, opacity',
           zIndex: 9999,
           transition: 'opacity 0.2s ease, border-color 0.2s ease',
         }}
       />
 
-      {/* Dot — solid center point */}
+      {/* Dot — starts invisible */}
       <div
         ref={dotRef}
         aria-hidden="true"
@@ -118,9 +142,10 @@ export function CursorTrail() {
           height: `${DOT_SIZE}px`,
           borderRadius: '50%',
           backgroundColor: 'rgba(255, 255, 255, 0.9)',
+          opacity: 0,
           willChange: 'transform',
           zIndex: 10000,
-          transition: 'background-color 0.2s ease',
+          transition: 'background-color 0.2s ease, opacity 0.15s ease',
         }}
       />
     </>

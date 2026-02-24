@@ -48,11 +48,11 @@ export function PositionCard({ ticker }: PositionCardProps) {
   if (!position) {
     return (
       <div className="card p-4">
-        <div className="flex items-center gap-2 text-muted mb-3">
+        <div className="flex items-center gap-2 text-foreground-muted mb-3">
           <BanknotesIcon className="h-4 w-4" />
           <span className="text-sm font-medium">Your Position</span>
         </div>
-        <p className="text-sm text-muted">No position in {ticker}</p>
+        <p className="text-sm text-foreground-muted">No position in {ticker}</p>
         <button className="mt-3 btn-primary text-xs py-1.5 px-3 w-full">
           Trade {ticker}
         </button>
@@ -66,11 +66,11 @@ export function PositionCard({ ticker }: PositionCardProps) {
   return (
     <div className="card p-4">
       <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2 text-muted">
+        <div className="flex items-center gap-2 text-foreground-muted">
           <BanknotesIcon className="h-4 w-4" />
           <span className="text-sm font-medium">Your Position</span>
         </div>
-        <span className="text-xs text-muted">{position.quantity} shares</span>
+        <span className="text-xs text-foreground-muted">{position.quantity} shares</span>
       </div>
 
       {/* Market Value */}
@@ -84,7 +84,7 @@ export function PositionCard({ ticker }: PositionCardProps) {
       <div className="grid grid-cols-2 gap-3 text-sm">
         {/* Total P/L */}
         <div>
-          <p className="text-xs text-muted mb-1">Total P/L</p>
+          <p className="text-xs text-foreground-muted mb-1">Total P/L</p>
           <div className={`flex items-center gap-1 font-medium ${isProfitable ? 'text-profit' : 'text-loss'}`}>
             {isProfitable ? (
               <ArrowUpIcon className="h-3 w-3" />
@@ -102,7 +102,7 @@ export function PositionCard({ ticker }: PositionCardProps) {
 
         {/* Day Change */}
         <div>
-          <p className="text-xs text-muted mb-1">Today</p>
+          <p className="text-xs text-foreground-muted mb-1">Today</p>
           <div className={`flex items-center gap-1 font-medium ${isDayPositive ? 'text-profit' : 'text-loss'}`}>
             {isDayPositive ? (
               <ArrowUpIcon className="h-3 w-3" />
@@ -119,11 +119,11 @@ export function PositionCard({ ticker }: PositionCardProps) {
       {/* Cost Basis */}
       <div className="mt-3 pt-3 border-t border-border">
         <div className="flex justify-between text-xs">
-          <span className="text-muted">Avg Cost</span>
+          <span className="text-foreground-muted">Avg Cost</span>
           <span className="font-mono text-foreground">{formatMoney(position.averageCost)}</span>
         </div>
         <div className="flex justify-between text-xs mt-1">
-          <span className="text-muted">Current</span>
+          <span className="text-foreground-muted">Current</span>
           <span className="font-mono text-foreground">{formatMoney(position.currentPrice)}</span>
         </div>
       </div>

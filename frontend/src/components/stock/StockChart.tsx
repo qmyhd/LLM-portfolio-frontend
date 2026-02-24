@@ -276,7 +276,7 @@ export function StockChart({ ticker, onOrderSelect }: StockChartProps) {
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <div className="flex items-center gap-4">
           {/* Period selector */}
-          <div className="flex rounded-lg bg-tertiary p-1">
+          <div className="flex rounded-lg bg-background-tertiary p-1">
             {periods.map((p) => (
               <button
                 key={p}
@@ -284,8 +284,8 @@ export function StockChart({ ticker, onOrderSelect }: StockChartProps) {
                 className={clsx(
                   'px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
                   period === p
-                    ? 'bg-accent text-white'
-                    : 'text-muted hover:text-foreground',
+                    ? 'bg-primary text-white'
+                    : 'text-foreground-muted hover:text-foreground',
                 )}
               >
                 {p}
@@ -299,9 +299,9 @@ export function StockChart({ ticker, onOrderSelect }: StockChartProps) {
               type="checkbox"
               checked={showOrders}
               onChange={(e) => setShowOrders(e.target.checked)}
-              className="w-4 h-4 rounded border-border bg-tertiary text-accent focus:ring-accent"
+              className="w-4 h-4 rounded border-border bg-background-tertiary text-primary focus:ring-accent"
             />
-            <span className="text-sm text-muted">Orders</span>
+            <span className="text-sm text-foreground-muted">Orders</span>
           </label>
         </div>
 
@@ -327,25 +327,25 @@ export function StockChart({ ticker, onOrderSelect }: StockChartProps) {
 
         {/* Loading skeleton */}
         {isLoading && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-secondary gap-3">
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-background-secondary gap-3">
             <div className="w-10 h-10 rounded-full border-2 border-accent border-t-transparent animate-spin" />
-            <span className="text-sm text-muted">Loading chart data&hellip;</span>
+            <span className="text-sm text-foreground-muted">Loading chart data&hellip;</span>
           </div>
         )}
 
         {/* Error state */}
         {error && !isLoading && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-secondary gap-2">
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-background-secondary gap-2">
             <span className="text-sm text-loss font-medium">Failed to load chart</span>
-            <span className="text-xs text-muted">{(error as Error).message}</span>
+            <span className="text-xs text-foreground-muted">{(error as Error).message}</span>
           </div>
         )}
 
         {/* Empty state (no data) */}
         {!isLoading && !error && series && series.data.length === 0 && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-secondary gap-2">
-            <span className="text-sm text-muted">No OHLCV data for {ticker}</span>
-            <span className="text-xs text-muted">Try a different period or check the backfill.</span>
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-background-secondary gap-2">
+            <span className="text-sm text-foreground-muted">No OHLCV data for {ticker}</span>
+            <span className="text-xs text-foreground-muted">Try a different period or check the backfill.</span>
           </div>
         )}
 
@@ -361,7 +361,7 @@ export function StockChart({ ticker, onOrderSelect }: StockChartProps) {
               top: tooltipPos.y - 60,
             }}
           >
-            <div className="bg-secondary border border-border rounded-lg shadow-lg p-2 text-xs">
+            <div className="bg-background-secondary border border-border rounded-lg shadow-lg p-2 text-xs">
               <div
                 className={clsx(
                   'flex items-center gap-1 font-medium',
@@ -375,10 +375,10 @@ export function StockChart({ ticker, onOrderSelect }: StockChartProps) {
                 )}
                 {hoveredOrder.action} {hoveredOrder.quantity} shares
               </div>
-              <div className="text-muted mt-1">
+              <div className="text-foreground-muted mt-1">
                 @ ${formatNumber(hoveredOrder.price)}
               </div>
-              <div className="text-muted">
+              <div className="text-foreground-muted">
                 {new Date(hoveredOrder.date).toLocaleDateString()}
               </div>
             </div>
@@ -388,7 +388,7 @@ export function StockChart({ ticker, onOrderSelect }: StockChartProps) {
 
       {/* Selected Order Detail Panel */}
       {selectedOrder && (
-        <div className="border-t border-border bg-secondary p-4">
+        <div className="border-t border-border bg-background-secondary p-4">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
               <div
@@ -417,7 +417,7 @@ export function StockChart({ ticker, onOrderSelect }: StockChartProps) {
                     {selectedOrder.quantity} shares @ ${formatNumber(selectedOrder.price)}
                   </span>
                 </div>
-                <div className="text-sm text-muted">
+                <div className="text-sm text-foreground-muted">
                   {new Date(selectedOrder.date).toLocaleDateString('en-US', {
                     weekday: 'long',
                     year: 'numeric',
@@ -432,7 +432,7 @@ export function StockChart({ ticker, onOrderSelect }: StockChartProps) {
                 setSelectedOrder(null);
                 onOrderSelect?.(null);
               }}
-              className="p-1 rounded hover:bg-tertiary text-muted hover:text-foreground"
+              className="p-1 rounded hover:bg-background-tertiary text-foreground-muted hover:text-foreground"
             >
               <XMarkIcon className="h-4 w-4" />
             </button>
@@ -442,13 +442,13 @@ export function StockChart({ ticker, onOrderSelect }: StockChartProps) {
           {selectedOrder.performanceSince && (
             <div className="mt-3 grid grid-cols-3 gap-4">
               <div>
-                <p className="text-xs text-muted">Current Price</p>
+                <p className="text-xs text-foreground-muted">Current Price</p>
                 <p className="text-sm font-mono font-medium text-foreground">
                   ${formatNumber(selectedOrder.performanceSince.currentPrice)}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-muted">P/L per Share</p>
+                <p className="text-xs text-foreground-muted">P/L per Share</p>
                 <p
                   className={clsx(
                     'text-sm font-mono font-medium',
@@ -464,7 +464,7 @@ export function StockChart({ ticker, onOrderSelect }: StockChartProps) {
                 </p>
               </div>
               <div>
-                <p className="text-xs text-muted">Days Held</p>
+                <p className="text-xs text-foreground-muted">Days Held</p>
                 <p className="text-sm font-mono font-medium text-foreground">
                   {selectedOrder.performanceSince.daysSince}
                 </p>

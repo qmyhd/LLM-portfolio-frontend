@@ -124,7 +124,7 @@ export default function WatchlistPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Watchlist</h1>
-          <p className="text-muted">Track your favorite stocks</p>
+          <p className="text-foreground-muted">Track your favorite stocks</p>
         </div>
         
         {/* Add Ticker */}
@@ -174,9 +174,9 @@ export default function WatchlistPage() {
         </div>
       ) : items.length === 0 ? (
         <div className="card p-12 text-center">
-          <StarIcon className="mx-auto h-12 w-12 text-muted" />
+          <StarIcon className="mx-auto h-12 w-12 text-foreground-muted" />
           <h3 className="mt-4 text-lg font-medium text-foreground">No stocks in watchlist</h3>
-          <p className="mt-2 text-muted">Add some symbols to start tracking</p>
+          <p className="mt-2 text-foreground-muted">Add some symbols to start tracking</p>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -184,7 +184,7 @@ export default function WatchlistPage() {
             <a
               key={item.symbol}
               href={`/stock/${item.symbol}`}
-              className="card group relative p-4 transition-all hover:border-accent"
+              className="card group relative p-4 transition-all hover:border-primary"
             >
               {/* Remove button */}
               <button
@@ -192,7 +192,7 @@ export default function WatchlistPage() {
                   e.preventDefault();
                   removeTicker(item.symbol);
                 }}
-                className="absolute right-2 top-2 rounded-full p-1 text-muted opacity-0 transition-opacity hover:bg-tertiary hover:text-foreground group-hover:opacity-100"
+                className="absolute right-2 top-2 rounded-full p-1 text-foreground-muted opacity-0 transition-opacity hover:bg-background-tertiary hover:text-foreground group-hover:opacity-100"
               >
                 <XMarkIcon className="h-4 w-4" />
               </button>
@@ -225,7 +225,7 @@ export default function WatchlistPage() {
               </div>
 
               {/* Volume */}
-              <div className="mt-2 text-xs text-muted">
+              <div className="mt-2 text-xs text-foreground-muted">
                 Vol: {formatVolume(item.volume)}
               </div>
             </a>
@@ -248,8 +248,8 @@ export default function WatchlistPage() {
               disabled={tickers.includes(symbol)}
               className={`rounded-full px-3 py-1 text-sm transition-colors ${
                 tickers.includes(symbol)
-                  ? 'bg-accent/20 text-accent cursor-not-allowed'
-                  : 'bg-tertiary text-muted hover:bg-accent hover:text-white'
+                  ? 'bg-primary/20 text-primary cursor-not-allowed'
+                  : 'bg-background-tertiary text-foreground-muted hover:bg-primary hover:text-white'
               }`}
             >
               {symbol}

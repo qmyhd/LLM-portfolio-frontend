@@ -1,6 +1,7 @@
 'use client';
 
 import { clsx } from 'clsx';
+import useSWR from 'swr';
 import {
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
@@ -9,56 +10,28 @@ import {
   ChatBubbleLeftIcon,
 } from '@heroicons/react/24/outline';
 import { formatNumber, formatCompact } from '@/lib/format';
+import type { StockProfileCurrent } from '@/types/api';
 
 interface StockMetricsProps {
   ticker: string;
 }
 
-// Mock data - will be replaced with API calls
-const getMockData = (ticker: string) => ({
-  ticker,
-  name: getCompanyName(ticker),
-  latestClose: 178.52,
-  previousClose: 175.23,
-  dailyChange: 3.29,
-  dailyChangePct: 1.88,
-  return1w: 2.45,
-  return1m: 5.67,
-  return3m: 12.34,
-  return1y: 28.90,
-  volatility30d: 24.5,
-  yearHigh: 198.45,
-  yearLow: 142.30,
-  avgVolume: 52340000,
-  // Position metrics
-  hasPosition: true,
-  positionQty: 100,
-  positionValue: 17852.00,
-  avgBuyPrice: 145.30,
-  unrealizedPnl: 3322.00,
-  unrealizedPnlPct: 22.86,
-  // Sentiment metrics
-  totalMentions: 45,
-  mentions30d: 12,
-  avgSentiment: 0.72,
-  bullishPct: 68,
-  bearishPct: 18,
-  neutralPct: 14,
+const fetcher = (url: string) => fetch(url).then(r => {
+  if (!r.ok) throw new Error(`Failed to fetch: ${r.status}`);
+  return r.json();
 });
 
-function getCompanyName(ticker: string): string {
-  const names: Record<string, string> = {
-    AAPL: 'Apple Inc.',
-    MSFT: 'Microsoft Corp.',
-    GOOGL: 'Alphabet Inc.',
-    NVDA: 'NVIDIA Corp.',
-    TSLA: 'Tesla Inc.',
-    META: 'Meta Platforms',
-    AMD: 'AMD Inc.',
-    PLTR: 'Palantir',
-  };
-  return names[ticker] || ticker;
-}
+const COMPANY_NAMES: Record<string, string> = {
+  AAPL: 'Apple Inc.',
+  MSFT: 'Microsoft Corp.',
+  GOOGL: 'Alphabet Inc.',
+  NVDA: 'NVIDIA Corp.',
+  TSLA: 'Tesla Inc.',
+  META: 'Meta Platforms',
+  AMD: 'AMD Inc.',
+  PLTR: 'Palantir',
+  AMZN: 'Amazon.com',
+};
 
 function MetricRow({ label, value, trend }: { label: string; value: string; trend?: 'up' | 'down' | null }) {
   return (
@@ -86,94 +59,167 @@ function SectionHeader({ title, icon: Icon }: { title: string; icon: React.Eleme
   );
 }
 
+function MetricsSkeleton() {
+  return (
+    <div className="h-full overflow-y-auto p-4 space-y-2 animate-pulse">
+      <div className="pb-4 border-b border-border">
+        <div className="h-7 w-20 bg-background-hover rounded" />
+        <div className="h-4 w-32 bg-background-hover rounded mt-2" />
+        <div className="h-9 w-36 bg-background-hover rounded mt-4" />
+        <div className="h-4 w-28 bg-background-hover rounded mt-2" />
+      </div>
+      {[...Array(6)].map((_, i) => (
+        <div key={i} className="flex justify-between py-2">
+          <div className="h-4 w-20 bg-background-hover rounded" />
+          <div className="h-4 w-16 bg-background-hover rounded" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function StockMetrics({ ticker }: StockMetricsProps) {
-  const data = getMockData(ticker);
-  const dailyTrend = data.dailyChange >= 0 ? 'up' : 'down';
+  const { data, isLoading, error } = useSWR<StockProfileCurrent>(
+    `/api/stocks/${ticker}`,
+    fetcher,
+    { revalidateOnFocus: false, dedupingInterval: 30000 }
+  );
+
+  if (isLoading) return <MetricsSkeleton />;
+
+  if (error || !data) {
+    return (
+      <div className="p-4 text-center">
+        <p className="text-sm text-foreground-muted">
+          {error ? 'Failed to load stock data' : 'No data available'}
+        </p>
+      </div>
+    );
+  }
+
+  const dailyChange = data.latestClosePrice && data.previousClosePrice
+    ? data.latestClosePrice - data.previousClosePrice
+    : 0;
+  const dailyTrend = dailyChange >= 0 ? 'up' : 'down';
+
+  function fmtReturn(val: number | null): { value: string; trend: 'up' | 'down' | null } {
+    if (val == null) return { value: '—', trend: null };
+    return {
+      value: `${val >= 0 ? '+' : ''}${formatNumber(val)}%`,
+      trend: val >= 0 ? 'up' : 'down',
+    };
+  }
 
   return (
     <div className="h-full overflow-y-auto p-4 space-y-2">
       {/* Header with price */}
       <div className="pb-4 border-b border-border">
         <h1 className="text-2xl font-bold">{data.ticker}</h1>
-        <p className="text-sm text-foreground-muted">{data.name}</p>
-        
+        <p className="text-sm text-foreground-muted">
+          {COMPANY_NAMES[data.ticker] || data.ticker}
+        </p>
+
         <div className="mt-4">
           <div className="text-3xl font-bold font-mono">
-            ${formatNumber(data.latestClose)}
+            {data.latestClosePrice != null
+              ? `$${formatNumber(data.latestClosePrice)}`
+              : '—'}
           </div>
-          <div className={clsx(
-            'flex items-center gap-1 mt-1',
-            dailyTrend === 'up' ? 'text-profit' : 'text-loss'
-          )}>
-            {dailyTrend === 'up' ? (
-              <ArrowTrendingUpIcon className="w-4 h-4" />
-            ) : (
-              <ArrowTrendingDownIcon className="w-4 h-4" />
-            )}
-            <span className="font-mono font-medium">
-              {data.dailyChange >= 0 ? '+' : ''}{formatNumber(data.dailyChange)} ({formatNumber(data.dailyChangePct)}%)
-            </span>
-          </div>
+          {data.dailyChangePct != null && (
+            <div className={clsx(
+              'flex items-center gap-1 mt-1',
+              dailyTrend === 'up' ? 'text-profit' : 'text-loss'
+            )}>
+              {dailyTrend === 'up' ? (
+                <ArrowTrendingUpIcon className="w-4 h-4" />
+              ) : (
+                <ArrowTrendingDownIcon className="w-4 h-4" />
+              )}
+              <span className="font-mono font-medium">
+                {dailyChange >= 0 ? '+' : ''}{formatNumber(dailyChange)} ({formatNumber(data.dailyChangePct)}%)
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Price Metrics */}
       <div>
         <SectionHeader title="Price" icon={ChartBarIcon} />
-        <MetricRow label="1W Return" value={`${data.return1w >= 0 ? '+' : ''}${formatNumber(data.return1w)}%`} trend={data.return1w >= 0 ? 'up' : 'down'} />
-        <MetricRow label="1M Return" value={`${data.return1m >= 0 ? '+' : ''}${formatNumber(data.return1m)}%`} trend={data.return1m >= 0 ? 'up' : 'down'} />
-        <MetricRow label="3M Return" value={`${data.return3m >= 0 ? '+' : ''}${formatNumber(data.return3m)}%`} trend={data.return3m >= 0 ? 'up' : 'down'} />
-        <MetricRow label="1Y Return" value={`${data.return1y >= 0 ? '+' : ''}${formatNumber(data.return1y)}%`} trend={data.return1y >= 0 ? 'up' : 'down'} />
-        <MetricRow label="30D Volatility" value={`${formatNumber(data.volatility30d, 1)}%`} />
-        <MetricRow label="52W High" value={`$${formatNumber(data.yearHigh)}`} />
-        <MetricRow label="52W Low" value={`$${formatNumber(data.yearLow)}`} />
-        <MetricRow label="Avg Volume" value={formatCompact(data.avgVolume)} />
+        <MetricRow label="1W Return" {...fmtReturn(data.return1wPct)} />
+        <MetricRow label="1M Return" {...fmtReturn(data.return1mPct)} />
+        <MetricRow label="3M Return" {...fmtReturn(data.return3mPct)} />
+        <MetricRow label="1Y Return" {...fmtReturn(data.return1yPct)} />
+        <MetricRow
+          label="30D Volatility"
+          value={data.volatility30d != null ? `${formatNumber(data.volatility30d, 1)}%` : '—'}
+        />
+        <MetricRow
+          label="52W High"
+          value={data.yearHigh != null ? `$${formatNumber(data.yearHigh)}` : '—'}
+        />
+        <MetricRow
+          label="52W Low"
+          value={data.yearLow != null ? `$${formatNumber(data.yearLow)}` : '—'}
+        />
+        <MetricRow
+          label="Avg Volume"
+          value={data.avgVolume30d != null ? formatCompact(data.avgVolume30d) : '—'}
+        />
       </div>
 
       {/* Position Metrics */}
-      {data.hasPosition && (
+      {data.currentPositionQty != null && data.currentPositionQty > 0 && (
         <div>
           <SectionHeader title="Your Position" icon={BanknotesIcon} />
-          <MetricRow label="Shares" value={data.positionQty.toString()} />
-          <MetricRow label="Value" value={`$${data.positionValue.toLocaleString()}`} />
-          <MetricRow label="Avg Cost" value={`$${formatNumber(data.avgBuyPrice)}`} />
-          <MetricRow 
-            label="Unrealized P/L" 
-            value={`${data.unrealizedPnl >= 0 ? '+' : ''}$${Math.abs(data.unrealizedPnl).toLocaleString()}`} 
-            trend={data.unrealizedPnl >= 0 ? 'up' : 'down'}
+          <MetricRow label="Shares" value={data.currentPositionQty.toString()} />
+          <MetricRow
+            label="Value"
+            value={data.currentPositionValue != null ? `$${data.currentPositionValue.toLocaleString()}` : '—'}
           />
-          <MetricRow 
-            label="P/L %" 
-            value={`${data.unrealizedPnlPct >= 0 ? '+' : ''}${formatNumber(data.unrealizedPnlPct)}%`} 
-            trend={data.unrealizedPnlPct >= 0 ? 'up' : 'down'}
+          <MetricRow
+            label="Avg Cost"
+            value={data.avgBuyPrice != null ? `$${formatNumber(data.avgBuyPrice)}` : '—'}
+          />
+          <MetricRow
+            label="Unrealized P/L"
+            value={
+              data.unrealizedPnl != null
+                ? `${data.unrealizedPnl >= 0 ? '+' : ''}$${Math.abs(data.unrealizedPnl).toLocaleString()}`
+                : '—'
+            }
+            trend={data.unrealizedPnl != null ? (data.unrealizedPnl >= 0 ? 'up' : 'down') : null}
+          />
+          <MetricRow
+            label="P/L %"
+            {...fmtReturn(data.unrealizedPnlPct)}
           />
         </div>
       )}
 
       {/* Sentiment Metrics */}
-      <div>
-        <SectionHeader title="Sentiment" icon={ChatBubbleLeftIcon} />
-        <MetricRow label="Total Mentions" value={data.totalMentions.toString()} />
-        <MetricRow label="Last 30 Days" value={data.mentions30d.toString()} />
-        <MetricRow 
-          label="Avg Score" 
-          value={formatNumber(data.avgSentiment)} 
-          trend={data.avgSentiment >= 0.5 ? 'up' : 'down'}
-        />
-        
-        {/* Sentiment bar */}
-        <div className="mt-3">
-          <div className="flex h-2 rounded-full overflow-hidden">
-            <div className="bg-profit" style={{ width: `${data.bullishPct}%` }} />
-            <div className="bg-sentiment-neutral" style={{ width: `${data.neutralPct}%` }} />
-            <div className="bg-loss" style={{ width: `${data.bearishPct}%` }} />
-          </div>
-          <div className="flex justify-between mt-1.5 text-2xs text-foreground-muted">
-            <span className="text-profit">{data.bullishPct}% Bull</span>
-            <span className="text-loss">{data.bearishPct}% Bear</span>
-          </div>
+      {data.totalMentionCount > 0 && (
+        <div>
+          <SectionHeader title="Sentiment" icon={ChatBubbleLeftIcon} />
+          <MetricRow label="Total Mentions" value={data.totalMentionCount.toString()} />
+          <MetricRow label="Last 30 Days" value={data.mentionCount30d.toString()} />
+
+          {/* Sentiment bar */}
+          {(data.bullishMentionPct != null || data.bearishMentionPct != null) && (
+            <div className="mt-3">
+              <div className="flex h-2 rounded-full overflow-hidden">
+                <div className="bg-profit" style={{ width: `${data.bullishMentionPct ?? 0}%` }} />
+                <div className="bg-sentiment-neutral" style={{ width: `${data.neutralMentionPct ?? 0}%` }} />
+                <div className="bg-loss" style={{ width: `${data.bearishMentionPct ?? 0}%` }} />
+              </div>
+              <div className="flex justify-between mt-1.5 text-2xs text-foreground-muted">
+                <span className="text-profit">{data.bullishMentionPct ?? 0}% Bull</span>
+                <span className="text-loss">{data.bearishMentionPct ?? 0}% Bear</span>
+              </div>
+            </div>
+          )}
         </div>
-      </div>
+      )}
     </div>
   );
 }

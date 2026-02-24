@@ -119,14 +119,20 @@ export function PortfolioSummary() {
   }
 
   const { summary } = data;
-  const dailyTrend = summary.dayChange >= 0 ? 'up' : 'down';
-  const totalTrend = summary.unrealizedPL >= 0 ? 'up' : 'down';
+
+  // Use totalEquity from backend SST (equity-only, no cash)
+  const equityValue = summary.totalEquity;
+  const unrealizedPL = summary.unrealizedPL;
+  const unrealizedPLPct = summary.unrealizedPLPercent;
+
+  const dailyTrend = summary.dayChange >= 0 ? 'up' : summary.dayChange < 0 ? 'down' : 'neutral';
+  const totalTrend = unrealizedPL >= 0 ? 'up' : 'down';
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <MetricCard
         title="Portfolio Value"
-        value={formatMoney(summary.totalValue)}
+        value={formatMoney(equityValue)}
         change={summary.dayChange}
         changePct={summary.dayChangePercent}
         icon={ChartBarIcon}
@@ -134,9 +140,9 @@ export function PortfolioSummary() {
       />
       <MetricCard
         title="Total P/L"
-        value={formatSignedMoney(summary.unrealizedPL)}
-        changePct={summary.unrealizedPLPercent}
-        icon={summary.unrealizedPL >= 0 ? ArrowTrendingUpIcon : ArrowTrendingDownIcon}
+        value={formatSignedMoney(unrealizedPL)}
+        changePct={unrealizedPLPct}
+        icon={unrealizedPL >= 0 ? ArrowTrendingUpIcon : ArrowTrendingDownIcon}
         trend={totalTrend}
       />
       <MetricCard

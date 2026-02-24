@@ -1,0 +1,12 @@
+{
+  "name": "llm-portfolio-frontend-root",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Root package — proxies scripts to ./frontend. Run `cd frontend && npm ci` first.",
+  "scripts": {
+    "frontend:dev": "cd frontend && npm run dev",
+    "frontend:build": "cd frontend && npm run build",
+    "frontend:start": "cd frontend && npm run start",
+    "frontend:lint": "cd frontend && npm run lint"
+  }
+}

@@ -192,7 +192,7 @@ export function TopBar({ currentTicker }: TopBarProps) {
         </div>
 
         {/* Center - Search bar */}
-        <form onSubmit={handleSearch} className="flex-1 max-w-md mx-4">
+        <form onSubmit={handleSearch} className="relative flex-1 max-w-md mx-4">
           <div className="relative">
             <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-subtle" />
             <input
@@ -211,7 +211,7 @@ export function TopBar({ currentTicker }: TopBarProps) {
             />
             {isSearching && (
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
               </div>
             )}
             {!isSearching && searchQuery && (
@@ -225,7 +225,7 @@ export function TopBar({ currentTicker }: TopBarProps) {
           
           {/* Search results dropdown */}
           {isSearchFocused && (searchQuery.length >= 1 || searchResults.length > 0) && (
-            <div className="absolute mt-2 w-full max-w-md bg-secondary border border-border rounded-lg shadow-lg z-50 overflow-hidden">
+            <div className="absolute mt-2 w-full max-w-md bg-background-secondary border border-border rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto">
               {searchResults.length > 0 ? (
                 <div className="py-1">
                   {searchResults.map((result, index) => {
@@ -238,31 +238,31 @@ export function TopBar({ currentTicker }: TopBarProps) {
                         className={clsx(
                           'w-full flex items-center justify-between px-3 py-2 text-left transition-colors',
                           index === selectedIndex
-                            ? 'bg-accent/10 text-accent'
-                            : 'hover:bg-tertiary'
+                            ? 'bg-primary/10 text-primary'
+                            : 'hover:bg-background-tertiary'
                         )}
                       >
                         <div className="flex items-center gap-3">
                           <span className="font-mono font-semibold text-foreground">
                             {result.symbol}
                           </span>
-                          <span className="text-sm text-muted truncate max-w-[180px]">
+                          <span className="text-sm text-foreground-muted truncate max-w-[180px]">
                             {result.name}
                           </span>
                           {result.type === 'etf' && (
-                            <span className="px-1.5 py-0.5 text-2xs bg-accent/20 text-accent rounded">
+                            <span className="px-1.5 py-0.5 text-2xs bg-primary/20 text-primary rounded">
                               ETF
                             </span>
                           )}
                         </div>
                         <button
                           onClick={(e) => toggleFavorite(result.symbol, e)}
-                          className="p-1 hover:bg-tertiary rounded"
+                          className="p-1 hover:bg-background-tertiary rounded"
                         >
                           {isFavorite ? (
                             <StarIconSolid className="w-4 h-4 text-yellow-500" />
                           ) : (
-                            <StarIcon className="w-4 h-4 text-muted" />
+                            <StarIcon className="w-4 h-4 text-foreground-muted" />
                           )}
                         </button>
                       </button>
@@ -273,10 +273,10 @@ export function TopBar({ currentTicker }: TopBarProps) {
                 <div className="p-3">
                   <button
                     type="submit"
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-tertiary text-left"
+                    className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-background-tertiary text-left"
                   >
-                    <MagnifyingGlassIcon className="w-4 h-4 text-muted" />
-                    <span className="text-muted">
+                    <MagnifyingGlassIcon className="w-4 h-4 text-foreground-muted" />
+                    <span className="text-foreground-muted">
                       Go to <span className="font-mono font-semibold text-foreground">{searchQuery}</span>
                     </span>
                   </button>

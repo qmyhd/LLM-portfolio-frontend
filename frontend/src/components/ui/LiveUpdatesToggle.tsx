@@ -32,7 +32,7 @@ export function LiveUpdatesToggle({
         className={`p-2 rounded-lg transition-colors ${
           isEnabled 
             ? 'bg-profit/20 text-profit hover:bg-profit/30' 
-            : 'bg-gray-700 text-text-muted hover:bg-gray-600'
+            : 'bg-gray-700 text-foreground-muted hover:bg-gray-600'
         } ${className}`}
         title={`Live updates: ${isEnabled ? 'ON' : 'OFF'}`}
         aria-label={`Toggle live updates (currently ${isEnabled ? 'on' : 'off'})`}
@@ -58,13 +58,13 @@ export function LiveUpdatesToggle({
   return (
     <div className={`flex items-center gap-3 ${className}`}>
       {showLabel && (
-        <span className="text-sm text-text-muted">Live updates</span>
+        <span className="text-sm text-foreground-muted">Live updates</span>
       )}
       
       {/* Toggle switch */}
       <button
         onClick={toggle}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-bg-primary ${
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-bg-primary ${
           isEnabled ? 'bg-profit' : 'bg-gray-600'
         }`}
         role="switch"
@@ -80,7 +80,7 @@ export function LiveUpdatesToggle({
       
       {/* Status indicator */}
       <span className={`text-xs font-medium ${
-        isEnabled ? 'text-profit' : 'text-text-muted'
+        isEnabled ? 'text-profit' : 'text-foreground-muted'
       }`}>
         {isEnabled ? 'ON' : 'OFF'}
       </span>
