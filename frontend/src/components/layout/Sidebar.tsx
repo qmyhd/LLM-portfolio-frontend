@@ -61,8 +61,9 @@ export function Sidebar() {
             // Fetch current prices for favorites
             const res = await fetch(`/api/watchlist?tickers=${tickers.join(',')}`);
             const data = await res.json();
+            const items: Array<{ symbol: string; changePercent: number }> = data.items || [];
             setFavorites(
-              (data.items || []).slice(0, 5).map((item: any) => ({
+              items.slice(0, 5).map((item) => ({
                 ticker: item.symbol,
                 change: item.changePercent,
               }))
@@ -124,7 +125,9 @@ export function Sidebar() {
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           <div className="space-y-1">
             {navigation.map((item) => {
-              const isActive = pathname === item.href;
+              const isActive = item.href === '/'
+                ? pathname === '/'
+                : pathname.startsWith(item.href);
               const Icon = isActive ? item.activeIcon : item.icon;
 
               return (
@@ -139,6 +142,7 @@ export function Sidebar() {
                     isCollapsed && 'justify-center px-0'
                   )}
                   title={isCollapsed ? item.name : undefined}
+                  aria-current={isActive ? 'page' : undefined}
                 >
                   <Icon className="w-5 h-5 flex-shrink-0" />
                   {!isCollapsed && item.name}
@@ -156,7 +160,7 @@ export function Sidebar() {
               <div className="mt-2 space-y-1">
                 {favorites.length === 0 ? (
                   <p className="px-3 py-2 text-xs text-foreground-muted">
-                    No favorites yet. Use ⌘K to search and star tickers.
+                    No favorites yet. Use ⌘K / Ctrl+K to search and star tickers.
                   </p>
                 ) : (
                   favorites.map((stock) => (
@@ -169,6 +173,7 @@ export function Sidebar() {
                           ? 'bg-primary/10 text-primary'
                           : 'text-foreground-muted hover:text-foreground hover:bg-background-hover'
                       )}
+                      aria-current={pathname === `/stock/${stock.ticker}` ? 'page' : undefined}
                     >
                       <div className="flex items-center gap-2">
                         <span className="font-mono font-medium">{stock.ticker}</span>
@@ -236,7 +241,8 @@ export function MobileSidebar({ isOpen, onClose }: { isOpen: boolean; onClose: (
           </Link>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-background-hover"
+            className="p-2 rounded-lg hover:bg-background-hover text-foreground-muted hover:text-foreground transition-colors"
+            aria-label="Close menu"
           >
             ✕
           </button>

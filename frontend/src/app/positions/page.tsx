@@ -7,6 +7,9 @@ import {
   ArrowDownIcon,
   ArrowPathIcon,
   ChartBarIcon,
+  ChevronUpIcon,
+  ChevronDownIcon,
+  BriefcaseIcon,
 } from '@heroicons/react/24/outline';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
@@ -122,7 +125,7 @@ export default function PositionsPage() {
         <div className="card p-4">
           <p className="text-sm text-foreground-muted">Unrealized P/L</p>
           <p className={`mt-1 text-2xl font-bold ${totalPL >= 0 ? 'text-profit' : 'text-loss'}`}>
-            {totalPL >= 0 ? '+' : ''}{formatMoney(Math.abs(totalPL))}
+            {totalPL > 0 ? '+' : totalPL < 0 ? '-' : ''}{formatMoney(Math.abs(totalPL))}
             <span className="ml-2 text-sm">
               ({formatPercent(totalPLPercent, 2, { showSign: true })})
             </span>
@@ -134,7 +137,7 @@ export default function PositionsPage() {
             totalDayChange === 0 ? 'text-foreground-muted' : totalDayChange > 0 ? 'text-profit' : 'text-loss'
           }`}>
             {totalDayChange === 0
-              ? '\u2014'
+              ? '$0.00'
               : `${totalDayChange >= 0 ? '+' : ''}${formatMoney(Math.abs(totalDayChange))}`}
           </p>
         </div>
@@ -146,30 +149,48 @@ export default function PositionsPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-border text-left text-sm text-foreground-muted">
-                <th className="px-4 py-3 font-medium">Symbol</th>
-                <th className="px-4 py-3 font-medium">Company</th>
-                <th className="px-4 py-3 font-medium text-right">Qty</th>
-                <th className="px-4 py-3 font-medium text-right">Avg Cost</th>
-                <th className="px-4 py-3 font-medium text-right">Price</th>
-                <th 
-                  className="cursor-pointer px-4 py-3 font-medium text-right hover:text-foreground"
+                <th scope="col" className="px-4 py-3 font-medium">Symbol</th>
+                <th scope="col" className="px-4 py-3 font-medium">Company</th>
+                <th scope="col" className="px-4 py-3 font-medium text-right">Qty</th>
+                <th scope="col" className="px-4 py-3 font-medium text-right">Avg Cost</th>
+                <th scope="col" className="px-4 py-3 font-medium text-right">Price</th>
+                <th
+                  scope="col"
+                  className="cursor-pointer px-4 py-3 font-medium text-right hover:text-foreground select-none"
                   onClick={() => toggleSort('value')}
                 >
-                  Value {sortBy === 'value' && (sortOrder === 'desc' ? '↓' : '↑')}
+                  <span className="inline-flex items-center gap-1">
+                    Value
+                    {sortBy === 'value' && (sortOrder === 'desc'
+                      ? <ChevronDownIcon className="h-3.5 w-3.5" />
+                      : <ChevronUpIcon className="h-3.5 w-3.5" />)}
+                  </span>
                 </th>
-                <th 
-                  className="cursor-pointer px-4 py-3 font-medium text-right hover:text-foreground"
+                <th
+                  scope="col"
+                  className="cursor-pointer px-4 py-3 font-medium text-right hover:text-foreground select-none"
                   onClick={() => toggleSort('pl')}
                 >
-                  P/L {sortBy === 'pl' && (sortOrder === 'desc' ? '↓' : '↑')}
+                  <span className="inline-flex items-center gap-1">
+                    P/L
+                    {sortBy === 'pl' && (sortOrder === 'desc'
+                      ? <ChevronDownIcon className="h-3.5 w-3.5" />
+                      : <ChevronUpIcon className="h-3.5 w-3.5" />)}
+                  </span>
                 </th>
-                <th 
-                  className="cursor-pointer px-4 py-3 font-medium text-right hover:text-foreground"
+                <th
+                  scope="col"
+                  className="cursor-pointer px-4 py-3 font-medium text-right hover:text-foreground select-none"
                   onClick={() => toggleSort('dayChange')}
                 >
-                  Day {sortBy === 'dayChange' && (sortOrder === 'desc' ? '↓' : '↑')}
+                  <span className="inline-flex items-center gap-1">
+                    Day
+                    {sortBy === 'dayChange' && (sortOrder === 'desc'
+                      ? <ChevronDownIcon className="h-3.5 w-3.5" />
+                      : <ChevronUpIcon className="h-3.5 w-3.5" />)}
+                  </span>
                 </th>
-                <th className="px-4 py-3 font-medium"></th>
+                <th scope="col" className="px-4 py-3 font-medium"><span className="sr-only">Actions</span></th>
               </tr>
             </thead>
             <tbody>
@@ -185,8 +206,10 @@ export default function PositionsPage() {
                 ))
               ) : sortedPositions.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-12 text-center text-foreground-muted">
-                    No positions found
+                  <td colSpan={9} className="px-4 py-12 text-center">
+                    <BriefcaseIcon className="mx-auto h-10 w-10 text-foreground-muted/50 mb-2" />
+                    <p className="text-foreground-muted">No positions found</p>
+                    <p className="text-xs text-foreground-subtle mt-1">Sync your brokerage to see holdings</p>
                   </td>
                 </tr>
               ) : (

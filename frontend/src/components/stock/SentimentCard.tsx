@@ -35,19 +35,6 @@ export function SentimentCard({ ticker }: SentimentCardProps) {
       
       if (data.sentiment) {
         setSentiment(data.sentiment);
-      } else {
-        // Generate mock sentiment
-        const bullish = Math.floor(Math.random() * 60) + 20;
-        const bearish = Math.floor(Math.random() * (100 - bullish));
-        const neutral = 100 - bullish - bearish;
-        setSentiment({
-          bullish,
-          bearish,
-          neutral,
-          overall: bullish > bearish ? 'bullish' : bearish > bullish ? 'bearish' : 'neutral',
-          score: ((bullish - bearish) / 100),
-          ideaCount: Math.floor(Math.random() * 50) + 10,
-        });
       }
     } catch (error) {
       console.error('Failed to fetch sentiment:', error);
@@ -103,7 +90,7 @@ export function SentimentCard({ ticker }: SentimentCardProps) {
           style={{ width: `${sentiment.bullish}%` }}
         />
         <div
-          className="bg-muted/50 transition-all"
+          className="bg-foreground-muted/30 transition-all"
           style={{ width: `${sentiment.neutral}%` }}
         />
         <div

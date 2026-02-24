@@ -5,3 +5,7 @@
 export { usePortfolio, type PortfolioData } from './usePortfolio';
 export { useIdeas, type IdeasData } from './useIdeas';
 export { useLiveUpdates } from './useLiveUpdates';
+export {
+  useTranscript, useManagement, useFundamentals,
+  useFilings, useNews, useNotes,
+} from './useOpenBB';

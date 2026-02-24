@@ -10,6 +10,8 @@ import { RawMessagesPanel } from './RawMessagesPanel';
 import { PositionCard } from './PositionCard';
 import { SentimentCard } from './SentimentCard';
 import { RiskCard } from './RiskCard';
+import { FundamentalsCard } from './FundamentalsCard';
+import { OpenBBInsightsPanel } from './OpenBBInsightsPanel';
 import {
   StarIcon,
   ArrowPathIcon,
@@ -46,7 +48,7 @@ function ChartSkeleton() {
 }
 
 export function StockHubContent({ ticker }: StockHubContentProps) {
-  const [activeTab, setActiveTab] = useState<'ideas' | 'chat' | 'raw'>('ideas');
+  const [activeTab, setActiveTab] = useState<'ideas' | 'chat' | 'raw' | 'insights'>('ideas');
   const [isFavorite, setIsFavorite] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [chartProvider, setChartProvider] = useState<ChartProvider>('tradingview');
@@ -164,6 +166,11 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
           <Suspense fallback={<CardSkeleton lines={3} />}>
             <RiskCard ticker={ticker} key={`risk-${refreshKey}`} />
           </Suspense>
+
+          {/* Fundamentals Card */}
+          <Suspense fallback={<CardSkeleton lines={5} />}>
+            <FundamentalsCard ticker={ticker} key={`fundamentals-${refreshKey}`} />
+          </Suspense>
         </aside>
 
         {/* Middle Column - Chart (owns height) */}
@@ -217,6 +224,16 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
             >
               Raw
             </button>
+            <button
+              onClick={() => setActiveTab('insights')}
+              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                activeTab === 'insights'
+                  ? 'text-primary border-b-2 border-primary bg-primary/5'
+                  : 'text-foreground-muted hover:text-foreground hover:bg-background-tertiary'
+              }`}
+            >
+              Insights
+            </button>
           </div>
 
           {/* Tab content */}
@@ -238,6 +255,9 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
               )}
               {activeTab === 'raw' && (
                 <RawMessagesPanel ticker={ticker} key={`raw-${refreshKey}`} />
+              )}
+              {activeTab === 'insights' && (
+                <OpenBBInsightsPanel ticker={ticker} key={`insights-${refreshKey}`} />
               )}
             </Suspense>
           </div>

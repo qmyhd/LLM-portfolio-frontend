@@ -7,6 +7,7 @@ import {
   ArrowDownIcon,
   FunnelIcon,
   MagnifyingGlassIcon,
+  ClipboardDocumentListIcon,
 } from '@heroicons/react/24/outline';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
@@ -105,14 +106,14 @@ export default function OrdersPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-border text-left text-sm text-foreground-muted">
-                <th className="px-4 py-3 font-medium">Date</th>
-                <th className="px-4 py-3 font-medium">Symbol</th>
-                <th className="px-4 py-3 font-medium">Side</th>
-                <th className="px-4 py-3 font-medium">Type</th>
-                <th className="px-4 py-3 font-medium text-right">Qty</th>
-                <th className="px-4 py-3 font-medium text-right">Price</th>
-                <th className="px-4 py-3 font-medium text-right">Total</th>
-                <th className="px-4 py-3 font-medium">Status</th>
+                <th scope="col" className="px-4 py-3 font-medium">Date</th>
+                <th scope="col" className="px-4 py-3 font-medium">Symbol</th>
+                <th scope="col" className="px-4 py-3 font-medium">Side</th>
+                <th scope="col" className="px-4 py-3 font-medium">Type</th>
+                <th scope="col" className="px-4 py-3 font-medium text-right">Qty</th>
+                <th scope="col" className="px-4 py-3 font-medium text-right">Price</th>
+                <th scope="col" className="px-4 py-3 font-medium text-right">Total</th>
+                <th scope="col" className="px-4 py-3 font-medium">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -129,8 +130,10 @@ export default function OrdersPage() {
                 ))
               ) : filteredOrders.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-foreground-muted">
-                    No orders found
+                  <td colSpan={8} className="px-4 py-12 text-center">
+                    <ClipboardDocumentListIcon className="mx-auto h-10 w-10 text-foreground-muted/50 mb-2" />
+                    <p className="text-foreground-muted">No orders found</p>
+                    <p className="text-xs text-foreground-subtle mt-1">Try adjusting your filter or search</p>
                   </td>
                 </tr>
               ) : (

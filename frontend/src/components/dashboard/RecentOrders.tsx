@@ -71,12 +71,12 @@ export function RecentOrders() {
         <table className="w-full">
           <thead>
             <tr className="border-b border-border bg-background-tertiary">
-              <th className="table-header text-left">Symbol</th>
-              <th className="table-header text-center">Action</th>
-              <th className="table-header text-right hidden sm:table-cell">Qty</th>
-              <th className="table-header text-right hidden md:table-cell">Price</th>
-              <th className="table-header text-right">Total</th>
-              <th className="table-header text-right hidden lg:table-cell">Time</th>
+              <th scope="col" className="table-header text-left">Symbol</th>
+              <th scope="col" className="table-header text-center">Action</th>
+              <th scope="col" className="table-header text-right hidden sm:table-cell">Qty</th>
+              <th scope="col" className="table-header text-right hidden md:table-cell">Price</th>
+              <th scope="col" className="table-header text-right">Total</th>
+              <th scope="col" className="table-header text-right hidden lg:table-cell">Time</th>
             </tr>
           </thead>
           <tbody>

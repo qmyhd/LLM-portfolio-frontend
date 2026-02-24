@@ -254,3 +254,96 @@ export interface HealthResponse {
   rds: boolean;
   timestamp: string;
 }
+
+// =============================================================================
+// OpenBB Insights (Fundamentals, Transcripts, Management, Filings, News, Notes)
+// =============================================================================
+
+export interface TranscriptItem {
+  date: string | null;
+  content: string;
+  quarter: number | null;
+  year: number | null;
+  symbol: string;
+}
+
+export interface TranscriptResponse {
+  ticker: string;
+  transcripts: TranscriptItem[];
+}
+
+export interface ExecutiveItem {
+  name: string;
+  title: string;
+  pay: number | null;
+  currency: string | null;
+  gender: string | null;
+  yearBorn: number | null;
+  titleSince: string | null;
+}
+
+export interface ManagementResponse {
+  ticker: string;
+  executives: ExecutiveItem[];
+}
+
+export interface FundamentalsResponse {
+  ticker: string;
+  marketCap: number | null;
+  peRatio: number | null;
+  pegRatio: number | null;
+  epsActual: number | null;
+  revenuePerShare: number | null;
+  debtToEquity: number | null;
+  currentRatio: number | null;
+  returnOnEquity: number | null;
+  returnOnAssets: number | null;
+  dividendYield: number | null;
+  priceToBook: number | null;
+  priceToSales: number | null;
+  bookValuePerShare: number | null;
+  freeCashFlowPerShare: number | null;
+}
+
+export interface FilingItem {
+  filingDate: string | null;
+  formType: string;
+  reportUrl: string | null;
+  description: string | null;
+  acceptedDate: string | null;
+}
+
+export interface FilingsResponse {
+  ticker: string;
+  filings: FilingItem[];
+  total: number;
+}
+
+export interface NewsItem {
+  date: string | null;
+  title: string;
+  text: string | null;
+  url: string | null;
+  source: string | null;
+  images: string[];
+}
+
+export interface NewsResponse {
+  ticker: string;
+  articles: NewsItem[];
+  total: number;
+}
+
+export interface StockNote {
+  id: number;
+  symbol: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NotesResponse {
+  ticker: string;
+  notes: StockNote[];
+  total: number;
+}

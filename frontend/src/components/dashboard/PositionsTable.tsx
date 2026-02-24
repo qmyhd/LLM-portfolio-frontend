@@ -134,7 +134,8 @@ export function PositionsTable() {
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value as FilterMode)}
-              className="bg-background-hover border border-border rounded-md px-2 py-1 text-sm"
+              className="bg-background-secondary border border-border rounded-md px-2 py-1 text-sm text-foreground cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              aria-label="Filter positions"
             >
               <option value="all">All</option>
               <option value="winners">Winners</option>
@@ -169,28 +170,32 @@ export function PositionsTable() {
           <thead>
             <tr className="border-b border-border bg-background-tertiary">
               <th
-                className="table-header text-left cursor-pointer hover:text-foreground"
+                scope="col"
+                className="table-header text-left cursor-pointer hover:text-foreground select-none"
                 onClick={() => handleSort('symbol')}
               >
                 Symbol <SortIcon column="symbol" />
               </th>
-              <th className="table-header text-right hidden sm:table-cell">Qty</th>
-              <th className="table-header text-right hidden md:table-cell">Price</th>
-              <th className="table-header text-right hidden xl:table-cell">Avg Cost</th>
+              <th scope="col" className="table-header text-right hidden sm:table-cell">Qty</th>
+              <th scope="col" className="table-header text-right hidden md:table-cell">Price</th>
+              <th scope="col" className="table-header text-right hidden xl:table-cell">Avg Cost</th>
               <th
-                className="table-header text-right cursor-pointer hover:text-foreground"
+                scope="col"
+                className="table-header text-right cursor-pointer hover:text-foreground select-none"
                 onClick={() => handleSort('equity')}
               >
                 Value <SortIcon column="equity" />
               </th>
               <th
-                className="table-header text-right cursor-pointer hover:text-foreground"
+                scope="col"
+                className="table-header text-right cursor-pointer hover:text-foreground select-none"
                 onClick={() => handleSort('openPnl')}
               >
                 P/L <SortIcon column="openPnl" />
               </th>
               <th
-                className="table-header text-right cursor-pointer hover:text-foreground"
+                scope="col"
+                className="table-header text-right cursor-pointer hover:text-foreground select-none"
                 onClick={() => handleSort('openPnlPercent')}
               >
                 P/L % <SortIcon column="openPnlPercent" />

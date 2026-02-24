@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { signIn } from 'next-auth/react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Suspense } from 'react';
+import { UserIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 import { LiquidGradientBackground } from '@/components/ui/LiquidGradientBackground';
 
 /**
@@ -272,9 +273,7 @@ function SigninIntroContent() {
               >
                 {/* Username */}
                 <div className="relative">
-                  <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-                  </svg>
+                  <UserIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-gray-500" />
                   <input
                     type="text"
                     placeholder="Username"
@@ -282,21 +281,21 @@ function SigninIntroContent() {
                     onChange={(e) => { setUsername(e.target.value); setLoginError(''); }}
                     autoComplete="username"
                     autoFocus
+                    aria-label="Username"
                     className="w-full pl-11 pr-4 py-3 bg-white/[0.06] border border-white/[0.1] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#5865f2]/50 focus:border-[#5865f2]/50 transition-all"
                   />
                 </div>
 
                 {/* Password */}
                 <div className="relative">
-                  <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-                  </svg>
+                  <LockClosedIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-gray-500" />
                   <input
                     type="password"
                     placeholder="Password"
                     value={password}
                     onChange={(e) => { setPassword(e.target.value); setLoginError(''); }}
                     autoComplete="current-password"
+                    aria-label="Password"
                     className="w-full pl-11 pr-4 py-3 bg-white/[0.06] border border-white/[0.1] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#5865f2]/50 focus:border-[#5865f2]/50 transition-all"
                   />
                 </div>

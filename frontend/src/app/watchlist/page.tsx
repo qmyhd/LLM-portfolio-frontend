@@ -140,7 +140,7 @@ export default function WatchlistPage() {
             }}
             onKeyDown={(e) => e.key === 'Enter' && addTicker()}
             className="input w-32 uppercase"
-            maxLength={6}
+            maxLength={10}
           />
           <button
             onClick={addTicker}

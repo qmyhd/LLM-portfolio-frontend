@@ -186,8 +186,9 @@ export function TopBar({ currentTicker }: TopBarProps) {
         <div className="flex items-center gap-4">
           {/* Mobile menu button */}
           <button
-            className="md:hidden p-2 rounded-lg hover:bg-background-hover"
+            className="md:hidden p-2 rounded-lg hover:bg-background-hover text-foreground-muted hover:text-foreground transition-colors"
             onClick={() => setIsMobileMenuOpen(true)}
+            aria-label="Open navigation menu"
           >
             <Bars3Icon className="w-6 h-6" />
           </button>
@@ -207,7 +208,7 @@ export function TopBar({ currentTicker }: TopBarProps) {
             <input
               ref={searchRef}
               type="text"
-              placeholder="Search ticker... (⌘K)"
+              placeholder="Search ticker... (⌘K / Ctrl+K)"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value.toUpperCase())}
               onFocus={() => setIsSearchFocused(true)}
@@ -234,7 +235,7 @@ export function TopBar({ currentTicker }: TopBarProps) {
           
           {/* Search results dropdown */}
           {isSearchFocused && (searchQuery.length >= 1 || searchResults.length > 0) && (
-            <div className="absolute mt-2 w-full max-w-md bg-background-secondary border border-border rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto">
+            <div className="absolute mt-2 w-full max-w-md bg-background-secondary border border-border rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto" role="listbox" aria-label="Search results">
               {searchResults.length > 0 ? (
                 <div className="py-1">
                   {searchResults.map((result, index) => {
@@ -315,12 +316,20 @@ export function TopBar({ currentTicker }: TopBarProps) {
           </button>
 
           {/* Notifications */}
-          <button className="p-2 rounded-lg hover:bg-background-hover relative">
+          <button
+            className="p-2 rounded-lg hover:bg-background-hover relative text-foreground-muted hover:text-foreground transition-colors"
+            aria-label="Notifications"
+            title="Notifications"
+          >
             <BellIcon className="w-5 h-5" />
           </button>
 
           {/* Profile */}
-          <button className="ml-2 w-8 h-8 bg-primary rounded-full flex items-center justify-center text-sm font-medium text-white">
+          <button
+            className="ml-2 w-8 h-8 bg-primary rounded-full flex items-center justify-center text-sm font-medium text-white"
+            aria-label="User profile"
+            title="Profile"
+          >
             Q
           </button>
         </div>
