@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import {
   ArrowUpIcon,
   ArrowDownIcon,
@@ -139,12 +140,12 @@ export default function OrdersPage() {
                       {formatDate(order.createdAt)}
                     </td>
                     <td className="px-4 py-3">
-                      <a
+                      <Link
                         href={`/stock/${order.symbol}`}
                         className="font-medium text-foreground hover:text-primary"
                       >
                         {order.symbol}
-                      </a>
+                      </Link>
                     </td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center gap-1 text-sm font-medium ${
@@ -191,28 +192,39 @@ export default function OrdersPage() {
 
       {/* Summary Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="card p-4">
-          <p className="text-sm text-foreground-muted">Total Orders</p>
-          <p className="mt-1 text-2xl font-bold text-foreground">{orders.length}</p>
-        </div>
-        <div className="card p-4">
-          <p className="text-sm text-foreground-muted">Filled</p>
-          <p className="mt-1 text-2xl font-bold text-profit">
-            {orders.filter(o => o.status === 'filled').length}
-          </p>
-        </div>
-        <div className="card p-4">
-          <p className="text-sm text-foreground-muted">Pending</p>
-          <p className="mt-1 text-2xl font-bold text-yellow-500">
-            {orders.filter(o => o.status === 'pending').length}
-          </p>
-        </div>
-        <div className="card p-4">
-          <p className="text-sm text-foreground-muted">Cancelled</p>
-          <p className="mt-1 text-2xl font-bold text-foreground-muted">
-            {orders.filter(o => o.status === 'cancelled').length}
-          </p>
-        </div>
+        {loading ? (
+          [...Array(4)].map((_, i) => (
+            <div key={i} className="card p-4 animate-pulse">
+              <div className="h-4 w-24 bg-background-hover rounded" />
+              <div className="h-8 w-16 bg-background-hover rounded mt-2" />
+            </div>
+          ))
+        ) : (
+          <>
+            <div className="card p-4">
+              <p className="text-sm text-foreground-muted">Total Orders</p>
+              <p className="mt-1 text-2xl font-bold text-foreground">{orders.length}</p>
+            </div>
+            <div className="card p-4">
+              <p className="text-sm text-foreground-muted">Filled</p>
+              <p className="mt-1 text-2xl font-bold text-profit">
+                {orders.filter(o => o.status === 'filled').length}
+              </p>
+            </div>
+            <div className="card p-4">
+              <p className="text-sm text-foreground-muted">Pending</p>
+              <p className="mt-1 text-2xl font-bold text-yellow-500">
+                {orders.filter(o => o.status === 'pending').length}
+              </p>
+            </div>
+            <div className="card p-4">
+              <p className="text-sm text-foreground-muted">Cancelled</p>
+              <p className="mt-1 text-2xl font-bold text-foreground-muted">
+                {orders.filter(o => o.status === 'cancelled').length}
+              </p>
+            </div>
+          </>
+        )}
       </div>
     </div>
         </main>

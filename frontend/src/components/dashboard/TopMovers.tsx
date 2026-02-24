@@ -10,36 +10,45 @@ import type { Position } from '@/types/api';
 import { CardSpotlight } from '@/components/ui/CardSpotlight';
 import { formatNumber } from '@/lib/format';
 
-/** Derive top gainers/losers from portfolio positions using dayChangePercent. */
+/**
+ * Derive top gainers/losers from portfolio positions.
+ * Primary: dayChangePercent (intraday).
+ * Fallback: openPnlPercent (unrealized P/L %) when day-change is unavailable.
+ */
 function deriveMovers(positions: Position[]) {
-  const withChange = positions.filter(
-    (p) => p.dayChangePercent !== null && p.dayChangePercent !== undefined
+  // Try day-change first — filter out zero/null values (likely stale data)
+  const withDayChange = positions.filter(
+    (p) => p.dayChangePercent !== null && p.dayChangePercent !== undefined && p.dayChangePercent !== 0
   );
 
-  const sorted = [...withChange].sort(
-    (a, b) => (b.dayChangePercent ?? 0) - (a.dayChangePercent ?? 0)
-  );
+  const useUnrealized = withDayChange.length === 0;
+  const source = useUnrealized ? positions : withDayChange;
+  const getChange = useUnrealized
+    ? (p: Position) => p.openPnlPercent ?? 0
+    : (p: Position) => p.dayChangePercent ?? 0;
+
+  const sorted = [...source].sort((a, b) => getChange(b) - getChange(a));
 
   const gainers = sorted
-    .filter((p) => (p.dayChangePercent ?? 0) > 0)
+    .filter((p) => getChange(p) > 0)
     .slice(0, 3)
     .map((p) => ({
       symbol: p.symbol,
-      change: p.dayChangePercent ?? 0,
+      change: getChange(p),
       price: p.currentPrice,
     }));
 
   const losers = sorted
-    .filter((p) => (p.dayChangePercent ?? 0) < 0)
+    .filter((p) => getChange(p) < 0)
     .reverse()
     .slice(0, 3)
     .map((p) => ({
       symbol: p.symbol,
-      change: p.dayChangePercent ?? 0,
+      change: getChange(p),
       price: p.currentPrice,
     }));
 
-  return { gainers, losers };
+  return { gainers, losers, useUnrealized };
 }
 
 export function TopMovers() {
@@ -69,13 +78,13 @@ export function TopMovers() {
   }
 
   const positions = data?.positions ?? [];
-  const { gainers, losers } = deriveMovers(positions);
+  const { gainers, losers, useUnrealized } = deriveMovers(positions);
   const hasData = gainers.length > 0 || losers.length > 0;
 
   if (!hasData) {
     return (
       <CardSpotlight className="card p-5 text-center">
-        <p className="text-foreground-muted text-sm">No day-change data available</p>
+        <p className="text-foreground-muted text-sm">No positions data available</p>
       </CardSpotlight>
     );
   }
@@ -84,7 +93,12 @@ export function TopMovers() {
     <CardSpotlight className="card">
       {/* Header */}
       <div className="px-5 py-4 border-b border-border">
-        <h2 className="text-lg font-semibold">Top Movers</h2>
+        <h2 className="text-lg font-semibold">
+          Top Movers
+          {useUnrealized && (
+            <span className="ml-2 text-xs font-normal text-foreground-muted">(by P/L %)</span>
+          )}
+        </h2>
       </div>
 
       {/* Gainers */}

@@ -79,6 +79,13 @@ export function ChatWidget({ ticker }: ChatWidgetProps) {
 
   return (
     <div className="h-full flex flex-col">
+      {/* Demo mode banner */}
+      <div className="px-4 py-2 bg-yellow-500/10 border-b border-yellow-500/20 text-center">
+        <span className="text-xs font-medium text-yellow-500">
+          Demo Mode — Responses are simulated
+        </span>
+      </div>
+
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map(message => (

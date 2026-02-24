@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import {
   PlusIcon,
   XMarkIcon,
@@ -181,7 +182,7 @@ export default function WatchlistPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {items.map((item) => (
-            <a
+            <Link
               key={item.symbol}
               href={`/stock/${item.symbol}`}
               className="card group relative p-4 transition-all hover:border-primary"
@@ -228,7 +229,7 @@ export default function WatchlistPage() {
               <div className="mt-2 text-xs text-foreground-muted">
                 Vol: {formatVolume(item.volume)}
               </div>
-            </a>
+            </Link>
           ))}
         </div>
       )}

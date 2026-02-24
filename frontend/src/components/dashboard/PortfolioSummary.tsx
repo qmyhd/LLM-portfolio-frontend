@@ -152,10 +152,10 @@ export function PortfolioSummary() {
         trend="neutral"
       />
       <MetricCard
-        title="Cash Balance"
+        title={summary.cashBalance < 0 ? 'Cash Balance (Margin)' : 'Cash Balance'}
         value={formatMoney(summary.cashBalance)}
         icon={BanknotesIcon}
-        trend="neutral"
+        trend={summary.cashBalance < 0 ? 'down' : 'neutral'}
       />
     </div>
   );

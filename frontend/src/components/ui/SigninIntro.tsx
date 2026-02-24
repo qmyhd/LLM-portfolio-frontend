@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { signIn } from 'next-auth/react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Suspense } from 'react';
 import { LiquidGradientBackground } from '@/components/ui/LiquidGradientBackground';
 
@@ -12,24 +12,28 @@ import { LiquidGradientBackground } from '@/components/ui/LiquidGradientBackgrou
  * Sequence:
  *   1. Three large "QQQ" text characters animate in with gradient fill
  *   2. "LLM Portfolio" subtitle fades in below
- *   3. Entire intro fades out → liquid gradient + Google sign-in
+ *   3. Entire intro fades out → credentials form + Google sign-in
  *
  * - Uses anime.js v4 for animations
- * - Liquid gradient background (replaces starfield)
- * - Glassmorphism sign-in card
+ * - Liquid gradient background
+ * - Glassmorphism sign-in card with username/password + Google OAuth
  * - Respects `prefers-reduced-motion`
- * - `signIn("google")` from NextAuth
  */
 
 type Phase = 'intro' | 'signin';
 
 function SigninIntroContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const callbackUrl = searchParams.get('callbackUrl') || '/';
   const error = searchParams.get('error');
 
   const [phase, setPhase] = useState<Phase>('intro');
   const [fontLoaded, setFontLoaded] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const introRef = useRef<HTMLDivElement>(null);
   const subtitleRef = useRef<HTMLDivElement>(null);
   const hasAnimated = useRef(false);
@@ -214,16 +218,18 @@ function SigninIntroContent() {
               </p>
             </div>
 
-            {/* Error Message */}
+            {/* Error Messages */}
             {error && (
               <div className="bg-red-900/30 backdrop-blur-sm border border-red-500/30 rounded-xl p-4 text-red-200 text-center">
                 {error === 'AccessDenied' ? (
                   <>
                     <p className="font-semibold">Access Denied</p>
                     <p className="text-sm mt-1">
-                      Your email is not authorized to access this dashboard.
+                      Your account is not authorized to access this dashboard.
                     </p>
                   </>
+                ) : error === 'CredentialsSignin' ? (
+                  <p>Invalid username or password.</p>
                 ) : (
                   <p>An error occurred during sign in. Please try again.</p>
                 )}
@@ -231,17 +237,114 @@ function SigninIntroContent() {
             )}
 
             {/* Sign In Card - Glassmorphism */}
-            <div className="bg-white/[0.04] backdrop-blur-xl rounded-2xl shadow-2xl p-8 space-y-6 border border-white/[0.08]">
+            <div className="bg-white/[0.04] backdrop-blur-xl rounded-2xl shadow-2xl p-8 space-y-5 border border-white/[0.08]">
               <div className="text-center">
                 <h2 className="text-xl font-semibold text-white">
                   Sign in to continue
                 </h2>
               </div>
 
+              {/* Credentials Form */}
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!username.trim() || !password.trim() || isSubmitting) return;
+                  setLoginError('');
+                  setIsSubmitting(true);
+                  try {
+                    const result = await signIn('credentials', {
+                      username: username.trim(),
+                      password: password.trim(),
+                      redirect: false,
+                    });
+                    if (result?.error) {
+                      setLoginError('Invalid username or password');
+                    } else if (result?.ok) {
+                      router.push(callbackUrl);
+                    }
+                  } catch {
+                    setLoginError('Something went wrong. Please try again.');
+                  } finally {
+                    setIsSubmitting(false);
+                  }
+                }}
+                className="space-y-4"
+              >
+                {/* Username */}
+                <div className="relative">
+                  <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                  </svg>
+                  <input
+                    type="text"
+                    placeholder="Username"
+                    value={username}
+                    onChange={(e) => { setUsername(e.target.value); setLoginError(''); }}
+                    autoComplete="username"
+                    autoFocus
+                    className="w-full pl-11 pr-4 py-3 bg-white/[0.06] border border-white/[0.1] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#5865f2]/50 focus:border-[#5865f2]/50 transition-all"
+                  />
+                </div>
+
+                {/* Password */}
+                <div className="relative">
+                  <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                  </svg>
+                  <input
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => { setPassword(e.target.value); setLoginError(''); }}
+                    autoComplete="current-password"
+                    className="w-full pl-11 pr-4 py-3 bg-white/[0.06] border border-white/[0.1] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#5865f2]/50 focus:border-[#5865f2]/50 transition-all"
+                  />
+                </div>
+
+                {/* Inline error */}
+                {loginError && (
+                  <p className="text-red-400 text-sm text-center">{loginError}</p>
+                )}
+
+                {/* Submit */}
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !username.trim() || !password.trim()}
+                  className="w-full py-3 rounded-xl font-semibold text-white transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed"
+                  style={{
+                    background: 'linear-gradient(135deg, #5865f2, #9333ea)',
+                  }}
+                >
+                  {isSubmitting ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Signing in...
+                    </span>
+                  ) : (
+                    'Sign In'
+                  )}
+                </button>
+              </form>
+
+              {/* Divider */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-white/10"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-3 text-gray-500 bg-[#0a0e1a]">
+                    or continue with
+                  </span>
+                </div>
+              </div>
+
               {/* Google Sign In Button */}
               <button
                 onClick={() => signIn('google', { callbackUrl })}
-                className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-white hover:bg-gray-100 text-gray-800 font-medium rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-[1.02]"
+                className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.1] text-white font-medium rounded-xl transition-all duration-200 hover:scale-[1.02]"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path
@@ -263,22 +366,10 @@ function SigninIntroContent() {
                 </svg>
                 <span>Continue with Google</span>
               </button>
-
-              {/* Divider */}
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-white/10"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-3 text-gray-500 bg-transparent">
-                    Authorized access only
-                  </span>
-                </div>
-              </div>
             </div>
 
             <p className="text-center text-gray-600 text-xs">
-              LLM Portfolio &copy; 2026
+              LLM Portfolio &copy; {new Date().getFullYear()}
             </p>
           </div>
         </div>

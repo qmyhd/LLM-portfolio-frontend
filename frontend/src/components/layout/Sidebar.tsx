@@ -180,7 +180,9 @@ export function Sidebar() {
                           stock.change < 0 ? 'text-loss' : 'text-foreground-muted'
                         )}
                       >
-                        {`${stock.change >= 0 ? '+' : ''}${formatNumber(stock.change)}%`}
+                        {stock.change === 0
+                          ? '\u2014'
+                          : `${stock.change >= 0 ? '+' : ''}${formatNumber(stock.change)}%`}
                       </span>
                     </Link>
                   ))

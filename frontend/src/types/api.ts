@@ -119,6 +119,12 @@ export interface StockProfileCurrent {
   labelTechnicalAnalysisCount: number;
   labelOptionsCount: number;
   labelCatalystNewsCount: number;
+
+  // Company metadata (from yfinance)
+  companyName?: string;
+  sector?: string;
+  industry?: string;
+  marketCap?: number;
 }
 
 // =============================================================================

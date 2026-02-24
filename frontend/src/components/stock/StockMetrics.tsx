@@ -10,6 +10,7 @@ import {
   ChatBubbleLeftIcon,
 } from '@heroicons/react/24/outline';
 import { formatNumber, formatCompact } from '@/lib/format';
+import { COMPANY_NAMES } from '@/lib/mappers';
 import type { StockProfileCurrent } from '@/types/api';
 
 interface StockMetricsProps {
@@ -20,18 +21,6 @@ const fetcher = (url: string) => fetch(url).then(r => {
   if (!r.ok) throw new Error(`Failed to fetch: ${r.status}`);
   return r.json();
 });
-
-const COMPANY_NAMES: Record<string, string> = {
-  AAPL: 'Apple Inc.',
-  MSFT: 'Microsoft Corp.',
-  GOOGL: 'Alphabet Inc.',
-  NVDA: 'NVIDIA Corp.',
-  TSLA: 'Tesla Inc.',
-  META: 'Meta Platforms',
-  AMD: 'AMD Inc.',
-  PLTR: 'Palantir',
-  AMZN: 'Amazon.com',
-};
 
 function MetricRow({ label, value, trend }: { label: string; value: string; trend?: 'up' | 'down' | null }) {
   return (
@@ -116,7 +105,7 @@ export function StockMetrics({ ticker }: StockMetricsProps) {
       <div className="pb-4 border-b border-border">
         <h1 className="text-2xl font-bold">{data.ticker}</h1>
         <p className="text-sm text-foreground-muted">
-          {COMPANY_NAMES[data.ticker] || data.ticker}
+          {data.companyName || COMPANY_NAMES[data.ticker] || data.ticker}
         </p>
 
         <div className="mt-4">

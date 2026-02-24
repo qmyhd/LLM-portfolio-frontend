@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSWRConfig } from 'swr';
 import { clsx } from 'clsx';
 import {
   MagnifyingGlassIcon,
@@ -26,6 +27,7 @@ interface TopBarProps {
 
 export function TopBar({ currentTicker }: TopBarProps) {
   const router = useRouter();
+  const { mutate } = useSWRConfig();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -162,12 +164,19 @@ export function TopBar({ currentTicker }: TopBarProps) {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Mock refresh function
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsRefreshing(false);
+    try {
+      await mutate(
+        (key: unknown) => typeof key === 'string' && (key.startsWith('/api/portfolio') || key.startsWith('/api/watchlist')),
+        undefined,
+        { revalidate: true }
+      );
+    } catch (error) {
+      console.error('Refresh failed:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   return (
@@ -270,15 +279,22 @@ export function TopBar({ currentTicker }: TopBarProps) {
                   })}
                 </div>
               ) : searchQuery.length >= 1 && !isSearching ? (
-                <div className="p-3">
+                <div className="p-2">
                   <button
                     type="submit"
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-background-tertiary text-left"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-primary/10 border border-border/50 text-left transition-colors"
                   >
-                    <MagnifyingGlassIcon className="w-4 h-4 text-foreground-muted" />
-                    <span className="text-foreground-muted">
-                      Go to <span className="font-mono font-semibold text-foreground">{searchQuery}</span>
-                    </span>
+                    <div className="p-1 bg-primary/10 rounded">
+                      <MagnifyingGlassIcon className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <span className="text-sm text-foreground">
+                        View stock page for <span className="font-mono font-bold text-primary">{searchQuery}</span>
+                      </span>
+                      <p className="text-2xs text-foreground-muted mt-0.5">
+                        Press Enter to go
+                      </p>
+                    </div>
                   </button>
                 </div>
               ) : null}
@@ -301,7 +317,6 @@ export function TopBar({ currentTicker }: TopBarProps) {
           {/* Notifications */}
           <button className="p-2 rounded-lg hover:bg-background-hover relative">
             <BellIcon className="w-5 h-5" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-loss rounded-full" />
           </button>
 
           {/* Profile */}

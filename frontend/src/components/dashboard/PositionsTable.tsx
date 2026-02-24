@@ -176,7 +176,7 @@ export function PositionsTable() {
               </th>
               <th className="table-header text-right hidden sm:table-cell">Qty</th>
               <th className="table-header text-right hidden md:table-cell">Price</th>
-              <th className="table-header text-right hidden lg:table-cell">Avg Cost</th>
+              <th className="table-header text-right hidden xl:table-cell">Avg Cost</th>
               <th
                 className="table-header text-right cursor-pointer hover:text-foreground"
                 onClick={() => handleSort('equity')}
@@ -214,7 +214,7 @@ export function PositionsTable() {
                 <td className="table-cell text-right font-mono hidden md:table-cell">
                   {formatMoney(position.currentPrice)}
                 </td>
-                <td className="table-cell text-right font-mono text-foreground-muted hidden lg:table-cell">
+                <td className="table-cell text-right font-mono text-foreground-muted hidden xl:table-cell">
                   {position.averageBuyPrice != null
                     ? formatMoney(position.averageBuyPrice)
                     : '—'}

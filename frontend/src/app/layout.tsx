@@ -1,14 +1,11 @@
 import type { Metadata } from 'next';
 import { PageTransition } from '@/components/layout/PageTransition';
-import { CursorTrailWrapper } from '@/components/layout/CursorTrailWrapper';
 import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Portfolio Dashboard | LLM Journal',
   description: 'Real-time portfolio analytics, stock charts, and trading insights',
-  icons: {
-    icon: '/favicon.ico',
-  },
+  icons: { icon: '/favicon.svg' },
 };
 
 export default function RootLayout({
@@ -19,7 +16,6 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className="min-h-screen bg-background">
-        <CursorTrailWrapper />
         <PageTransition>{children}</PageTransition>
       </body>
     </html>

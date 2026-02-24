@@ -1,29 +1,92 @@
 'use client';
 
+import useSWR from 'swr';
 import { clsx } from 'clsx';
 import { formatNumber } from '@/lib/format';
 
-// Mock sentiment data
-const sentimentData = {
-  overallScore: 0.72,
-  bullishCount: 45,
-  bearishCount: 12,
-  neutralCount: 8,
+interface SentimentData {
+  ticker: string;
+  window: string;
+  totalMentions: number;
+  bullishPct: number | null;
+  bearishPct: number | null;
+  neutralPct: number | null;
+}
+
+// Mock fallback when API is unavailable
+const MOCK_DATA: SentimentData = {
+  ticker: 'ALL',
+  window: '30d',
   totalMentions: 65,
-  topBullish: ['NVDA', 'AAPL', 'MSFT'],
-  topBearish: ['PLTR', 'NIO'],
+  bullishPct: 69,
+  bearishPct: 18,
+  neutralPct: 13,
 };
 
+const fetcher = (url: string) => fetch(url).then(r => {
+  if (!r.ok) throw new Error(`Failed: ${r.status}`);
+  return r.json();
+});
+
+function SentimentSkeleton() {
+  return (
+    <div className="card">
+      <div className="px-5 py-4 border-b border-border">
+        <div className="h-5 w-24 bg-background-hover rounded animate-pulse" />
+      </div>
+      <div className="p-4 space-y-4 animate-pulse">
+        <div className="flex justify-center">
+          <div className="h-10 w-16 bg-background-hover rounded" />
+        </div>
+        <div className="h-3 w-full bg-background-hover rounded-full" />
+        <div className="grid grid-cols-3 gap-2">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-14 bg-background-hover rounded-lg" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function SentimentOverview() {
-  const bullishPct = (sentimentData.bullishCount / sentimentData.totalMentions) * 100;
-  const bearishPct = (sentimentData.bearishCount / sentimentData.totalMentions) * 100;
-  const neutralPct = (sentimentData.neutralCount / sentimentData.totalMentions) * 100;
+  const { data, error, isLoading } = useSWR<SentimentData>(
+    '/api/sentiment?window=30d',
+    fetcher,
+    { revalidateOnFocus: false, dedupingInterval: 60000, errorRetryCount: 1 }
+  );
+
+  if (isLoading) return <SentimentSkeleton />;
+
+  // Use API data or fall back to mock
+  const isMock = !!error || !data;
+  const sentiment = data || MOCK_DATA;
+
+  const bullishPct = sentiment.bullishPct ?? 0;
+  const bearishPct = sentiment.bearishPct ?? 0;
+  const neutralPct = sentiment.neutralPct ?? 0;
+
+  // Derive overall score: 0–1 based on bullish proportion
+  const overallScore = bullishPct + bearishPct > 0
+    ? bullishPct / (bullishPct + bearishPct)
+    : 0.5;
+
+  // Derive counts from percentages
+  const total = sentiment.totalMentions || 1;
+  const bullishCount = Math.round((bullishPct / 100) * total);
+  const bearishCount = Math.round((bearishPct / 100) * total);
+  const neutralCount = total - bullishCount - bearishCount;
 
   return (
     <div className="card">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-border">
+      <div className="px-5 py-4 border-b border-border flex items-center justify-between">
         <h2 className="text-lg font-semibold">Sentiment</h2>
+        {isMock && (
+          <span className="text-2xs px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-500 font-medium">
+            Sample data
+          </span>
+        )}
       </div>
 
       <div className="p-4 space-y-4">
@@ -32,10 +95,10 @@ export function SentimentOverview() {
           <div
             className={clsx(
               'text-4xl font-bold font-mono',
-              sentimentData.overallScore >= 0.5 ? 'text-profit' : 'text-loss'
+              overallScore >= 0.5 ? 'text-profit' : 'text-loss'
             )}
           >
-            {formatNumber(sentimentData.overallScore)}
+            {formatNumber(overallScore)}
           </div>
           <div className="text-sm text-foreground-muted mt-1">
             Overall Score
@@ -72,33 +135,21 @@ export function SentimentOverview() {
         <div className="grid grid-cols-3 gap-2 pt-2">
           <div className="text-center p-2 bg-profit/10 rounded-lg">
             <div className="text-lg font-bold text-profit">
-              {sentimentData.bullishCount}
+              {bullishCount}
             </div>
             <div className="text-2xs text-foreground-muted">Bullish</div>
           </div>
           <div className="text-center p-2 bg-sentiment-neutral/10 rounded-lg">
             <div className="text-lg font-bold text-sentiment-neutral">
-              {sentimentData.neutralCount}
+              {neutralCount}
             </div>
             <div className="text-2xs text-foreground-muted">Neutral</div>
           </div>
           <div className="text-center p-2 bg-loss/10 rounded-lg">
             <div className="text-lg font-bold text-loss">
-              {sentimentData.bearishCount}
+              {bearishCount}
             </div>
             <div className="text-2xs text-foreground-muted">Bearish</div>
-          </div>
-        </div>
-
-        {/* Top Mentions */}
-        <div className="pt-2">
-          <div className="text-xs text-foreground-muted mb-2">Most Bullish</div>
-          <div className="flex flex-wrap gap-1">
-            {sentimentData.topBullish.map((ticker) => (
-              <span key={ticker} className="badge-bullish">
-                {ticker}
-              </span>
-            ))}
           </div>
         </div>
       </div>

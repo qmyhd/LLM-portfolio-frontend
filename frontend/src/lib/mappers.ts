@@ -16,6 +16,36 @@ import type {
 } from '@/types/api';
 
 // ---------------------------------------------------------------------------
+// Client-side company name fallback until backend provides names for all tickers
+// ---------------------------------------------------------------------------
+export const COMPANY_NAMES: Record<string, string> = {
+  AAPL: 'Apple Inc.',
+  MSFT: 'Microsoft Corp.',
+  GOOGL: 'Alphabet Inc.',
+  GOOG: 'Alphabet Inc.',
+  NVDA: 'NVIDIA Corp.',
+  TSLA: 'Tesla Inc.',
+  META: 'Meta Platforms',
+  AMD: 'Advanced Micro Devices',
+  PLTR: 'Palantir Technologies',
+  AMZN: 'Amazon.com Inc.',
+  NFLX: 'Netflix Inc.',
+  SPY: 'SPDR S&P 500 ETF',
+  QQQ: 'Invesco QQQ Trust',
+  SOFI: 'SoFi Technologies',
+  NIO: 'NIO Inc.',
+  RIVN: 'Rivian Automotive',
+  COIN: 'Coinbase Global',
+  MARA: 'Marathon Digital',
+  INTC: 'Intel Corp.',
+  DIS: 'Walt Disney Co.',
+  BA: 'Boeing Co.',
+  JPM: 'JPMorgan Chase',
+  V: 'Visa Inc.',
+  WMT: 'Walmart Inc.',
+};
+
+// ---------------------------------------------------------------------------
 // UI display types (used by standalone pages)
 // ---------------------------------------------------------------------------
 
@@ -99,7 +129,7 @@ export function toUiPosition(api: ApiPosition): UiPosition {
 
   return {
     symbol: api.symbol,
-    companyName: '',
+    companyName: COMPANY_NAMES[api.symbol] ?? '',
     quantity,
     averageCost,
     currentPrice: api.currentPrice ?? 0,

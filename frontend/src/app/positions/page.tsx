@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import {
   ArrowUpIcon,
   ArrowDownIcon,
@@ -129,8 +130,12 @@ export default function PositionsPage() {
         </div>
         <div className="card p-4">
           <p className="text-sm text-foreground-muted">Day Change</p>
-          <p className={`mt-1 text-2xl font-bold ${totalDayChange >= 0 ? 'text-profit' : 'text-loss'}`}>
-            {totalDayChange >= 0 ? '+' : ''}{formatMoney(Math.abs(totalDayChange))}
+          <p className={`mt-1 text-2xl font-bold ${
+            totalDayChange === 0 ? 'text-foreground-muted' : totalDayChange > 0 ? 'text-profit' : 'text-loss'
+          }`}>
+            {totalDayChange === 0
+              ? '\u2014'
+              : `${totalDayChange >= 0 ? '+' : ''}${formatMoney(Math.abs(totalDayChange))}`}
           </p>
         </div>
       </div>
@@ -188,12 +193,12 @@ export default function PositionsPage() {
                 sortedPositions.map((pos) => (
                   <tr key={pos.symbol} className="table-row">
                     <td className="px-4 py-3">
-                      <a
+                      <Link
                         href={`/stock/${pos.symbol}`}
                         className="font-bold text-foreground hover:text-primary"
                       >
                         {pos.symbol}
-                      </a>
+                      </Link>
                     </td>
                     <td className="px-4 py-3 text-sm text-foreground-muted">
                       {pos.companyName}
@@ -223,19 +228,23 @@ export default function PositionsPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <span className={`font-mono text-sm ${
-                        pos.dayChangePercent >= 0 ? 'text-profit' : 'text-loss'
-                      }`}>
-                        {formatPercent(pos.dayChangePercent, 2, { showSign: true })}
-                      </span>
+                      {pos.dayChange === 0 && pos.dayChangePercent === 0 ? (
+                        <span className="font-mono text-sm text-foreground-muted">{'\u2014'}</span>
+                      ) : (
+                        <span className={`font-mono text-sm ${
+                          pos.dayChangePercent >= 0 ? 'text-profit' : 'text-loss'
+                        }`}>
+                          {formatPercent(pos.dayChangePercent, 2, { showSign: true })}
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
-                      <a
+                      <Link
                         href={`/stock/${pos.symbol}`}
                         className="rounded p-1.5 text-foreground-muted transition-colors hover:bg-background-tertiary hover:text-foreground"
                       >
                         <ChartBarIcon className="h-4 w-4" />
-                      </a>
+                      </Link>
                     </td>
                   </tr>
                 ))

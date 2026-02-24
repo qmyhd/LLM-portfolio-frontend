@@ -13,8 +13,6 @@ import { RiskCard } from './RiskCard';
 import {
   StarIcon,
   ArrowPathIcon,
-  ShareIcon,
-  EllipsisHorizontalIcon,
   ChartBarIcon,
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
@@ -140,23 +138,11 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
           >
             <ArrowPathIcon className="h-4 w-4" />
           </button>
-          <button
-            className="p-2 rounded-lg hover:bg-background-tertiary text-foreground-muted hover:text-foreground transition-colors"
-            title="Share"
-          >
-            <ShareIcon className="h-4 w-4" />
-          </button>
-          <button
-            className="p-2 rounded-lg hover:bg-background-tertiary text-foreground-muted hover:text-foreground transition-colors"
-            title="More options"
-          >
-            <EllipsisHorizontalIcon className="h-4 w-4" />
-          </button>
         </div>
       </div>
 
       {/* Three-column layout */}
-      <div className="h-[calc(100%-56px)] flex flex-col lg:flex-row">
+      <div className="h-[calc(100%-56px)] flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
         {/* Left Column - Stacked Cards */}
         <aside className="w-full lg:w-72 xl:w-80 border-b lg:border-b-0 lg:border-r border-border overflow-y-auto flex-shrink-0 p-4 space-y-4 bg-background-secondary/80 backdrop-blur-md">
           {/* Profile Card - loads first (critical info) */}
@@ -181,7 +167,7 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
         </aside>
 
         {/* Middle Column - Chart (owns height) */}
-        <div className="flex-1 min-w-0 border-b lg:border-b-0 lg:border-r border-border overflow-hidden flex flex-col">
+        <div className="flex-1 min-w-0 min-h-[400px] border-b lg:border-b-0 lg:border-r border-border overflow-hidden flex flex-col">
           <Suspense fallback={<ChartSkeleton />}>
             {chartProvider === 'tradingview' ? (
               <TradingViewChart 
@@ -198,7 +184,7 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
         </div>
 
         {/* Right Column - Tabbed Panel */}
-        <aside className="w-full lg:w-80 xl:w-96 overflow-hidden flex flex-col flex-shrink-0 bg-background-secondary/80 backdrop-blur-md">
+        <aside className="w-full lg:w-80 xl:w-96 min-h-[300px] overflow-hidden flex flex-col flex-shrink-0 bg-background-secondary/80 backdrop-blur-md">
           {/* Tab switcher */}
           <div className="flex border-b border-border bg-background-secondary">
             <button
