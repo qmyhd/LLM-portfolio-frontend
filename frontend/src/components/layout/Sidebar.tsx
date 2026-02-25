@@ -10,6 +10,7 @@ import {
   ClipboardDocumentListIcon,
   Cog6ToothIcon,
   StarIcon,
+  LightBulbIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
 } from '@heroicons/react/24/outline';
@@ -18,12 +19,14 @@ import {
   ChartBarIcon as ChartBarIconSolid,
   ClipboardDocumentListIcon as ClipboardDocumentListIconSolid,
   StarIcon as StarIconSolid,
+  LightBulbIcon as LightBulbIconSolid,
 } from '@heroicons/react/24/solid';
 import { formatNumber } from '@/lib/format';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: HomeIcon, activeIcon: HomeIconSolid },
   { name: 'Watchlist', href: '/watchlist', icon: StarIcon, activeIcon: StarIconSolid },
+  { name: 'Ideas', href: '/ideas', icon: LightBulbIcon, activeIcon: LightBulbIconSolid },
   { name: 'Positions', href: '/positions', icon: ChartBarIcon, activeIcon: ChartBarIconSolid },
   { name: 'Orders', href: '/orders', icon: ClipboardDocumentListIcon, activeIcon: ClipboardDocumentListIconSolid },
 ];

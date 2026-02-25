@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { PageTransition } from '@/components/layout/PageTransition';
+import { SplashGate } from '@/components/ui/SplashGate';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -16,7 +17,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className="min-h-screen bg-background">
-        <PageTransition>{children}</PageTransition>
+        <SplashGate>
+          <PageTransition>{children}</PageTransition>
+        </SplashGate>
       </body>
     </html>
   );

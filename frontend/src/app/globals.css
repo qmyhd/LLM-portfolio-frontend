@@ -233,4 +233,28 @@
   .glass {
     @apply bg-background-secondary/80 backdrop-blur-md;
   }
+
+  /* Slide-in-right animation for drawer */
+  .animate-slide-in-right {
+    animation: slideInRight 0.3s ease-out;
+  }
+
+  /* Ticker tape scrolling */
+  .ticker-bar-track {
+    animation: ticker-scroll 30s linear infinite;
+  }
+
+  .ticker-bar-track.paused {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes ticker-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }

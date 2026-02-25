@@ -1,5 +1,6 @@
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
+import { TickerBar } from '@/components/dashboard/TickerBar';
 import { PortfolioSummary } from '@/components/dashboard/PortfolioSummary';
 import { PositionsTable } from '@/components/dashboard/PositionsTable';
 import { RecentOrders } from '@/components/dashboard/RecentOrders';
@@ -17,6 +18,9 @@ export default function DashboardPage() {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top bar with search */}
         <TopBar />
+
+        {/* Ticker tape */}
+        <TickerBar />
 
         {/* Scrollable content */}
         <main className="flex-1 overflow-y-auto p-6">
