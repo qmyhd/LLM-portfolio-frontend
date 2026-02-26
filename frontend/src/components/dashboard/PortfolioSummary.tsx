@@ -9,7 +9,8 @@ import {
 } from '@heroicons/react/24/outline';
 import { usePortfolio } from '@/hooks';
 import { CardSpotlight } from '@/components/ui/CardSpotlight';
-import { formatNumber, formatMoney, formatSignedMoney } from '@/lib/format';
+import { formatMoney, formatSignedMoney, formatSignedPct } from '@/lib/format';
+import { trendDirection } from '@/lib/colors';
 
 interface MetricCardProps {
   title: string;
@@ -40,14 +41,10 @@ function MetricCard({ title, value, change, changePct, icon: Icon, trend }: Metr
                 )}
               >
                 {change !== undefined && (
-                  <span>
-                    {change >= 0 ? '+' : ''}${Math.abs(change).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                  </span>
+                  <span>{formatSignedMoney(change)}</span>
                 )}
                 {changePct !== undefined && (
-                  <span className="ml-1">
-                    ({changePct >= 0 ? '+' : ''}{formatNumber(changePct)}%)
-                  </span>
+                  <span className="ml-1">({formatSignedPct(changePct)})</span>
                 )}
               </span>
             </div>
@@ -125,8 +122,8 @@ export function PortfolioSummary() {
   const unrealizedPL = summary.unrealizedPL;
   const unrealizedPLPct = summary.unrealizedPLPercent;
 
-  const dailyTrend = summary.dayChange >= 0 ? 'up' : summary.dayChange < 0 ? 'down' : 'neutral';
-  const totalTrend = unrealizedPL >= 0 ? 'up' : 'down';
+  const dailyTrend = trendDirection(summary.dayChange);
+  const totalTrend = trendDirection(unrealizedPL);
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

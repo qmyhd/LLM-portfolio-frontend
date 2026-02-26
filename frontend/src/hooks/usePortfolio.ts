@@ -25,7 +25,13 @@ interface UsePortfolioOptions {
 const fetcher = async (url: string): Promise<PortfolioData> => {
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`Failed to fetch portfolio: ${response.status}`);
+    const errorBody = await response.json().catch(() => ({}));
+    const detail = errorBody?.error || errorBody?.detail || '';
+    throw new Error(
+      detail
+        ? `Portfolio error: ${detail}`
+        : `Failed to fetch portfolio (${response.status})`
+    );
   }
   return response.json();
 };

@@ -11,7 +11,13 @@ import type { UserIdeasResponse, IdeasFilters } from '@/types/ideas';
 const fetcher = async (url: string): Promise<UserIdeasResponse> => {
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`Failed to fetch ideas: ${response.status}`);
+    const errorBody = await response.json().catch(() => ({}));
+    const detail = errorBody?.error || errorBody?.detail || '';
+    throw new Error(
+      detail
+        ? `Ideas error: ${detail}`
+        : `Failed to fetch ideas (${response.status})`
+    );
   }
   return response.json();
 };

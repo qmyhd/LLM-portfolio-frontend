@@ -1,12 +1,14 @@
+import { Suspense } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
 import { TickerBar } from '@/components/dashboard/TickerBar';
-import { PortfolioSummary } from '@/components/dashboard/PortfolioSummary';
-import { PositionsTable } from '@/components/dashboard/PositionsTable';
+import { RobinhoodHeader } from '@/components/dashboard/RobinhoodHeader';
+import { HoldingsList } from '@/components/dashboard/HoldingsList';
 import { RecentOrders } from '@/components/dashboard/RecentOrders';
 import { TopMovers } from '@/components/dashboard/TopMovers';
 import { SentimentOverview } from '@/components/dashboard/SentimentOverview';
 import { DebugOverlay } from '@/components/dashboard/DebugOverlay';
+import { ReconPanel } from '@/components/dashboard/ReconPanel';
 
 export default function DashboardPage() {
   return (
@@ -28,14 +30,19 @@ export default function DashboardPage() {
             {/* Debug overlay (NEXT_PUBLIC_DEBUG_UI=1) */}
             <DebugOverlay />
 
-            {/* Portfolio Summary Cards */}
-            <PortfolioSummary />
+            {/* Recon mode panel (?recon=1) */}
+            <Suspense fallback={null}>
+              <ReconPanel />
+            </Suspense>
+
+            {/* Portfolio Header (Robinhood-style) */}
+            <RobinhoodHeader />
 
             {/* Two column layout for tables */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Positions Table - spans 2 columns */}
+              {/* Holdings List - spans 2 columns */}
               <div className="lg:col-span-2">
-                <PositionsTable />
+                <HoldingsList />
               </div>
 
               {/* Right sidebar with movers and sentiment */}

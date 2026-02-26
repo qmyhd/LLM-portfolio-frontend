@@ -8,7 +8,11 @@ export async function GET(request: NextRequest) {
     // Verify user is authenticated
     await authGuard();
 
-    const response = await backendFetch('/portfolio', {
+    // Forward ?recon=1 to backend for debug metadata
+    const recon = request.nextUrl.searchParams.get('recon') === '1';
+    const backendPath = recon ? '/portfolio?recon=1' : '/portfolio';
+
+    const response = await backendFetch(backendPath, {
       // Cache for 30 seconds on the edge
       next: { revalidate: 30 },
     });

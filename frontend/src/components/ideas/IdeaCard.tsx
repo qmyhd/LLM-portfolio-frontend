@@ -1,36 +1,12 @@
 'use client';
 
 import type { UserIdea } from '@/types/ideas';
+import { formatRelativeTime } from '@/lib/format';
+import { IDEA_STATUS_COLORS, IDEA_SOURCE_COLORS } from '@/lib/colors';
 
 interface IdeaCardProps {
   idea: UserIdea;
   onClick: (idea: UserIdea) => void;
-}
-
-const statusStyles: Record<string, string> = {
-  draft: 'bg-yellow-500/20 text-yellow-400',
-  refined: 'bg-green-500/20 text-green-400',
-  archived: 'bg-background-hover text-foreground-subtle',
-};
-
-const sourceStyles: Record<string, string> = {
-  discord: 'bg-indigo-500/20 text-indigo-400',
-  manual: 'bg-primary/20 text-primary',
-  transcribe: 'bg-purple-500/20 text-purple-400',
-};
-
-function timeAgo(dateStr: string): string {
-  const now = Date.now();
-  const then = new Date(dateStr).getTime();
-  const diff = now - then;
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  if (days < 30) return `${days}d ago`;
-  return new Date(dateStr).toLocaleDateString();
 }
 
 export function IdeaCard({ idea, onClick }: IdeaCardProps) {
@@ -52,20 +28,20 @@ export function IdeaCard({ idea, onClick }: IdeaCardProps) {
         <div className="flex items-center gap-2">
           <span
             className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${
-              sourceStyles[idea.source] || sourceStyles.manual
+              IDEA_SOURCE_COLORS[idea.source] || IDEA_SOURCE_COLORS._default
             }`}
           >
             {idea.source}
           </span>
           <span
             className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${
-              statusStyles[idea.status] || statusStyles.draft
+              IDEA_STATUS_COLORS[idea.status] || IDEA_STATUS_COLORS._default
             }`}
           >
             {idea.status}
           </span>
         </div>
-        <span className="text-xs text-foreground-muted">{timeAgo(idea.createdAt)}</span>
+        <span className="text-xs text-foreground-muted">{formatRelativeTime(idea.createdAt)}</span>
       </div>
 
       {/* Content preview */}

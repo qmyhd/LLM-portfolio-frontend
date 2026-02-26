@@ -13,6 +13,7 @@ import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
 import { formatNumber, formatCompact } from '@/lib/format';
+import { FAVORITE_COLOR } from '@/lib/colors';
 
 interface WatchlistItem {
   symbol: string;
@@ -200,7 +201,7 @@ export default function WatchlistPage() {
 
               {/* Symbol */}
               <div className="flex items-center gap-2">
-                <StarIconSolid className="h-4 w-4 text-yellow-500" />
+                <StarIconSolid className={`h-4 w-4 ${FAVORITE_COLOR}`} />
                 <span className="font-bold text-foreground">{item.symbol}</span>
               </div>
 

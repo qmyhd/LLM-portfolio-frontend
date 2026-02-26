@@ -12,6 +12,7 @@ import {
   StarIcon,
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
+import { FAVORITE_COLOR } from '@/lib/colors';
 import { MobileSidebar } from './Sidebar';
 
 interface SearchResult {
@@ -270,7 +271,7 @@ export function TopBar({ currentTicker }: TopBarProps) {
                           className="p-1 hover:bg-background-tertiary rounded"
                         >
                           {isFavorite ? (
-                            <StarIconSolid className="w-4 h-4 text-yellow-500" />
+                            <StarIconSolid className={`w-4 h-4 ${FAVORITE_COLOR}`} />
                           ) : (
                             <StarIcon className="w-4 h-4 text-foreground-muted" />
                           )}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
+import { formatDate } from '@/lib/format';
 import { TickerAutocomplete } from './TickerAutocomplete';
 import { TagsInput } from './TagsInput';
 import { RefineDiffPreview } from './RefineDiffPreview';
@@ -124,7 +125,7 @@ export function IdeaDetailDrawer({
       <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
 
       {/* Drawer panel */}
-      <div className="fixed inset-y-0 right-0 w-full sm:w-[480px] bg-background-secondary z-50 flex flex-col border-l border-border animate-slide-in-right">
+      <div className="fixed inset-y-0 right-0 w-full sm:w-[480px] bg-background-secondary z-50 flex flex-col border-l border-border drawer-enter">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <h2 className="text-lg font-semibold">Edit Idea</h2>
@@ -194,8 +195,8 @@ export function IdeaDetailDrawer({
           {/* Meta info */}
           <div className="text-xs text-foreground-subtle space-y-1">
             <p>Source: {idea.source}</p>
-            <p>Created: {new Date(idea.createdAt).toLocaleString()}</p>
-            <p>Updated: {new Date(idea.updatedAt).toLocaleString()}</p>
+            <p>Created: {formatDate(idea.createdAt, 'full')}</p>
+            <p>Updated: {formatDate(idea.updatedAt, 'full')}</p>
           </div>
 
           {/* Refine diff preview */}

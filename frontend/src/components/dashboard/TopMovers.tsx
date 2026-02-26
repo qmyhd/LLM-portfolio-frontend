@@ -4,55 +4,31 @@ import Link from 'next/link';
 import {
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
+  ArrowPathIcon,
 } from '@heroicons/react/24/outline';
-import { usePortfolio } from '@/hooks';
-import type { Position } from '@/types/api';
+import { useMovers } from '@/hooks';
+import type { MoverItem } from '@/types/ideas';
 import { CardSpotlight } from '@/components/ui/CardSpotlight';
 import { formatNumber } from '@/lib/format';
 
 /**
- * Derive top gainers/losers from portfolio positions.
- * Primary: dayChangePercent (intraday).
- * Fallback: openPnlPercent (unrealized P/L %) when day-change is unavailable.
+ * Get the display change percentage for a mover item.
+ * Uses dayChangePct when source is 'intraday', openPnlPct otherwise.
  */
-function deriveMovers(positions: Position[]) {
-  // Try day-change first — filter out zero/null values (likely stale data)
-  const withDayChange = positions.filter(
-    (p) => p.dayChangePercent !== null && p.dayChangePercent !== undefined && p.dayChangePercent !== 0
-  );
+function getChangePct(item: MoverItem, source: 'intraday' | 'unrealized'): number {
+  if (source === 'intraday') {
+    return item.dayChangePct ?? item.openPnlPct;
+  }
+  return item.openPnlPct;
+}
 
-  const useUnrealized = withDayChange.length === 0;
-  const source = useUnrealized ? positions : withDayChange;
-  const getChange = useUnrealized
-    ? (p: Position) => p.openPnlPercent ?? 0
-    : (p: Position) => p.dayChangePercent ?? 0;
-
-  const sorted = [...source].sort((a, b) => getChange(b) - getChange(a));
-
-  const gainers = sorted
-    .filter((p) => getChange(p) > 0)
-    .slice(0, 3)
-    .map((p) => ({
-      symbol: p.symbol,
-      change: getChange(p),
-      price: p.currentPrice,
-    }));
-
-  const losers = sorted
-    .filter((p) => getChange(p) < 0)
-    .reverse()
-    .slice(0, 3)
-    .map((p) => ({
-      symbol: p.symbol,
-      change: getChange(p),
-      price: p.currentPrice,
-    }));
-
-  return { gainers, losers, useUnrealized };
+/** Label shown in header to indicate which metric is used for ranking. */
+function sourceLabel(source: 'intraday' | 'unrealized'): string {
+  return source === 'intraday' ? 'by day change' : 'by P/L %';
 }
 
 export function TopMovers() {
-  const { data, error, isLoading } = usePortfolio();
+  const { data, error, isLoading, refresh } = useMovers({ limit: 3 });
 
   if (isLoading) {
     return (
@@ -71,14 +47,23 @@ export function TopMovers() {
 
   if (error) {
     return (
-      <CardSpotlight className="card p-5 text-center">
-        <p className="text-loss text-sm">Failed to load movers</p>
+      <CardSpotlight className="card p-5">
+        <p className="text-loss text-sm mb-2">Failed to load movers</p>
+        <p className="text-foreground-muted text-xs mb-3">{error.message}</p>
+        <button
+          onClick={refresh}
+          className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
+        >
+          <ArrowPathIcon className="w-3 h-3" />
+          Retry
+        </button>
       </CardSpotlight>
     );
   }
 
-  const positions = data?.positions ?? [];
-  const { gainers, losers, useUnrealized } = deriveMovers(positions);
+  const gainers = data?.topGainers ?? [];
+  const losers = data?.topLosers ?? [];
+  const source = data?.source ?? 'unrealized';
   const hasData = gainers.length > 0 || losers.length > 0;
 
   if (!hasData) {
@@ -95,9 +80,9 @@ export function TopMovers() {
       <div className="px-5 py-4 border-b border-border">
         <h2 className="text-lg font-semibold">
           Top Movers
-          {useUnrealized && (
-            <span className="ml-2 text-xs font-normal text-foreground-muted">(by P/L %)</span>
-          )}
+          <span className="ml-2 text-xs font-normal text-foreground-muted">
+            ({sourceLabel(source)})
+          </span>
         </h2>
       </div>
 
@@ -109,19 +94,19 @@ export function TopMovers() {
             <span className="text-sm font-medium text-profit">Gainers</span>
           </div>
           <div className="space-y-2">
-            {gainers.map((stock) => (
+            {gainers.map((item) => (
               <Link
-                key={stock.symbol}
-                href={`/stock/${stock.symbol}`}
+                key={item.symbol}
+                href={`/stock/${item.symbol}`}
                 className="flex items-center justify-between p-2 rounded-lg hover:bg-background-hover transition-colors"
               >
-                <span className="font-mono font-semibold">{stock.symbol}</span>
+                <span className="font-mono font-semibold">{item.symbol}</span>
                 <div className="text-right">
                   <div className="text-sm font-mono text-profit">
-                    +{formatNumber(stock.change)}%
+                    +{formatNumber(getChangePct(item, source))}%
                   </div>
                   <div className="text-xs text-foreground-muted font-mono">
-                    ${formatNumber(stock.price)}
+                    ${formatNumber(item.currentPrice)}
                   </div>
                 </div>
               </Link>
@@ -143,19 +128,19 @@ export function TopMovers() {
             <span className="text-sm font-medium text-loss">Losers</span>
           </div>
           <div className="space-y-2">
-            {losers.map((stock) => (
+            {losers.map((item) => (
               <Link
-                key={stock.symbol}
-                href={`/stock/${stock.symbol}`}
+                key={item.symbol}
+                href={`/stock/${item.symbol}`}
                 className="flex items-center justify-between p-2 rounded-lg hover:bg-background-hover transition-colors"
               >
-                <span className="font-mono font-semibold">{stock.symbol}</span>
+                <span className="font-mono font-semibold">{item.symbol}</span>
                 <div className="text-right">
                   <div className="text-sm font-mono text-loss">
-                    {formatNumber(stock.change)}%
+                    {formatNumber(getChangePct(item, source))}%
                   </div>
                   <div className="text-xs text-foreground-muted font-mono">
-                    ${formatNumber(stock.price)}
+                    ${formatNumber(item.currentPrice)}
                   </div>
                 </div>
               </Link>

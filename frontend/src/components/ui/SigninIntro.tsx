@@ -49,7 +49,7 @@ function SigninIntroContent() {
             >
               QQQ
             </h1>
-            <p className="text-gray-400 text-lg">LLM Portfolio</p>
+            <p className="text-foreground-muted text-lg">LLM Portfolio</p>
           </div>
 
           {/* Error Messages */}
@@ -141,7 +141,7 @@ function SigninIntroContent() {
 
               {/* Inline error */}
               {loginError && (
-                <p className="text-red-400 text-sm text-center">{loginError}</p>
+                <p className="text-loss text-sm text-center">{loginError}</p>
               )}
 
               {/* Submit */}

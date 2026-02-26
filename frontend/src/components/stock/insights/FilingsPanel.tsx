@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useFilings } from '@/hooks/useOpenBB';
 import { DocumentTextIcon, ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline';
+import { FILING_FORM_COLORS } from '@/lib/colors';
 
 interface FilingsPanelProps {
   ticker: string;
@@ -15,13 +16,6 @@ const FORM_TYPES = [
   { value: '8-K', label: '8-K' },
   { value: '4', label: 'Form 4' },
 ];
-
-const FORM_COLORS: Record<string, string> = {
-  '10-K': 'bg-primary/20 text-primary',
-  '10-Q': 'bg-purple-500/20 text-purple-400',
-  '8-K': 'bg-amber-500/20 text-amber-400',
-  '4': 'bg-cyan-500/20 text-cyan-400',
-};
 
 export function FilingsPanel({ ticker }: FilingsPanelProps) {
   const [formType, setFormType] = useState('');
@@ -79,7 +73,7 @@ export function FilingsPanel({ ticker }: FilingsPanelProps) {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <span className={`px-1.5 py-0.5 text-2xs font-medium rounded ${
-                  FORM_COLORS[filing.formType] || 'bg-background-hover text-foreground-muted'
+                  FILING_FORM_COLORS[filing.formType] || FILING_FORM_COLORS._default
                 }`}>
                   {filing.formType}
                 </span>

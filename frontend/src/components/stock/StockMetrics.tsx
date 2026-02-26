@@ -1,6 +1,5 @@
 'use client';
 
-import { clsx } from 'clsx';
 import useSWR from 'swr';
 import {
   ArrowTrendingUpIcon,
@@ -9,7 +8,8 @@ import {
   BanknotesIcon,
   ChatBubbleLeftIcon,
 } from '@heroicons/react/24/outline';
-import { formatNumber, formatCompact } from '@/lib/format';
+import { formatNumber, formatCompact, formatMoney, formatSignedMoney, formatSignedPct } from '@/lib/format';
+import { pnlTextColor, trendDirection } from '@/lib/colors';
 import { COMPANY_NAMES } from '@/lib/mappers';
 import type { StockProfileCurrent } from '@/types/api';
 
@@ -22,15 +22,12 @@ const fetcher = (url: string) => fetch(url).then(r => {
   return r.json();
 });
 
-function MetricRow({ label, value, trend }: { label: string; value: string; trend?: 'up' | 'down' | null }) {
+function MetricRow({ label, value, trend }: { label: string; value: string; trend?: 'up' | 'down' | 'neutral' | null }) {
+  const colorClass = trend ? pnlTextColor(trend === 'up' ? 1 : trend === 'down' ? -1 : 0) : '';
   return (
     <div className="flex items-center justify-between py-2">
       <span className="text-sm text-foreground-muted">{label}</span>
-      <span className={clsx(
-        'text-sm font-mono font-medium',
-        trend === 'up' && 'text-profit',
-        trend === 'down' && 'text-loss',
-      )}>
+      <span className={`text-sm font-mono font-medium ${colorClass}`}>
         {value}
       </span>
     </div>
@@ -89,13 +86,13 @@ export function StockMetrics({ ticker }: StockMetricsProps) {
   const dailyChange = data.latestClosePrice && data.previousClosePrice
     ? data.latestClosePrice - data.previousClosePrice
     : 0;
-  const dailyTrend = dailyChange >= 0 ? 'up' : 'down';
+  const dailyTrend = trendDirection(dailyChange);
 
-  function fmtReturn(val: number | null): { value: string; trend: 'up' | 'down' | null } {
+  function fmtReturn(val: number | null): { value: string; trend: 'up' | 'down' | 'neutral' | null } {
     if (val == null) return { value: '—', trend: null };
     return {
-      value: `${val >= 0 ? '+' : ''}${formatNumber(val)}%`,
-      trend: val >= 0 ? 'up' : 'down',
+      value: formatSignedPct(val),
+      trend: trendDirection(val),
     };
   }
 
@@ -110,22 +107,17 @@ export function StockMetrics({ ticker }: StockMetricsProps) {
 
         <div className="mt-4">
           <div className="text-3xl font-bold font-mono">
-            {data.latestClosePrice != null
-              ? `$${formatNumber(data.latestClosePrice)}`
-              : '—'}
+            {data.latestClosePrice != null ? formatMoney(data.latestClosePrice) : '—'}
           </div>
           {data.dailyChangePct != null && (
-            <div className={clsx(
-              'flex items-center gap-1 mt-1',
-              dailyTrend === 'up' ? 'text-profit' : 'text-loss'
-            )}>
-              {dailyTrend === 'up' ? (
-                <ArrowTrendingUpIcon className="w-4 h-4" />
-              ) : (
+            <div className={`flex items-center gap-1 mt-1 ${pnlTextColor(dailyChange)}`}>
+              {dailyTrend === 'down' ? (
                 <ArrowTrendingDownIcon className="w-4 h-4" />
+              ) : (
+                <ArrowTrendingUpIcon className="w-4 h-4" />
               )}
               <span className="font-mono font-medium">
-                {dailyChange >= 0 ? '+' : ''}{formatNumber(dailyChange)} ({formatNumber(data.dailyChangePct)}%)
+                {formatSignedMoney(dailyChange)} ({formatSignedPct(data.dailyChangePct)})
               </span>
             </div>
           )}
@@ -164,20 +156,16 @@ export function StockMetrics({ ticker }: StockMetricsProps) {
           <MetricRow label="Shares" value={data.currentPositionQty.toString()} />
           <MetricRow
             label="Value"
-            value={data.currentPositionValue != null ? `$${data.currentPositionValue.toLocaleString()}` : '—'}
+            value={data.currentPositionValue != null ? formatMoney(data.currentPositionValue) : '—'}
           />
           <MetricRow
             label="Avg Cost"
-            value={data.avgBuyPrice != null ? `$${formatNumber(data.avgBuyPrice)}` : '—'}
+            value={data.avgBuyPrice != null ? formatMoney(data.avgBuyPrice) : '—'}
           />
           <MetricRow
             label="Unrealized P/L"
-            value={
-              data.unrealizedPnl != null
-                ? `${data.unrealizedPnl >= 0 ? '+' : ''}$${Math.abs(data.unrealizedPnl).toLocaleString()}`
-                : '—'
-            }
-            trend={data.unrealizedPnl != null ? (data.unrealizedPnl >= 0 ? 'up' : 'down') : null}
+            value={data.unrealizedPnl != null ? formatSignedMoney(data.unrealizedPnl) : '—'}
+            trend={data.unrealizedPnl != null ? trendDirection(data.unrealizedPnl) : null}
           />
           <MetricRow
             label="P/L %"

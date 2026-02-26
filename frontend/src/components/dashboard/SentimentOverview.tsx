@@ -83,7 +83,7 @@ export function SentimentOverview() {
       <div className="px-5 py-4 border-b border-border flex items-center justify-between">
         <h2 className="text-lg font-semibold">Sentiment</h2>
         {isMock && (
-          <span className="text-2xs px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-500 font-medium">
+          <span className="text-2xs px-2 py-0.5 rounded-full bg-status-warning/10 text-status-warning font-medium">
             Sample data
           </span>
         )}

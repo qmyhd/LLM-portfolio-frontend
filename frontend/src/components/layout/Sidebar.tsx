@@ -8,6 +8,7 @@ import {
   HomeIcon,
   ChartBarIcon,
   ClipboardDocumentListIcon,
+  ArrowsRightLeftIcon,
   Cog6ToothIcon,
   StarIcon,
   LightBulbIcon,
@@ -18,6 +19,7 @@ import {
   HomeIcon as HomeIconSolid,
   ChartBarIcon as ChartBarIconSolid,
   ClipboardDocumentListIcon as ClipboardDocumentListIconSolid,
+  ArrowsRightLeftIcon as ArrowsRightLeftIconSolid,
   StarIcon as StarIconSolid,
   LightBulbIcon as LightBulbIconSolid,
 } from '@heroicons/react/24/solid';
@@ -29,6 +31,7 @@ const navigation = [
   { name: 'Ideas', href: '/ideas', icon: LightBulbIcon, activeIcon: LightBulbIconSolid },
   { name: 'Positions', href: '/positions', icon: ChartBarIcon, activeIcon: ChartBarIconSolid },
   { name: 'Orders', href: '/orders', icon: ClipboardDocumentListIcon, activeIcon: ClipboardDocumentListIconSolid },
+  { name: 'Activity', href: '/activity', icon: ArrowsRightLeftIcon, activeIcon: ArrowsRightLeftIconSolid },
 ];
 
 interface FavoriteStock {

@@ -11,7 +11,13 @@ import type { MoversResponse } from '@/types/ideas';
 const fetcher = async (url: string): Promise<MoversResponse> => {
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`Failed to fetch movers: ${response.status}`);
+    const errorBody = await response.json().catch(() => ({}));
+    const detail = errorBody?.error || errorBody?.detail || '';
+    throw new Error(
+      detail
+        ? `Movers error: ${detail}`
+        : `Failed to fetch movers (${response.status})`
+    );
   }
   return response.json();
 };

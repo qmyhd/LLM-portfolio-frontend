@@ -6,6 +6,7 @@ import {
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 import { formatNumber } from '@/lib/format';
+import { riskLevelColor } from '@/lib/colors';
 
 interface RiskMetrics {
   beta: number | null;
@@ -69,11 +70,7 @@ export function RiskCard({ ticker }: RiskCardProps) {
     );
   }
 
-  const riskColor = risk.riskLevel === 'low'
-    ? 'text-profit'
-    : risk.riskLevel === 'medium'
-    ? 'text-yellow-500'
-    : 'text-loss';
+  const riskColor = riskLevelColor(risk.riskLevel);
 
   const RiskIcon = risk.riskLevel === 'high' ? ExclamationTriangleIcon : ShieldCheckIcon;
 

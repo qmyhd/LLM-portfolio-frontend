@@ -65,7 +65,8 @@ export interface MoverItem {
   currentPrice: number;
   previousClose: number | null;
   dayChange: number | null;
-  dayChangePct: number | null;
+  dayChangePct: number | null; // null = no intraday data
+  openPnlPct: number; // always present (0.0 if no cost basis)
   quantity: number;
   equity: number;
 }
@@ -74,4 +75,19 @@ export interface MoversResponse {
   topGainers: MoverItem[];
   topLosers: MoverItem[];
   source: 'intraday' | 'unrealized';
+}
+
+// Sync response from POST /portfolio/sync (always HTTP 200, stable shape)
+export interface SyncResponse {
+  status: 'success' | 'partial' | 'error';
+  message: string;
+  accounts: number;
+  balances: number;
+  positions: number;
+  orders: number;
+  activities: number;
+  errorCount: number;
+  errors: string[];
+  accountIdUsed: string | null;
+  authError: boolean;
 }

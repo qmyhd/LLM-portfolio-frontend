@@ -4,6 +4,7 @@ import { clsx } from 'clsx';
 import Link from 'next/link';
 import useSWR from 'swr';
 import type { OrdersResponse, Order } from '@/types/api';
+import { formatMoney, formatDate } from '@/lib/format';
 
 const fetcher = async (url: string): Promise<OrdersResponse> => {
   const res = await fetch(url);
@@ -111,17 +112,13 @@ export function RecentOrders() {
                     {order.totalQuantity}
                   </td>
                   <td className="table-cell text-right font-mono hidden md:table-cell">
-                    {price > 0
-                      ? `$${price.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
-                      : '—'}
+                    {price > 0 ? formatMoney(price) : '—'}
                   </td>
                   <td className="table-cell text-right font-mono font-medium">
-                    {total > 0
-                      ? `$${total.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
-                      : '—'}
+                    {total > 0 ? formatMoney(total) : '—'}
                   </td>
                   <td className="table-cell text-right text-foreground-muted text-sm hidden lg:table-cell">
-                    {time ? new Date(time).toLocaleString() : '—'}
+                    {time ? formatDate(time, 'short') : '—'}
                   </td>
                 </tr>
               );

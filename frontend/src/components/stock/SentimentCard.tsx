@@ -6,6 +6,7 @@ import {
   ArrowTrendingDownIcon,
   MinusIcon,
 } from '@heroicons/react/24/outline';
+import { directionTextColor } from '@/lib/colors';
 
 interface Sentiment {
   bullish: number;
@@ -67,11 +68,7 @@ export function SentimentCard({ ticker }: SentimentCardProps) {
     ? ArrowTrendingDownIcon 
     : MinusIcon;
 
-  const sentimentColor = sentiment.overall === 'bullish'
-    ? 'text-profit'
-    : sentiment.overall === 'bearish'
-    ? 'text-loss'
-    : 'text-foreground-muted';
+  const sentimentColor = directionTextColor(sentiment.overall);
 
   return (
     <div className="card p-4">

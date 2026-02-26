@@ -1,23 +1,30 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
+import useSWR from 'swr';
 import { StockMetrics } from './StockMetrics';
 import { StockChart } from './StockChart';
 import { TradingViewChart } from './TradingViewChart';
 import { IdeasPanel } from './IdeasPanel';
 import { ChatWidget } from './ChatWidget';
 import { RawMessagesPanel } from './RawMessagesPanel';
-import { PositionCard } from './PositionCard';
+import { RobinhoodPositionCard } from './RobinhoodPositionCard';
+import { RobinhoodStockHeader } from './RobinhoodStockHeader';
 import { SentimentCard } from './SentimentCard';
 import { RiskCard } from './RiskCard';
 import { FundamentalsCard } from './FundamentalsCard';
 import { OpenBBInsightsPanel } from './OpenBBInsightsPanel';
 import {
-  StarIcon,
   ArrowPathIcon,
   ChartBarIcon,
 } from '@heroicons/react/24/outline';
-import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
+import type { StockProfileCurrent } from '@/types/api';
+
+const profileFetcher = (url: string) =>
+  fetch(url).then((r) => {
+    if (!r.ok) throw new Error(`Failed to fetch: ${r.status}`);
+    return r.json();
+  });
 
 type ChartProvider = 'lightweight' | 'tradingview';
 
@@ -52,6 +59,13 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
   const [isFavorite, setIsFavorite] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [chartProvider, setChartProvider] = useState<ChartProvider>('tradingview');
+
+  // Fetch stock profile for header
+  const { data: profile } = useSWR<StockProfileCurrent>(
+    `/api/stocks/${ticker}`,
+    profileFetcher,
+    { revalidateOnFocus: false, dedupingInterval: 30000 },
+  );
 
   // Check if ticker is in favorites
   useEffect(() => {
@@ -105,43 +119,21 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
 
   return (
     <main className="flex-1 overflow-hidden bg-background">
-      {/* Stock Header Bar */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-background-secondary">
-        <div className="flex items-center gap-3">
-          <h1 className="text-xl font-bold text-foreground">{ticker}</h1>
-          <button
-            onClick={toggleFavorite}
-            className="p-1.5 rounded-lg hover:bg-background-tertiary transition-colors"
-            title={isFavorite ? 'Remove from watchlist' : 'Add to watchlist'}
-          >
-            {isFavorite ? (
-              <StarIconSolid className="h-5 w-5 text-yellow-500" />
-            ) : (
-              <StarIcon className="h-5 w-5 text-foreground-muted" />
-            )}
-          </button>
+      {/* Robinhood-style Stock Header */}
+      {profile ? (
+        <RobinhoodStockHeader
+          ticker={ticker}
+          profile={profile}
+          isFavorite={isFavorite}
+          onToggleFavorite={toggleFavorite}
+        />
+      ) : (
+        <div className="px-4 py-4 border-b border-border bg-background-secondary animate-pulse">
+          <div className="skeleton h-4 w-16 mb-2 rounded" />
+          <div className="skeleton h-7 w-48 mb-2 rounded" />
+          <div className="skeleton h-10 w-36 rounded" />
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={toggleChartProvider}
-            className={`p-2 rounded-lg transition-colors ${
-              chartProvider === 'tradingview'
-                ? 'bg-primary/20 text-primary'
-                : 'text-foreground-muted hover:text-foreground hover:bg-background-tertiary'
-            }`}
-            title={`Switch to ${chartProvider === 'lightweight' ? 'TradingView' : 'Lightweight'} chart`}
-          >
-            <ChartBarIcon className="h-4 w-4" />
-          </button>
-          <button
-            onClick={handleRefresh}
-            className="p-2 rounded-lg hover:bg-background-tertiary text-foreground-muted hover:text-foreground transition-colors"
-            title="Refresh data"
-          >
-            <ArrowPathIcon className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* Three-column layout */}
       <div className="h-[calc(100%-56px)] flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
@@ -152,9 +144,9 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
             <StockMetrics ticker={ticker} key={`metrics-${refreshKey}`} />
           </Suspense>
 
-          {/* Position Card - user's holding */}
+          {/* Position Card - Robinhood-style */}
           <Suspense fallback={<CardSkeleton lines={3} />}>
-            <PositionCard ticker={ticker} key={`position-${refreshKey}`} />
+            <RobinhoodPositionCard ticker={ticker} key={`position-${refreshKey}`} />
           </Suspense>
 
           {/* Sentiment Card */}
@@ -175,6 +167,27 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
 
         {/* Middle Column - Chart (owns height) */}
         <div className="flex-1 min-w-0 min-h-[400px] border-b lg:border-b-0 lg:border-r border-border overflow-hidden flex flex-col">
+          {/* Chart controls */}
+          <div className="flex items-center justify-end gap-1 px-3 py-1.5 border-b border-border bg-background-secondary/50">
+            <button
+              onClick={toggleChartProvider}
+              className={`p-1.5 rounded-md transition-colors ${
+                chartProvider === 'tradingview'
+                  ? 'bg-primary/20 text-primary'
+                  : 'text-foreground-muted hover:text-foreground hover:bg-background-tertiary'
+              }`}
+              title={`Switch to ${chartProvider === 'lightweight' ? 'TradingView' : 'Lightweight'} chart`}
+            >
+              <ChartBarIcon className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={handleRefresh}
+              className="p-1.5 rounded-md hover:bg-background-tertiary text-foreground-muted hover:text-foreground transition-colors"
+              title="Refresh data"
+            >
+              <ArrowPathIcon className="h-3.5 w-3.5" />
+            </button>
+          </div>
           <Suspense fallback={<ChartSkeleton />}>
             {chartProvider === 'tradingview' ? (
               <TradingViewChart 

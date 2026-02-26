@@ -21,6 +21,7 @@ export interface PortfolioSummary {
   positionsCount: number;
   lastSync: string; // ISO timestamp (SnapTrade last sync)
   source: string; // Data source: 'snaptrade' | 'cache'
+  buyingPower?: number; // From account_balances.buying_power
 }
 
 export interface Position {
@@ -35,11 +36,36 @@ export interface Position {
   dayChange: number | null;
   dayChangePercent: number | null;
   rawSymbol: string | null;
+  // Robinhood-style fields (optional)
+  portfolioDiversity?: number; // equity / totalEquity * 100
+  companyName?: string;
+}
+
+// Recon mode debug metadata (only present when ?recon=1)
+export interface ReconPositionMeta {
+  symbol: string;
+  priceSource: 'databento' | 'snaptrade' | 'yfinance' | 'avgcost';
+  priceUsed: number;
+  databentoPrice: number | null;
+  snaptradePrice: number | null;
+  yfinancePrice: number | null;
+  prevCloseSource: string | null;
+  prevCloseValue: number | null;
+}
+
+export interface ReconMeta {
+  positions: ReconPositionMeta[];
+  cashRaw: number;
+  cashForTotal: number;
+  totalEquityComputed: number;
+  totalCostComputed: number;
+  priceSourceBreakdown: Record<string, number>;
 }
 
 export interface PortfolioResponse {
   summary: PortfolioSummary;
   positions: Position[];
+  recon?: ReconMeta; // Only populated when ?recon=1
 }
 
 // =============================================================================
@@ -211,18 +237,12 @@ export interface IdeasResponse {
 
 export interface ChatRequest {
   message: string;
-  includeIdeas?: boolean; // Include recent parsed ideas in context
-  includePosition?: boolean; // Include current position info
-  maxIdeas?: number; // Max ideas to include (default: 10)
+  context?: string; // Additional context for the AI
 }
 
 export interface ChatResponse {
-  ticker: string;
   response: string;
-  ideasUsed: number;
-  model: string;
-  promptTokens: number;
-  completionTokens: number;
+  sources: string[]; // Data sources used (e.g. "OHLCV data", "Discord trading ideas")
 }
 
 // =============================================================================
@@ -346,4 +366,48 @@ export interface NotesResponse {
   ticker: string;
   notes: StockNote[];
   total: number;
+}
+
+// =============================================================================
+// Activities (SnapTrade trade history)
+// =============================================================================
+
+export interface Activity {
+  id: string;
+  accountId: string | null;
+  activityType: string | null; // BUY, SELL, DIVIDEND, FEE
+  tradeDate: string | null;
+  settlementDate: string | null;
+  amount: number;
+  price: number | null;
+  units: number | null;
+  symbol: string | null;
+  description: string | null;
+  currency: string;
+  fee: number;
+  fxRate: number | null;
+  institution: string | null;
+  optionType: string | null;
+}
+
+export interface ActivitiesResponse {
+  activities: Activity[];
+  total: number;
+  startDate: string;
+  endDate: string;
+}
+
+// =============================================================================
+// Sparklines (batch close prices for portfolio sparklines)
+// =============================================================================
+
+export interface SparklineData {
+  symbol: string;
+  closes: number[];
+  dates: string[];
+}
+
+export interface SparklineResponse {
+  sparklines: SparklineData[];
+  period: string;
 }

@@ -28,7 +28,13 @@ interface UseIdeasOptions {
 const fetcher = async (url: string): Promise<IdeasData> => {
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`Failed to fetch ideas: ${response.status}`);
+    const errorBody = await response.json().catch(() => ({}));
+    const detail = errorBody?.error || errorBody?.detail || '';
+    throw new Error(
+      detail
+        ? `Ideas error: ${detail}`
+        : `Failed to fetch ideas (${response.status})`
+    );
   }
   return response.json();
 };

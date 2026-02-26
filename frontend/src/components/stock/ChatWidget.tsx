@@ -80,8 +80,8 @@ export function ChatWidget({ ticker }: ChatWidgetProps) {
   return (
     <div className="h-full flex flex-col">
       {/* Demo mode banner */}
-      <div className="px-4 py-2 bg-yellow-500/10 border-b border-yellow-500/20 text-center">
-        <span className="text-xs font-medium text-yellow-500">
+      <div className="px-4 py-2 bg-status-warning/10 border-b border-status-warning/20 text-center">
+        <span className="text-xs font-medium text-status-warning">
           Demo Mode — Responses are simulated
         </span>
       </div>

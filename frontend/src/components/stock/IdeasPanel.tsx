@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { clsx } from 'clsx';
-import { formatNumber } from '@/lib/format';
+import { formatNumber, formatRelativeTime } from '@/lib/format';
+import { directionTextColor } from '@/lib/colors';
+import type { StockIdea } from '@/types/api';
 import {
   FunnelIcon,
   ArrowTrendingUpIcon,
@@ -12,17 +14,10 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 
-interface Idea {
-  id: number;
-  direction: 'bullish' | 'bearish' | 'neutral';
-  confidence: number;
-  labels: string[];
-  entryPrice: number | null;
-  targetPrice: number | null;
-  stopLoss: number | null;
-  text: string;
-  author: string;
-  createdAt: string;
+/** Extract a price level value from the levels array by kind. */
+function getLevelValue(idea: StockIdea, kind: string): number | null {
+  const level = idea.levels?.find((l) => l.kind === kind);
+  return level?.value ?? null;
 }
 
 interface IdeasPanelProps {
@@ -47,22 +42,9 @@ const LABEL_COLORS: Record<string, string> = {
 
 const ALL_LABELS = Object.keys(LABEL_COLORS);
 
-function formatTimeAgo(dateStr: string): string {
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  
-  if (diffHours < 1) return 'Just now';
-  if (diffHours < 24) return `${diffHours}h ago`;
-  const diffDays = Math.floor(diffHours / 24);
-  if (diffDays === 1) return 'Yesterday';
-  if (diffDays < 7) return `${diffDays}d ago`;
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
 
 export function IdeasPanel({ ticker }: IdeasPanelProps) {
-  const [ideas, setIdeas] = useState<Idea[]>([]);
+  const [ideas, setIdeas] = useState<StockIdea[]>([]);
   const [loading, setLoading] = useState(true);
   const [directionFilter, setDirectionFilter] = useState<FilterMode>('all');
   const [labelFilter, setLabelFilter] = useState<string | null>(null);
@@ -92,7 +74,7 @@ export function IdeasPanel({ ticker }: IdeasPanelProps) {
   // Apply filters and sorting
   let filteredIdeas = ideas.filter((idea) => {
     if (directionFilter !== 'all' && idea.direction !== directionFilter) return false;
-    if (labelFilter && !idea.labels.includes(labelFilter)) return false;
+    if (labelFilter && !(idea.labels as string[]).includes(labelFilter)) return false;
     if (authorFilter && idea.author !== authorFilter) return false;
     return true;
   });
@@ -102,7 +84,7 @@ export function IdeasPanel({ ticker }: IdeasPanelProps) {
     if (sortBy === 'confidence') {
       return b.confidence - a.confidence;
     }
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    return new Date(b.sourceCreatedAt).getTime() - new Date(a.sourceCreatedAt).getTime();
   });
 
   const clearFilters = () => {
@@ -147,7 +129,7 @@ export function IdeasPanel({ ticker }: IdeasPanelProps) {
                         : f === 'bearish'
                         ? 'bg-loss/20 text-loss'
                         : f === 'neutral'
-                        ? 'bg-yellow-500/20 text-yellow-500'
+                        ? 'bg-status-warning/20 text-status-warning'
                         : 'bg-primary/20 text-primary'
                       : 'text-foreground-muted hover:text-foreground hover:bg-background-tertiary'
                   )}
@@ -268,7 +250,7 @@ export function IdeasPanel({ ticker }: IdeasPanelProps) {
 }
 
 interface IdeaCardProps {
-  idea: Idea;
+  idea: StockIdea;
   onAuthorClick: (author: string) => void;
 }
 
@@ -280,12 +262,7 @@ function IdeaCard({ idea, onAuthorClick }: IdeaCardProps) {
       ? ArrowTrendingDownIcon
       : MinusIcon;
 
-  const directionColor =
-    idea.direction === 'bullish'
-      ? 'text-profit'
-      : idea.direction === 'bearish'
-      ? 'text-loss'
-      : 'text-yellow-500';
+  const directionColor = directionTextColor(idea.direction);
 
   return (
     <div className="p-4 hover:bg-background-tertiary/50 transition-colors">
@@ -298,7 +275,7 @@ function IdeaCard({ idea, onAuthorClick }: IdeaCardProps) {
           </span>
           <span className="text-xs text-foreground-muted">{formatNumber((idea.confidence ?? 0) * 100, 0)}%</span>
         </div>
-        <span className="text-xs text-foreground-muted">{formatTimeAgo(idea.createdAt)}</span>
+        <span className="text-xs text-foreground-muted">{formatRelativeTime(idea.sourceCreatedAt)}</span>
       </div>
 
       {/* Labels */}
@@ -317,28 +294,34 @@ function IdeaCard({ idea, onAuthorClick }: IdeaCardProps) {
       </div>
 
       {/* Text */}
-      <p className="text-sm text-foreground leading-relaxed">{idea.text}</p>
+      <p className="text-sm text-foreground leading-relaxed">{idea.ideaText}</p>
 
       {/* Price levels */}
-      {(idea.entryPrice || idea.targetPrice || idea.stopLoss) && (
-        <div className="flex flex-wrap gap-3 mt-2 text-xs font-mono">
-          {idea.entryPrice && (
-            <span className="text-foreground-muted">
-              Entry: <span className="text-foreground">${formatNumber(idea.entryPrice)}</span>
-            </span>
-          )}
-          {idea.targetPrice && (
-            <span className="text-foreground-muted">
-              Target: <span className="text-profit">${formatNumber(idea.targetPrice)}</span>
-            </span>
-          )}
-          {idea.stopLoss && (
-            <span className="text-foreground-muted">
-              Stop: <span className="text-loss">${formatNumber(idea.stopLoss)}</span>
-            </span>
-          )}
-        </div>
-      )}
+      {(() => {
+        const entry = getLevelValue(idea, 'entry');
+        const target = getLevelValue(idea, 'target');
+        const stop = getLevelValue(idea, 'stop');
+        if (!entry && !target && !stop) return null;
+        return (
+          <div className="flex flex-wrap gap-3 mt-2 text-xs font-mono">
+            {entry && (
+              <span className="text-foreground-muted">
+                Entry: <span className="text-foreground">${formatNumber(entry)}</span>
+              </span>
+            )}
+            {target && (
+              <span className="text-foreground-muted">
+                Target: <span className="text-profit">${formatNumber(target)}</span>
+              </span>
+            )}
+            {stop && (
+              <span className="text-foreground-muted">
+                Stop: <span className="text-loss">${formatNumber(stop)}</span>
+              </span>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Author */}
       <button

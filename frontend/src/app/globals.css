@@ -258,3 +258,50 @@
   0%   { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
+
+/* ── Motion utilities ─────────────────────────────────────────────── */
+
+/* Subtle loading shimmer overlay */
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255,255,255,0.04) 50%,
+    transparent 100%
+  );
+  animation: shimmer-slide 1.5s ease-in-out infinite;
+}
+@keyframes shimmer-slide {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Value transition for pill color changes */
+.pill-transition {
+  transition: color 180ms ease-out, background-color 180ms ease-out;
+}
+
+/* Drawer / bottom-sheet slide-in */
+.drawer-enter {
+  animation: drawerSlideIn 200ms ease-out;
+}
+@keyframes drawerSlideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+/* Fade-in for data mount */
+.fade-in-data {
+  animation: fadeInData 180ms ease-out;
+}
+@keyframes fadeInData {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

@@ -15,7 +15,13 @@ import type {
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`Failed: ${res.status}`);
+  if (!res.ok) {
+    const errorBody = await res.json().catch(() => ({}));
+    const detail = errorBody?.error || errorBody?.detail || '';
+    throw new Error(
+      detail ? detail : `Request failed (${res.status})`
+    );
+  }
   return res.json();
 };
 

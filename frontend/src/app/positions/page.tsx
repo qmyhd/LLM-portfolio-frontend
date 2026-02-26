@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
   ArrowUpIcon,
@@ -10,46 +10,114 @@ import {
   ChevronUpIcon,
   ChevronDownIcon,
   BriefcaseIcon,
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
+  XCircleIcon,
 } from '@heroicons/react/24/outline';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
 import type { Position as ApiPosition } from '@/types/api';
+import type { SyncResponse } from '@/types/ideas';
 import { toUiPosition, type UiPosition } from '@/lib/mappers';
 import { formatMoney, formatPercent, formatNumber } from '@/lib/format';
+
+type SyncStatus = 'idle' | 'syncing' | 'success' | 'partial' | 'error';
+
+interface SyncFeedback {
+  status: SyncStatus;
+  message: string;
+  details?: string[];
+}
 
 export default function PositionsPage() {
   const [positions, setPositions] = useState<UiPosition[]>([]);
   const [loading, setLoading] = useState(true);
-  const [syncing, setSyncing] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [syncFeedback, setSyncFeedback] = useState<SyncFeedback>({ status: 'idle', message: '' });
   const [sortBy, setSortBy] = useState<'value' | 'pl' | 'dayChange'>('value');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
-  useEffect(() => {
-    fetchPositions();
-  }, []);
-
-  const fetchPositions = async () => {
+  const fetchPositions = useCallback(async () => {
     try {
+      setFetchError(null);
       const res = await fetch('/api/portfolio');
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody?.error || errBody?.detail || `Server error (${res.status})`);
+      }
       const data = await res.json();
       const apiPositions: ApiPosition[] = data.positions || [];
       setPositions(apiPositions.map(toUiPosition));
     } catch (error) {
-      console.error('Failed to fetch positions:', error);
+      const msg = error instanceof Error ? error.message : 'Failed to fetch positions';
+      setFetchError(msg);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to fetch positions:', error);
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchPositions();
+  }, [fetchPositions]);
 
   const syncBrokerage = async () => {
-    setSyncing(true);
+    setSyncFeedback({ status: 'syncing', message: 'Syncing with brokerage...' });
     try {
-      await fetch('/api/portfolio', { method: 'POST' });
-      await fetchPositions();
+      const res = await fetch('/api/portfolio', { method: 'POST' });
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody?.error || errBody?.detail || `Sync failed (${res.status})`);
+      }
+      const result: SyncResponse = await res.json();
+
+      if (result.authError) {
+        setSyncFeedback({
+          status: 'error',
+          message: result.message || 'Brokerage authentication failed — please re-link your account',
+          details: result.errors?.length ? result.errors : undefined,
+        });
+      } else if (result.status === 'success') {
+        setSyncFeedback({
+          status: 'success',
+          message: `Sync complete: ${result.positions} positions, ${result.orders} orders updated`,
+        });
+      } else if (result.status === 'error') {
+        setSyncFeedback({
+          status: 'error',
+          message: result.message || 'Sync failed',
+          details: result.errors?.length ? result.errors : undefined,
+        });
+      } else {
+        setSyncFeedback({
+          status: 'partial',
+          message: result.message || 'Sync completed with some errors',
+          details: result.errors?.length ? result.errors : undefined,
+        });
+      }
+
+      // Refresh portfolio data after sync (skip if full error with no data)
+      if (result.status !== 'error') {
+        await fetchPositions();
+      }
+
+      // Auto-dismiss success after 5s
+      if (result.status === 'success') {
+        setTimeout(() => setSyncFeedback((prev) =>
+          prev.status === 'success' ? { status: 'idle', message: '' } : prev
+        ), 5000);
+      }
     } catch (error) {
-      console.error('Sync failed:', error);
-    } finally {
-      setSyncing(false);
+      const msg = error instanceof Error ? error.message : 'Sync failed';
+      setSyncFeedback({
+        status: 'error',
+        message: msg,
+      });
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Sync error:', error);
+      }
     }
   };
 
@@ -97,16 +165,78 @@ export default function PositionsPage() {
           <h1 className="text-2xl font-bold text-foreground">Positions</h1>
           <p className="text-foreground-muted">Your current holdings</p>
         </div>
-        
+
         <button
           onClick={syncBrokerage}
-          disabled={syncing}
+          disabled={syncFeedback.status === 'syncing'}
           className="btn-primary inline-flex items-center gap-2"
         >
-          <ArrowPathIcon className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
-          {syncing ? 'Syncing...' : 'Sync Brokerage'}
+          <ArrowPathIcon className={`h-4 w-4 ${syncFeedback.status === 'syncing' ? 'animate-spin' : ''}`} />
+          {syncFeedback.status === 'syncing' ? 'Syncing...' : 'Sync Brokerage'}
         </button>
       </div>
+
+      {/* Sync Feedback Banner */}
+      {syncFeedback.status !== 'idle' && syncFeedback.status !== 'syncing' && (
+        <div className={`rounded-lg p-4 flex items-start gap-3 ${
+          syncFeedback.status === 'success'
+            ? 'bg-profit/10 border border-profit/20'
+            : syncFeedback.status === 'partial'
+            ? 'bg-status-warning/10 border border-status-warning/20'
+            : 'bg-loss/10 border border-loss/20'
+        }`}>
+          {syncFeedback.status === 'success' && (
+            <CheckCircleIcon className="h-5 w-5 text-profit flex-shrink-0 mt-0.5" />
+          )}
+          {syncFeedback.status === 'partial' && (
+            <ExclamationTriangleIcon className="h-5 w-5 text-status-warning flex-shrink-0 mt-0.5" />
+          )}
+          {syncFeedback.status === 'error' && (
+            <XCircleIcon className="h-5 w-5 text-loss flex-shrink-0 mt-0.5" />
+          )}
+          <div className="flex-1 min-w-0">
+            <p className={`text-sm font-medium ${
+              syncFeedback.status === 'success'
+                ? 'text-profit'
+                : syncFeedback.status === 'partial'
+                ? 'text-status-warning'
+                : 'text-loss'
+            }`}>
+              {syncFeedback.message}
+            </p>
+            {syncFeedback.details && syncFeedback.details.length > 0 && (
+              <ul className="mt-1 space-y-0.5">
+                {syncFeedback.details.map((detail, i) => (
+                  <li key={i} className="text-xs text-foreground-muted">{detail}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <button
+            onClick={() => setSyncFeedback({ status: 'idle', message: '' })}
+            className="text-foreground-muted hover:text-foreground text-xs flex-shrink-0"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {/* Fetch Error Banner */}
+      {fetchError && (
+        <div className="rounded-lg p-4 flex items-start gap-3 bg-loss/10 border border-loss/20">
+          <XCircleIcon className="h-5 w-5 text-loss flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-loss">{fetchError}</p>
+          </div>
+          <button
+            onClick={() => { setFetchError(null); setLoading(true); fetchPositions(); }}
+            className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80"
+          >
+            <ArrowPathIcon className="w-3 h-3" />
+            Retry
+          </button>
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

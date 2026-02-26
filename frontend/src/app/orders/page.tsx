@@ -179,7 +179,7 @@ export default function OrdersPage() {
                         order.status === 'filled'
                           ? 'bg-profit/20 text-profit'
                           : order.status === 'pending'
-                          ? 'bg-yellow-500/20 text-yellow-500'
+                          ? 'bg-status-warning/20 text-status-warning'
                           : 'bg-foreground-muted/20 text-foreground-muted'
                       }`}>
                         {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
@@ -216,7 +216,7 @@ export default function OrdersPage() {
             </div>
             <div className="card p-4">
               <p className="text-sm text-foreground-muted">Pending</p>
-              <p className="mt-1 text-2xl font-bold text-yellow-500">
+              <p className="mt-1 text-2xl font-bold text-status-warning">
                 {orders.filter(o => o.status === 'pending').length}
               </p>
             </div>

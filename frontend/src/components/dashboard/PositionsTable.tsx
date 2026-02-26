@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { clsx } from 'clsx';
 import {
   ChevronUpIcon,
   ChevronDownIcon,
@@ -10,7 +9,8 @@ import {
 } from '@heroicons/react/24/outline';
 import { usePortfolio } from '@/hooks';
 import type { Position } from '@/types/api';
-import { formatMoney, formatPercent } from '@/lib/format';
+import { formatMoney, formatSignedMoney, formatPercent } from '@/lib/format';
+import { pnlTextColor, pnlBgColor } from '@/lib/colors';
 
 type SortKey = 'symbol' | 'equity' | 'openPnl' | 'openPnlPercent';
 type FilterMode = 'all' | 'winners' | 'losers';
@@ -153,12 +153,8 @@ export function PositionsTable() {
           </span>
           <span className="text-foreground-muted">
             P/L:{' '}
-            <span className={clsx(
-              'font-mono font-medium',
-              positions.reduce((s, p) => s + p.openPnl, 0) >= 0 ? 'text-profit' : 'text-loss'
-            )}>
-              {positions.reduce((s, p) => s + p.openPnl, 0) >= 0 ? '+' : ''}
-              {formatMoney(Math.abs(positions.reduce((s, p) => s + p.openPnl, 0)))}
+            <span className={`font-mono font-medium ${pnlTextColor(positions.reduce((s, p) => s + p.openPnl, 0))}`}>
+              {formatSignedMoney(positions.reduce((s, p) => s + p.openPnl, 0))}
             </span>
           </span>
         </div>
@@ -227,25 +223,12 @@ export function PositionsTable() {
                 <td className="table-cell text-right font-mono">
                   {formatMoney(position.equity)}
                 </td>
-                <td
-                  className={clsx(
-                    'table-cell text-right font-mono',
-                    position.openPnl >= 0 ? 'text-profit' : 'text-loss'
-                  )}
-                >
-                  {position.openPnl >= 0 ? '+' : ''}${(position.openPnl ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                <td className={`table-cell text-right font-mono ${pnlTextColor(position.openPnl)}`}>
+                  {formatSignedMoney(position.openPnl)}
                 </td>
-                <td
-                  className={clsx(
-                    'table-cell text-right font-mono font-medium',
-                    position.openPnlPercent >= 0 ? 'text-profit' : 'text-loss'
-                  )}
-                >
-                  <span className={clsx(
-                    'px-2 py-1 rounded',
-                    position.openPnlPercent >= 0 ? 'bg-profit/10' : 'bg-loss/10'
-                  )}>
-                    {position.openPnlPercent >= 0 ? '+' : ''}{formatPercent(position.openPnlPercent)}
+                <td className={`table-cell text-right font-mono font-medium ${pnlTextColor(position.openPnlPercent)}`}>
+                  <span className={`px-2 py-1 rounded ${pnlBgColor(position.openPnlPercent)}`}>
+                    {formatPercent(position.openPnlPercent, 2, { showSign: true })}
                   </span>
                 </td>
               </tr>
