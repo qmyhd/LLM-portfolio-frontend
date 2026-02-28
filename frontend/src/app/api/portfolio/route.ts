@@ -13,6 +13,8 @@ export async function GET(request: NextRequest) {
     if (request.nextUrl.searchParams.get('recon') === '1') params.set('recon', '1');
     const assetClass = request.nextUrl.searchParams.get('asset_class');
     if (assetClass) params.set('asset_class', assetClass);
+    const accountId = request.nextUrl.searchParams.get('account_id');
+    if (accountId) params.set('account_id', accountId);
     const qs = params.toString();
     const backendPath = qs ? `/portfolio?${qs}` : '/portfolio';
 
