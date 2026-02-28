@@ -117,43 +117,57 @@ export function PortfolioSummary() {
 
   const { summary } = data;
 
-  // Use totalEquity from backend SST (equity-only, no cash)
-  const equityValue = summary.totalEquity;
-  const unrealizedPL = summary.unrealizedPL;
-  const unrealizedPLPct = summary.unrealizedPLPercent;
-
   const dailyTrend = trendDirection(summary.dayChange);
-  const totalTrend = trendDirection(unrealizedPL);
+  const totalTrend = trendDirection(summary.unrealizedPL);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <MetricCard
-        title="Portfolio Value"
-        value={formatMoney(equityValue)}
-        change={summary.dayChange}
-        changePct={summary.dayChangePercent}
-        icon={ChartBarIcon}
-        trend={dailyTrend}
-      />
-      <MetricCard
-        title="Total P/L"
-        value={formatSignedMoney(unrealizedPL)}
-        changePct={unrealizedPLPct}
-        icon={unrealizedPL >= 0 ? ArrowTrendingUpIcon : ArrowTrendingDownIcon}
-        trend={totalTrend}
-      />
-      <MetricCard
-        title="Positions"
-        value={summary.positionsCount.toString()}
-        icon={ChartBarIcon}
-        trend="neutral"
-      />
-      <MetricCard
-        title={summary.cashBalance < 0 ? 'Cash Balance (Margin)' : 'Cash Balance'}
-        value={formatMoney(summary.cashBalance)}
-        icon={BanknotesIcon}
-        trend={summary.cashBalance < 0 ? 'down' : 'neutral'}
-      />
+    <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-thin snap-x snap-mandatory">
+      <div className="snap-start min-w-[160px] flex-1">
+        <MetricCard
+          title="Market Value"
+          value={formatMoney(summary.totalEquity)}
+          change={summary.dayChange}
+          changePct={summary.dayChangePercent}
+          icon={ChartBarIcon}
+          trend={dailyTrend}
+        />
+      </div>
+      <div className="snap-start min-w-[140px] flex-1">
+        <MetricCard
+          title={summary.cashBalance < 0 ? 'Cash (Margin)' : 'Cash'}
+          value={formatMoney(summary.cashBalance)}
+          icon={BanknotesIcon}
+          trend={summary.cashBalance < 0 ? 'down' : 'neutral'}
+        />
+      </div>
+      {summary.buyingPower != null && (
+        <div className="snap-start min-w-[140px] flex-1">
+          <MetricCard
+            title="Buying Power"
+            value={formatMoney(summary.buyingPower)}
+            icon={BanknotesIcon}
+            trend="neutral"
+          />
+        </div>
+      )}
+      <div className="snap-start min-w-[160px] flex-1">
+        <MetricCard
+          title="Day Change"
+          value={formatSignedMoney(summary.dayChange)}
+          changePct={summary.dayChangePercent}
+          icon={dailyTrend === 'down' ? ArrowTrendingDownIcon : ArrowTrendingUpIcon}
+          trend={dailyTrend}
+        />
+      </div>
+      <div className="snap-start min-w-[160px] flex-1">
+        <MetricCard
+          title="Total P/L"
+          value={formatSignedMoney(summary.unrealizedPL)}
+          changePct={summary.unrealizedPLPercent}
+          icon={totalTrend === 'down' ? ArrowTrendingDownIcon : ArrowTrendingUpIcon}
+          trend={totalTrend}
+        />
+      </div>
     </div>
   );
 }

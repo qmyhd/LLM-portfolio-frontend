@@ -33,10 +33,10 @@ function SigninIntroContent() {
       <LiquidGradientBackground />
 
       {/* Sign-in form */}
-      <div className="absolute inset-0 z-10 flex items-center justify-center animate-fade-in">
+      <div className="absolute inset-0 z-10 flex items-center justify-center">
         <div className="relative z-10 max-w-md w-full mx-4 space-y-6">
-          {/* Logo/Title */}
-          <div className="text-center">
+          {/* Logo/Title — Stage 1: immediate */}
+          <div className="text-center opacity-0 animate-[fadeSlideUp_0.6s_ease-out_forwards]">
             <h1
               className="text-6xl font-black mb-3"
               style={{
@@ -49,6 +49,10 @@ function SigninIntroContent() {
             >
               QQQ
             </h1>
+          </div>
+
+          {/* Subtitle — Stage 2: 400ms delay */}
+          <div className="text-center opacity-0 animate-[fadeSlideUp_0.5s_ease-out_0.4s_forwards]">
             <p className="text-foreground-muted text-lg">LLM Portfolio</p>
           </div>
 
@@ -70,8 +74,8 @@ function SigninIntroContent() {
             </div>
           )}
 
-          {/* Sign In Card — Glassmorphism */}
-          <div className="bg-white/[0.04] backdrop-blur-xl rounded-2xl shadow-2xl p-8 space-y-5 border border-white/[0.08]">
+          {/* Sign In Card — Glassmorphism — Stage 3: 800ms delay */}
+          <div className="bg-white/[0.04] backdrop-blur-xl rounded-2xl shadow-2xl p-8 space-y-5 border border-white/[0.08] opacity-0 animate-[fadeSlideUp_0.6s_ease-out_0.8s_forwards]">
             <div className="text-center">
               <h2 className="text-xl font-semibold text-white">
                 Sign in to continue
@@ -118,7 +122,7 @@ function SigninIntroContent() {
                   autoComplete="username"
                   autoFocus
                   aria-label="Username"
-                  className="w-full pl-11 pr-4 py-3 bg-white/[0.06] border border-white/[0.1] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#5865f2]/50 focus:border-[#5865f2]/50 transition-all"
+                  className="w-full pl-11 pr-4 py-3 bg-white/[0.06] border border-white/[0.1] rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-[#5865f2]/50 focus:border-[#5865f2]/50 transition-all"
                 />
               </div>
 
@@ -135,7 +139,7 @@ function SigninIntroContent() {
                   }}
                   autoComplete="current-password"
                   aria-label="Password"
-                  className="w-full pl-11 pr-4 py-3 bg-white/[0.06] border border-white/[0.1] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#5865f2]/50 focus:border-[#5865f2]/50 transition-all"
+                  className="w-full pl-11 pr-4 py-3 bg-white/[0.06] border border-white/[0.1] rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-[#5865f2]/50 focus:border-[#5865f2]/50 transition-all"
                 />
               </div>
 
@@ -188,7 +192,7 @@ function SigninIntroContent() {
                 <div className="w-full border-t border-white/10"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-3 text-gray-500 bg-[#0a0e1a]">
+                <span className="px-3 text-white/40 backdrop-blur-sm">
                   or continue with
                 </span>
               </div>
@@ -197,7 +201,7 @@ function SigninIntroContent() {
             {/* Google Sign In Button */}
             <button
               onClick={() => signIn('google', { callbackUrl })}
-              className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.1] text-white font-medium rounded-xl transition-all duration-200 hover:scale-[1.02]"
+              className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-white/10 hover:bg-white/15 ring-1 ring-white/20 text-white font-medium rounded-xl transition-all duration-200 hover:scale-[1.02]"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path

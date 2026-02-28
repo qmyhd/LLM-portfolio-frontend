@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePortfolio } from '@/hooks';
-import { formatNumber } from '@/lib/format';
+import { formatNumber, formatSignedPct } from '@/lib/format';
+import { pnlTextColor } from '@/lib/colors';
 import type { Position } from '@/types/api';
 
 interface TickerItem {
@@ -64,18 +65,8 @@ export function TickerBar() {
             <span className="text-foreground-muted font-mono">
               ${formatNumber(item.price)}
             </span>
-            <span
-              className={`font-mono ${
-                item.changePct > 0
-                  ? 'text-profit'
-                  : item.changePct < 0
-                  ? 'text-loss'
-                  : 'text-foreground-muted'
-              }`}
-            >
-              {item.changePct === 0
-                ? '\u2014'
-                : `${item.changePct >= 0 ? '+' : ''}${formatNumber(item.changePct)}%`}
+            <span className={`font-mono ${pnlTextColor(item.changePct)}`}>
+              {item.changePct === 0 ? '\u2014' : formatSignedPct(item.changePct)}
             </span>
           </Link>
         ))}

@@ -142,7 +142,7 @@ export function IdeasPageContent() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Ideas</h1>
         <label className="flex items-center gap-2 cursor-pointer">
-          <span className="text-sm text-foreground-muted">Car Ride Mode</span>
+          <span className="text-sm text-foreground-muted">Dictation Mode</span>
           <div className="relative">
             <input
               type="checkbox"

@@ -66,6 +66,7 @@ export interface UiPosition {
   dayChange: number;
   dayChangePercent: number;
   sector: string;
+  assetType: string;
 }
 
 /**
@@ -129,7 +130,7 @@ export function toUiPosition(api: ApiPosition): UiPosition {
 
   return {
     symbol: api.symbol,
-    companyName: COMPANY_NAMES[api.symbol] ?? '',
+    companyName: api.companyName || COMPANY_NAMES[api.symbol] || '',
     quantity,
     averageCost,
     currentPrice: api.currentPrice ?? 0,
@@ -140,6 +141,7 @@ export function toUiPosition(api: ApiPosition): UiPosition {
     dayChange: api.dayChange ?? 0,
     dayChangePercent: api.dayChangePercent ?? 0,
     sector: '',
+    assetType: api.assetType ?? 'equity',
   };
 }
 

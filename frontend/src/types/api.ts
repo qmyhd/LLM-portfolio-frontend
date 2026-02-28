@@ -22,6 +22,10 @@ export interface PortfolioSummary {
   lastSync: string; // ISO timestamp (SnapTrade last sync)
   source: string; // Data source: 'snaptrade' | 'cache'
   buyingPower?: number; // From account_balances.buying_power
+  assetBreakdown?: Record<string, number>; // {assetType: totalEquity}
+  cryptoValue?: number; // Total crypto equity
+  cryptoPnl?: number; // Total crypto unrealized P/L
+  connectionStatus?: 'connected' | 'disconnected' | 'error' | 'deleted';
 }
 
 export interface Position {
@@ -39,6 +43,7 @@ export interface Position {
   // Robinhood-style fields (optional)
   portfolioDiversity?: number; // equity / totalEquity * 100
   companyName?: string;
+  assetType?: string; // 'equity' | 'etf' | 'crypto' | 'option'
 }
 
 // Recon mode debug metadata (only present when ?recon=1)
@@ -395,6 +400,24 @@ export interface ActivitiesResponse {
   total: number;
   startDate: string;
   endDate: string;
+}
+
+// =============================================================================
+// Brokerage Connections (SnapTrade)
+// =============================================================================
+
+export interface ConnectionInfo {
+  accountId: string;
+  name: string | null;
+  institutionName: string | null;
+  connectionStatus: 'connected' | 'disconnected' | 'error' | 'deleted';
+  disabledAt: string | null;
+  errorMessage: string | null;
+  lastSync: string | null;
+}
+
+export interface ConnectionsResponse {
+  connections: ConnectionInfo[];
 }
 
 // =============================================================================

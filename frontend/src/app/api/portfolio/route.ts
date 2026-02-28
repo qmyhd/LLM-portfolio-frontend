@@ -8,9 +8,13 @@ export async function GET(request: NextRequest) {
     // Verify user is authenticated
     await authGuard();
 
-    // Forward ?recon=1 to backend for debug metadata
-    const recon = request.nextUrl.searchParams.get('recon') === '1';
-    const backendPath = recon ? '/portfolio?recon=1' : '/portfolio';
+    // Forward supported query params to backend
+    const params = new URLSearchParams();
+    if (request.nextUrl.searchParams.get('recon') === '1') params.set('recon', '1');
+    const assetClass = request.nextUrl.searchParams.get('asset_class');
+    if (assetClass) params.set('asset_class', assetClass);
+    const qs = params.toString();
+    const backendPath = qs ? `/portfolio?${qs}` : '/portfolio';
 
     const response = await backendFetch(backendPath, {
       // Cache for 30 seconds on the edge

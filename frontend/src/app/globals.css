@@ -13,6 +13,7 @@
 
   html {
     @apply bg-background text-foreground antialiased;
+    overflow-x: hidden;
   }
 
   body {
@@ -242,6 +243,7 @@
   /* Ticker tape scrolling */
   .ticker-bar-track {
     animation: ticker-scroll 30s linear infinite;
+    will-change: transform;
   }
 
   .ticker-bar-track.paused {
@@ -257,6 +259,37 @@
 @keyframes ticker-scroll {
   0%   { transform: translateX(0); }
   100% { transform: translateX(-50%); }
+}
+
+/* ── QQQ branded loader ──────────────────────────────────────────── */
+
+.qqq-loader {
+  display: inline-flex;
+}
+
+.qqq-loader-letter {
+  display: inline-block;
+  background: linear-gradient(135deg, #5865f2 0%, #9333ea 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: qqqFadeIn 0.6s ease-out both, qqqPulse 1.8s ease-in-out 0.6s infinite;
+}
+
+@keyframes qqqFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes qqqPulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.4; }
+}
+
+/* Login page staged reveal */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ── Motion utilities ─────────────────────────────────────────────── */

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import useSWR from 'swr';
+import { clsx } from 'clsx';
 import { StockMetrics } from './StockMetrics';
 import { StockChart } from './StockChart';
 import { TradingViewChart } from './TradingViewChart';
@@ -10,13 +11,14 @@ import { ChatWidget } from './ChatWidget';
 import { RawMessagesPanel } from './RawMessagesPanel';
 import { RobinhoodPositionCard } from './RobinhoodPositionCard';
 import { RobinhoodStockHeader } from './RobinhoodStockHeader';
-import { SentimentCard } from './SentimentCard';
-import { RiskCard } from './RiskCard';
 import { FundamentalsCard } from './FundamentalsCard';
 import { OpenBBInsightsPanel } from './OpenBBInsightsPanel';
+import { NotesPanel } from './NotesPanel';
 import {
   ArrowPathIcon,
   ChartBarIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
 } from '@heroicons/react/24/outline';
 import type { StockProfileCurrent } from '@/types/api';
 
@@ -27,12 +29,20 @@ const profileFetcher = (url: string) =>
   });
 
 type ChartProvider = 'lightweight' | 'tradingview';
+type TabKey = 'chat' | 'ideas' | 'raw' | 'insights' | 'notes';
+
+const TABS: { key: TabKey; label: string }[] = [
+  { key: 'chat', label: 'Chat' },
+  { key: 'ideas', label: 'Ideas' },
+  { key: 'raw', label: 'Raw' },
+  { key: 'insights', label: 'Insights' },
+  { key: 'notes', label: 'Notes' },
+];
 
 interface StockHubContentProps {
   ticker: string;
 }
 
-// Loading skeleton for cards
 function CardSkeleton({ lines = 3 }: { lines?: number }) {
   return (
     <div className="card p-4 animate-pulse">
@@ -44,7 +54,6 @@ function CardSkeleton({ lines = 3 }: { lines?: number }) {
   );
 }
 
-// Loading skeleton for chart
 function ChartSkeleton() {
   return (
     <div className="h-full flex flex-col p-4 animate-pulse">
@@ -54,20 +63,21 @@ function ChartSkeleton() {
   );
 }
 
+const LS_MORE_STATS = 'stock-more-stats';
+
 export function StockHubContent({ ticker }: StockHubContentProps) {
-  const [activeTab, setActiveTab] = useState<'ideas' | 'chat' | 'raw' | 'insights'>('ideas');
+  const [activeTab, setActiveTab] = useState<TabKey>('ideas');
   const [isFavorite, setIsFavorite] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [chartProvider, setChartProvider] = useState<ChartProvider>('tradingview');
+  const [moreStatsOpen, setMoreStatsOpen] = useState(false);
 
-  // Fetch stock profile for header
   const { data: profile } = useSWR<StockProfileCurrent>(
     `/api/stocks/${ticker}`,
     profileFetcher,
     { revalidateOnFocus: false, dedupingInterval: 30000 },
   );
 
-  // Check if ticker is in favorites
   useEffect(() => {
     const stored = localStorage.getItem('portfolio-watchlist');
     if (stored) {
@@ -78,31 +88,27 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
         setIsFavorite(false);
       }
     }
-    
-    // Load chart provider preference
+
     const chartPref = localStorage.getItem('chart-provider');
     if (chartPref === 'lightweight' || chartPref === 'tradingview') {
       setChartProvider(chartPref);
     }
+
+    const statsOpen = localStorage.getItem(LS_MORE_STATS);
+    if (statsOpen === 'true') setMoreStatsOpen(true);
   }, [ticker]);
 
   const toggleFavorite = () => {
     const stored = localStorage.getItem('portfolio-watchlist');
     let watchlist: string[] = [];
     if (stored) {
-      try {
-        watchlist = JSON.parse(stored);
-      } catch {
-        watchlist = [];
-      }
+      try { watchlist = JSON.parse(stored); } catch { watchlist = []; }
     }
-
     if (isFavorite) {
       watchlist = watchlist.filter((t) => t !== ticker);
     } else {
       watchlist.push(ticker);
     }
-
     localStorage.setItem('portfolio-watchlist', JSON.stringify(watchlist));
     setIsFavorite(!isFavorite);
   };
@@ -113,69 +119,80 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
     localStorage.setItem('chart-provider', newProvider);
   };
 
-  const handleRefresh = () => {
-    setRefreshKey((prev) => prev + 1);
+  const toggleMoreStats = () => {
+    const next = !moreStatsOpen;
+    setMoreStatsOpen(next);
+    localStorage.setItem(LS_MORE_STATS, String(next));
   };
 
+  const handleRefresh = () => setRefreshKey((p) => p + 1);
+
   return (
-    <main className="flex-1 overflow-hidden bg-background">
-      {/* Robinhood-style Stock Header */}
-      {profile ? (
-        <RobinhoodStockHeader
-          ticker={ticker}
-          profile={profile}
-          isFavorite={isFavorite}
-          onToggleFavorite={toggleFavorite}
-        />
-      ) : (
-        <div className="px-4 py-4 border-b border-border bg-background-secondary animate-pulse">
-          <div className="skeleton h-4 w-16 mb-2 rounded" />
-          <div className="skeleton h-7 w-48 mb-2 rounded" />
-          <div className="skeleton h-10 w-36 rounded" />
-        </div>
-      )}
+    <main className="flex-1 overflow-y-auto bg-background">
+      {/* ── Top section: Header + Position + Returns ── */}
+      <div className="border-b border-border">
+        {profile ? (
+          <RobinhoodStockHeader
+            ticker={ticker}
+            profile={profile}
+            isFavorite={isFavorite}
+            onToggleFavorite={toggleFavorite}
+          />
+        ) : (
+          <div className="px-4 py-4 bg-background-secondary animate-pulse">
+            <div className="skeleton h-4 w-16 mb-2 rounded" />
+            <div className="skeleton h-7 w-48 mb-2 rounded" />
+            <div className="skeleton h-10 w-36 rounded" />
+          </div>
+        )}
 
-      {/* Three-column layout */}
-      <div className="h-[calc(100%-56px)] flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
-        {/* Left Column - Stacked Cards */}
-        <aside className="w-full lg:w-72 xl:w-80 border-b lg:border-b-0 lg:border-r border-border overflow-y-auto flex-shrink-0 p-4 space-y-4 bg-background-secondary/80 backdrop-blur-md">
-          {/* Profile Card - loads first (critical info) */}
-          <Suspense fallback={<CardSkeleton lines={4} />}>
-            <StockMetrics ticker={ticker} key={`metrics-${refreshKey}`} />
-          </Suspense>
-
-          {/* Position Card - Robinhood-style */}
+        {/* Inline position card */}
+        <div className="px-4 pb-4">
           <Suspense fallback={<CardSkeleton lines={3} />}>
             <RobinhoodPositionCard ticker={ticker} key={`position-${refreshKey}`} />
           </Suspense>
+        </div>
 
-          {/* Sentiment Card */}
-          <Suspense fallback={<CardSkeleton lines={2} />}>
-            <SentimentCard ticker={ticker} key={`sentiment-${refreshKey}`} />
-          </Suspense>
+        {/* Collapsible More Stats */}
+        <div className="border-t border-border">
+          <button
+            onClick={toggleMoreStats}
+            className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-medium text-foreground-muted hover:text-foreground transition-colors"
+          >
+            <span>More Stats</span>
+            {moreStatsOpen ? (
+              <ChevronUpIcon className="w-3.5 h-3.5" />
+            ) : (
+              <ChevronDownIcon className="w-3.5 h-3.5" />
+            )}
+          </button>
+          {moreStatsOpen && (
+            <div className="px-4 pb-4 space-y-4">
+              <Suspense fallback={<CardSkeleton lines={6} />}>
+                <StockMetrics ticker={ticker} key={`metrics-${refreshKey}`} />
+              </Suspense>
+              <Suspense fallback={<CardSkeleton lines={5} />}>
+                <FundamentalsCard ticker={ticker} key={`fundamentals-${refreshKey}`} />
+              </Suspense>
+            </div>
+          )}
+        </div>
+      </div>
 
-          {/* Risk Card */}
-          <Suspense fallback={<CardSkeleton lines={3} />}>
-            <RiskCard ticker={ticker} key={`risk-${refreshKey}`} />
-          </Suspense>
-
-          {/* Fundamentals Card */}
-          <Suspense fallback={<CardSkeleton lines={5} />}>
-            <FundamentalsCard ticker={ticker} key={`fundamentals-${refreshKey}`} />
-          </Suspense>
-        </aside>
-
-        {/* Middle Column - Chart (owns height) */}
-        <div className="flex-1 min-w-0 min-h-[400px] border-b lg:border-b-0 lg:border-r border-border overflow-hidden flex flex-col">
+      {/* ── Bottom section: Chart + Tabs ── */}
+      <div className="flex flex-col lg:flex-row lg:h-[calc(100vh-320px)] min-h-0">
+        {/* Chart */}
+        <div className="flex-1 min-w-0 border-b lg:border-b-0 lg:border-r border-border overflow-hidden flex flex-col">
           {/* Chart controls */}
           <div className="flex items-center justify-end gap-1 px-3 py-1.5 border-b border-border bg-background-secondary/50">
             <button
               onClick={toggleChartProvider}
-              className={`p-1.5 rounded-md transition-colors ${
+              className={clsx(
+                'p-1.5 rounded-md transition-colors',
                 chartProvider === 'tradingview'
                   ? 'bg-primary/20 text-primary'
-                  : 'text-foreground-muted hover:text-foreground hover:bg-background-tertiary'
-              }`}
+                  : 'text-foreground-muted hover:text-foreground hover:bg-background-tertiary',
+              )}
               title={`Switch to ${chartProvider === 'lightweight' ? 'TradingView' : 'Lightweight'} chart`}
             >
               <ChartBarIcon className="h-3.5 w-3.5" />
@@ -188,65 +205,41 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
               <ArrowPathIcon className="h-3.5 w-3.5" />
             </button>
           </div>
-          <Suspense fallback={<ChartSkeleton />}>
-            {chartProvider === 'tradingview' ? (
-              <TradingViewChart 
-                symbol={ticker} 
-                key={`tv-chart-${refreshKey}`}
-                theme="dark"
-                height={500}
-                autosize={true}
-              />
-            ) : (
-              <StockChart ticker={ticker} key={`chart-${refreshKey}`} />
-            )}
-          </Suspense>
+          <div className="flex-1 min-h-[300px] sm:min-h-[400px]">
+            <Suspense fallback={<ChartSkeleton />}>
+              {chartProvider === 'tradingview' ? (
+                <TradingViewChart
+                  symbol={ticker}
+                  key={`tv-chart-${refreshKey}`}
+                  theme="dark"
+                  height={400}
+                  autosize={true}
+                />
+              ) : (
+                <StockChart ticker={ticker} key={`chart-${refreshKey}`} />
+              )}
+            </Suspense>
+          </div>
         </div>
 
-        {/* Right Column - Tabbed Panel */}
+        {/* Tabbed panel */}
         <aside className="w-full lg:w-80 xl:w-96 min-h-[300px] overflow-hidden flex flex-col flex-shrink-0 bg-background-secondary/80 backdrop-blur-md">
           {/* Tab switcher */}
-          <div className="flex border-b border-border bg-background-secondary">
-            <button
-              onClick={() => setActiveTab('chat')}
-              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-                activeTab === 'chat'
-                  ? 'text-primary border-b-2 border-primary bg-primary/5'
-                  : 'text-foreground-muted hover:text-foreground hover:bg-background-tertiary'
-              }`}
-            >
-              Chat
-            </button>
-            <button
-              onClick={() => setActiveTab('ideas')}
-              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-                activeTab === 'ideas'
-                  ? 'text-primary border-b-2 border-primary bg-primary/5'
-                  : 'text-foreground-muted hover:text-foreground hover:bg-background-tertiary'
-              }`}
-            >
-              Ideas
-            </button>
-            <button
-              onClick={() => setActiveTab('raw')}
-              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-                activeTab === 'raw'
-                  ? 'text-primary border-b-2 border-primary bg-primary/5'
-                  : 'text-foreground-muted hover:text-foreground hover:bg-background-tertiary'
-              }`}
-            >
-              Raw
-            </button>
-            <button
-              onClick={() => setActiveTab('insights')}
-              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-                activeTab === 'insights'
-                  ? 'text-primary border-b-2 border-primary bg-primary/5'
-                  : 'text-foreground-muted hover:text-foreground hover:bg-background-tertiary'
-              }`}
-            >
-              Insights
-            </button>
+          <div className="flex border-b border-border bg-background-secondary overflow-x-auto">
+            {TABS.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={clsx(
+                  'flex-1 px-3 py-2.5 text-sm font-medium transition-colors whitespace-nowrap',
+                  activeTab === tab.key
+                    ? 'text-primary border-b-2 border-primary bg-primary/5'
+                    : 'text-foreground-muted hover:text-foreground hover:bg-background-tertiary',
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
 
           {/* Tab content */}
@@ -271,6 +264,9 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
               )}
               {activeTab === 'insights' && (
                 <OpenBBInsightsPanel ticker={ticker} key={`insights-${refreshKey}`} />
+              )}
+              {activeTab === 'notes' && (
+                <NotesPanel ticker={ticker} key={`notes-${refreshKey}`} />
               )}
             </Suspense>
           </div>
