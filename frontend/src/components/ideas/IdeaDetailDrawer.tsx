@@ -6,7 +6,7 @@ import { formatDate } from '@/lib/format';
 import { TickerAutocomplete } from './TickerAutocomplete';
 import { TagsInput } from './TagsInput';
 import { RefineDiffPreview } from './RefineDiffPreview';
-import type { UserIdea, UpdateIdeaRequest, RefineResponse, IdeaStatus } from '@/types/ideas';
+import type { UserIdea, UpdateIdeaRequest, RefineResponse, IdeaStatus, IdeaContextResponse } from '@/types/ideas';
 
 interface IdeaDetailDrawerProps {
   idea: UserIdea | null;
@@ -38,6 +38,22 @@ export function IdeaDetailDrawer({
   const [refining, setRefining] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [applying, setApplying] = useState(false);
+  const [contextData, setContextData] = useState<IdeaContextResponse | null>(null);
+  const [loadingContext, setLoadingContext] = useState(false);
+  const [showContext, setShowContext] = useState(false);
+
+  const loadContext = useCallback(async () => {
+    if (!idea?.originMessageId) return;
+    setLoadingContext(true);
+    try {
+      const res = await fetch(`/api/ideas/${idea.id}/context`);
+      if (res.ok) {
+        setContextData(await res.json());
+        setShowContext(true);
+      }
+    } catch { /* silent */ }
+    setLoadingContext(false);
+  }, [idea]);
 
   // Reset form when idea changes
   useEffect(() => {
@@ -47,6 +63,9 @@ export function IdeaDetailDrawer({
       setEditTags([...idea.tags]);
       setEditStatus(idea.status);
       setShowDeleteConfirm(false);
+      // Reset context state
+      setContextData(null);
+      setShowContext(false);
     }
   }, [idea]);
 
@@ -198,6 +217,55 @@ export function IdeaDetailDrawer({
             <p>Created: {formatDate(idea.createdAt, 'full')}</p>
             <p>Updated: {formatDate(idea.updatedAt, 'full')}</p>
           </div>
+
+          {/* Discord context */}
+          {idea.originMessageId && (
+            <div>
+              <button
+                className="btn-secondary text-sm w-full"
+                onClick={showContext ? () => setShowContext(false) : loadContext}
+                disabled={loadingContext}
+              >
+                {loadingContext ? 'Loading...' : showContext ? 'Hide Context' : 'View Discord Context'}
+              </button>
+
+              {showContext && contextData && (
+                <div className="mt-3 space-y-2">
+                  <p className="text-xs text-foreground-muted uppercase tracking-wider">
+                    Discord Conversation
+                  </p>
+                  <div className="space-y-1.5 max-h-[300px] overflow-y-auto">
+                    {contextData.contextMessages.map((msg) => (
+                      <div
+                        key={msg.messageId}
+                        className={`p-2 rounded text-sm ${
+                          msg.isParent
+                            ? 'bg-accent/20 border border-accent/30'
+                            : 'bg-background-hover'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="font-medium text-xs">{msg.author}</span>
+                          <span className="text-xs text-foreground-subtle">
+                            {new Date(msg.sentAt).toLocaleString()}
+                          </span>
+                          {msg.isParent && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-accent/30 text-accent">
+                              Source
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-foreground-secondary whitespace-pre-wrap">{msg.content}</p>
+                      </div>
+                    ))}
+                  </div>
+                  {contextData.contextMessages.length === 0 && (
+                    <p className="text-sm text-foreground-subtle">No surrounding messages found.</p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Refine diff preview */}
           {refineResult && (

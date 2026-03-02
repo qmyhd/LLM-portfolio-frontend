@@ -77,6 +77,22 @@ export interface MoversResponse {
   source: 'intraday' | 'unrealized';
 }
 
+// Context types for viewing surrounding Discord messages
+export interface ContextMessage {
+  messageId: string;
+  content: string;
+  author: string;
+  sentAt: string;
+  channel: string;
+  isParent: boolean;
+}
+
+export interface IdeaContextResponse {
+  idea: UserIdea;
+  parentMessage: ContextMessage | null;
+  contextMessages: ContextMessage[];
+}
+
 // Sync response from POST /portfolio/sync (always HTTP 200, stable shape)
 export interface SyncResponse {
   status: 'success' | 'partial' | 'error';
