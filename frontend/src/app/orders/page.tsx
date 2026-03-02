@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import {
   ArrowUpIcon,
@@ -11,35 +11,22 @@ import {
 import { Select } from '@/components/ui/Select';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
-import type { Order as ApiOrder } from '@/types/api';
-import { toUiOrder, type UiOrder } from '@/lib/mappers';
+import { toUiOrder } from '@/lib/mappers';
 import { formatMoney } from '@/lib/format';
+import { useOrders } from '@/hooks/useOrders';
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<UiOrder[]>([]);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
 
-  useEffect(() => {
-    fetchOrders();
-  }, [filter]);
+  const { data: ordersData, isLoading: loading } = useOrders({
+    status: filter !== 'all' ? filter : undefined,
+  });
 
-  const fetchOrders = async () => {
-    try {
-      const params = new URLSearchParams();
-      if (filter !== 'all') params.set('status', filter);
-      
-      const res = await fetch(`/api/orders?${params}`);
-      const data = await res.json();
-      const apiOrders: ApiOrder[] = data.orders || [];
-      setOrders(apiOrders.map(toUiOrder));
-    } catch (error) {
-      console.error('Failed to fetch orders:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const orders = useMemo(
+    () => (ordersData?.orders ?? []).map(toUiOrder),
+    [ordersData],
+  );
 
   const filteredOrders = orders.filter(order =>
     order.symbol.toLowerCase().includes(search.toLowerCase())

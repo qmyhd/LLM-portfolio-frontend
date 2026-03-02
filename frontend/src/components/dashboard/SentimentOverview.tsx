@@ -1,18 +1,9 @@
 'use client';
 
-import useSWR from 'swr';
 import { clsx } from 'clsx';
 import { formatNumber } from '@/lib/format';
 import { CardSpotlight } from '@/components/ui/CardSpotlight';
-
-interface SentimentData {
-  ticker: string;
-  window: string;
-  totalMentions: number;
-  bullishPct: number | null;
-  bearishPct: number | null;
-  neutralPct: number | null;
-}
+import { useSentiment, type SentimentData } from '@/hooks/useSentiment';
 
 // Mock fallback when API is unavailable
 const MOCK_DATA: SentimentData = {
@@ -23,11 +14,6 @@ const MOCK_DATA: SentimentData = {
   bearishPct: 18,
   neutralPct: 13,
 };
-
-const fetcher = (url: string) => fetch(url).then(r => {
-  if (!r.ok) throw new Error(`Failed: ${r.status}`);
-  return r.json();
-});
 
 function SentimentSkeleton() {
   return (
@@ -51,11 +37,7 @@ function SentimentSkeleton() {
 }
 
 export function SentimentOverview() {
-  const { data, error, isLoading } = useSWR<SentimentData>(
-    '/api/sentiment?window=30d',
-    fetcher,
-    { revalidateOnFocus: false, dedupingInterval: 60000, errorRetryCount: 1 }
-  );
+  const { data, error, isLoading } = useSentiment();
 
   if (isLoading) return <SentimentSkeleton />;
 

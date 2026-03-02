@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import {
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
@@ -9,56 +8,36 @@ import {
 } from '@heroicons/react/24/outline';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { directionTextColor } from '@/lib/colors';
-
-interface Sentiment {
-  bullish: number;
-  bearish: number;
-  neutral: number;
-  overall: 'bullish' | 'bearish' | 'neutral';
-  score: number;
-  ideaCount: number;
-}
+import { useStockProfile } from '@/hooks/useStockProfile';
 
 interface SentimentCardProps {
   ticker: string;
 }
 
 export function SentimentCard({ ticker }: SentimentCardProps) {
-  const [sentiment, setSentiment] = useState<Sentiment | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: profile, isLoading } = useStockProfile(ticker);
 
-  useEffect(() => {
-    fetchSentiment();
-  }, [ticker]);
+  // Derive sentiment from the stock profile
+  const b = profile?.bullishMentionPct ?? 0;
+  const br = profile?.bearishMentionPct ?? 0;
+  const n = profile?.neutralMentionPct ?? 0;
+  const hasSentiment = b + br + n > 0;
 
-  const fetchSentiment = async () => {
-    try {
-      const res = await fetch(`/api/stocks/${ticker}`);
-      if (!res.ok) return;
-      const data = await res.json();
-
-      const b = data.bullishMentionPct ?? 0;
-      const br = data.bearishMentionPct ?? 0;
-      const n = data.neutralMentionPct ?? 0;
-
-      if (b + br + n > 0) {
-        setSentiment({
-          bullish: b,
-          bearish: br,
-          neutral: n,
-          overall: b > br ? 'bullish' : br > b ? 'bearish' : 'neutral',
-          score: b + br > 0 ? Math.round((b / (b + br)) * 100) : 50,
-          ideaCount: data.mentionCount30d ?? 0,
-        });
+  const sentiment = hasSentiment
+    ? {
+        bullish: b,
+        bearish: br,
+        neutral: n,
+        overall: (b > br ? 'bullish' : br > b ? 'bearish' : 'neutral') as
+          | 'bullish'
+          | 'bearish'
+          | 'neutral',
+        score: b + br > 0 ? Math.round((b / (b + br)) * 100) : 50,
+        ideaCount: profile?.mentionCount30d ?? 0,
       }
-    } catch (error) {
-      console.error('Failed to fetch sentiment:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    : null;
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="card p-4 animate-pulse">
         <div className="skeleton h-4 w-20 mb-3 rounded" />

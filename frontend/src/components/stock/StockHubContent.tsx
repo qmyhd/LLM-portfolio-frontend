@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import useSWR from 'swr';
 import { clsx } from 'clsx';
 import { StockMetrics } from './StockMetrics';
 import { StockChart } from './StockChart';
@@ -20,13 +19,7 @@ import {
   ChevronDownIcon,
   ChevronUpIcon,
 } from '@heroicons/react/24/outline';
-import type { StockProfileCurrent } from '@/types/api';
-
-const profileFetcher = (url: string) =>
-  fetch(url).then((r) => {
-    if (!r.ok) throw new Error(`Failed to fetch: ${r.status}`);
-    return r.json();
-  });
+import { useStockProfile } from '@/hooks/useStockProfile';
 
 type ChartProvider = 'lightweight' | 'tradingview';
 type TabKey = 'chat' | 'ideas' | 'raw' | 'insights' | 'notes';
@@ -72,11 +65,7 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
   const [chartProvider, setChartProvider] = useState<ChartProvider>('tradingview');
   const [moreStatsOpen, setMoreStatsOpen] = useState(false);
 
-  const { data: profile } = useSWR<StockProfileCurrent>(
-    `/api/stocks/${ticker}`,
-    profileFetcher,
-    { revalidateOnFocus: false, dedupingInterval: 30000 },
-  );
+  const { data: profile } = useStockProfile(ticker);
 
   useEffect(() => {
     const stored = localStorage.getItem('portfolio-watchlist');

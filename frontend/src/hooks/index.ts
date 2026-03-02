@@ -8,6 +8,9 @@ export { useUserIdeas } from './useUserIdeas';
 export { useMovers } from './useMovers';
 export { useActivities } from './useActivities';
 export { useSparklines } from './useSparklines';
+export { useStockProfile } from './useStockProfile';
+export { useOrders } from './useOrders';
+export { useSentiment } from './useSentiment';
 export { useTimeRange, type TimeRange } from './useTimeRange';
 export { useLiveUpdates } from './useLiveUpdates';
 export {

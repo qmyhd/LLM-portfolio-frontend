@@ -2,23 +2,13 @@
 
 import { clsx } from 'clsx';
 import Link from 'next/link';
-import useSWR from 'swr';
-import type { OrdersResponse, Order } from '@/types/api';
+import type { Order } from '@/types/api';
 import { formatMoney, formatDate } from '@/lib/format';
 import { CardSpotlight } from '@/components/ui/CardSpotlight';
-
-const fetcher = async (url: string): Promise<OrdersResponse> => {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Failed to fetch orders: ${res.status}`);
-  return res.json();
-};
+import { useOrders } from '@/hooks/useOrders';
 
 export function RecentOrders() {
-  const { data, error, isLoading } = useSWR<OrdersResponse>(
-    '/api/orders?limit=5',
-    fetcher,
-    { revalidateOnFocus: false, dedupingInterval: 10000, errorRetryCount: 3 }
-  );
+  const { data, error, isLoading } = useOrders({ limit: 5 });
 
   if (isLoading) {
     return (
