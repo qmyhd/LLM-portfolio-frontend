@@ -45,6 +45,7 @@ export interface Position {
   companyName?: string;
   assetType?: string; // 'equity' | 'etf' | 'crypto' | 'option'
   tvSymbol?: string; // TradingView widget symbol (e.g. "COINBASE:BTCUSD", "NASDAQ:AAPL")
+  weekChangePct?: number | null;
 }
 
 // Recon mode debug metadata (only present when ?recon=1)
@@ -401,6 +402,27 @@ export interface ActivitiesResponse {
   total: number;
   startDate: string;
   endDate: string;
+}
+
+// =============================================================================
+// Stock Activities (per-ticker trade history)
+// =============================================================================
+
+export interface StockActivity {
+  id: string;
+  activityType: string | null;
+  tradeDate: string | null;
+  price: number | null;
+  units: number | null;
+  amount: number;
+  fee: number;
+  description: string | null;
+}
+
+export interface StockActivitiesResponse {
+  ticker: string;
+  activities: StockActivity[];
+  total: number;
 }
 
 // =============================================================================

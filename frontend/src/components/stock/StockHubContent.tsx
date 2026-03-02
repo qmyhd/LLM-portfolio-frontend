@@ -12,6 +12,7 @@ import { RobinhoodPositionCard } from './RobinhoodPositionCard';
 import { RobinhoodStockHeader } from './RobinhoodStockHeader';
 import { FundamentalsCard } from './FundamentalsCard';
 import { OpenBBInsightsPanel } from './OpenBBInsightsPanel';
+import { TradesPanel } from './TradesPanel';
 import { NotesPanel } from './NotesPanel';
 import {
   ArrowPathIcon,
@@ -22,11 +23,12 @@ import {
 import { useStockProfile } from '@/hooks/useStockProfile';
 
 type ChartProvider = 'lightweight' | 'tradingview';
-type TabKey = 'chat' | 'ideas' | 'raw' | 'insights' | 'notes';
+type TabKey = 'chat' | 'ideas' | 'trades' | 'raw' | 'insights' | 'notes';
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'chat', label: 'Chat' },
   { key: 'ideas', label: 'Ideas' },
+  { key: 'trades', label: 'Trades' },
   { key: 'raw', label: 'Raw' },
   { key: 'insights', label: 'Insights' },
   { key: 'notes', label: 'Notes' },
@@ -84,7 +86,11 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
     }
 
     const statsOpen = localStorage.getItem(LS_MORE_STATS);
-    if (statsOpen === 'true') setMoreStatsOpen(true);
+    if (statsOpen === null) {
+      setMoreStatsOpen(window.innerWidth >= 1024);
+    } else {
+      setMoreStatsOpen(statsOpen === 'true');
+    }
   }, [ticker]);
 
   const toggleFavorite = () => {
@@ -148,7 +154,7 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
             onClick={toggleMoreStats}
             className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-medium text-foreground-muted hover:text-foreground transition-colors"
           >
-            <span>More Stats</span>
+            <span>Stats &amp; Fundamentals</span>
             {moreStatsOpen ? (
               <ChevronUpIcon className="w-3.5 h-3.5" />
             ) : (
@@ -253,6 +259,9 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
               )}
               {activeTab === 'insights' && (
                 <OpenBBInsightsPanel ticker={ticker} key={`insights-${refreshKey}`} />
+              )}
+              {activeTab === 'trades' && (
+                <TradesPanel ticker={ticker} key={`trades-${refreshKey}`} />
               )}
               {activeTab === 'notes' && (
                 <NotesPanel ticker={ticker} key={`notes-${refreshKey}`} />

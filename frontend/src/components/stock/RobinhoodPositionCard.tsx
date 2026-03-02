@@ -80,21 +80,21 @@ export function RobinhoodPositionCard({ ticker }: RobinhoodPositionCardProps) {
 
       {/* Shares + Market value row */}
       <div className="grid grid-cols-2 gap-4 mb-4">
-        <div>
+        <div className="min-h-[3.5rem]">
           <p className="text-xs text-foreground-muted mb-1">Shares</p>
-          <p className="text-lg font-bold font-mono">{formatNumber(position.quantity, 4)}</p>
+          <p className="text-lg font-bold font-mono tabular-nums">{formatNumber(position.quantity, 4)}</p>
         </div>
-        <div>
+        <div className="min-h-[3.5rem]">
           <p className="text-xs text-foreground-muted mb-1">Market value</p>
-          <p className="text-lg font-bold font-mono">{formatMoney(position.marketValue)}</p>
+          <p className="text-lg font-bold font-mono tabular-nums">{formatMoney(position.marketValue)}</p>
         </div>
       </div>
 
       {/* Average cost + Diversity ring row */}
       <div className="flex items-center justify-between mb-4">
-        <div>
+        <div className="min-h-[3.5rem]">
           <p className="text-xs text-foreground-muted mb-1">Average cost</p>
-          <p className="text-base font-mono font-semibold">{formatMoney(position.averageCost)}</p>
+          <p className="text-base font-mono font-semibold tabular-nums">{formatMoney(position.averageCost)}</p>
         </div>
         {diversity != null && (
           <div className="text-center">
@@ -106,8 +106,8 @@ export function RobinhoodPositionCard({ ticker }: RobinhoodPositionCardProps) {
 
       {/* Today's return */}
       <div className="py-3 border-t border-border">
-        <p className="text-xs text-foreground-muted mb-1">Today's return</p>
-        <span className={`text-sm font-semibold font-mono ${pnlTextColor(position.dayChange)}`}>
+        <p className="text-xs text-foreground-muted mb-1">Today&apos;s return</p>
+        <span className={`text-sm font-semibold font-mono tabular-nums ${pnlTextColor(position.dayChange)}`}>
           {formatSignedMoney(position.dayChange)}{' '}
           ({formatPercent(position.dayChangePercent, 2, { showSign: true })})
         </span>
@@ -116,7 +116,7 @@ export function RobinhoodPositionCard({ ticker }: RobinhoodPositionCardProps) {
       {/* Total return */}
       <div className="py-3 border-t border-border">
         <p className="text-xs text-foreground-muted mb-1">Total return</p>
-        <span className={`text-sm font-semibold font-mono ${pnlTextColor(position.unrealizedPL)}`}>
+        <span className={`text-sm font-semibold font-mono tabular-nums ${pnlTextColor(position.unrealizedPL)}`}>
           {formatSignedMoney(position.unrealizedPL)}{' '}
           ({formatPercent(position.unrealizedPLPercent, 2, { showSign: true })})
         </span>

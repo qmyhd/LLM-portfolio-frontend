@@ -41,11 +41,11 @@ function SigninIntroContent() {
             <h1
               className="text-6xl font-black mb-3"
               style={{
-                fontFamily: "'Playfair Display', Georgia, serif",
+                fontFamily: "'DM Serif Display', Georgia, serif",
                 background: 'linear-gradient(135deg, #5865f2, #9333ea)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
-                filter: 'drop-shadow(0 0 20px rgba(88,101,242,0.3))',
+                filter: 'drop-shadow(0 0 24px rgba(88,101,242,0.5))',
               }}
             >
               QQQ
@@ -188,15 +188,10 @@ function SigninIntroContent() {
             </form>
 
             {/* Divider */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/10"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-3 text-white/40 backdrop-blur-sm">
-                  or continue with
-                </span>
-              </div>
+            <div className="relative flex items-center my-1">
+              <div className="flex-1 border-t border-white/20" />
+              <span className="px-3 text-xs text-white/50">or continue with</span>
+              <div className="flex-1 border-t border-white/20" />
             </div>
 
             {/* Google Sign In Button */}

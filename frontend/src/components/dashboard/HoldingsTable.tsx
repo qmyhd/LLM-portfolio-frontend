@@ -318,43 +318,48 @@ export function HoldingsTable() {
                   </td>
 
                   {/* Market Value */}
-                  <td className="px-3 py-2.5 text-right font-mono text-sm">
+                  <td className="px-3 py-2.5 text-right font-mono text-sm tabular-nums">
                     {formatMoney(position.equity)}
                   </td>
 
-                  {/* P/L % */}
+                  {/* P/L % + avg cost */}
                   <td className="px-3 py-2.5 text-right">
                     <span
                       className={clsx(
-                        'inline-block px-2 py-0.5 rounded text-xs font-mono font-medium',
+                        'inline-block px-2 py-0.5 rounded text-xs font-mono font-medium tabular-nums',
                         pnlTextColor(position.openPnlPercent),
                         pnlBgColor(position.openPnlPercent),
                       )}
                     >
                       {formatPercent(position.openPnlPercent, 2, { showSign: true })}
                     </span>
+                    {position.averageBuyPrice != null && (
+                      <div className="text-[10px] text-foreground-muted font-mono tabular-nums mt-0.5">
+                        {formatMoney(position.averageBuyPrice)}
+                      </div>
+                    )}
                   </td>
 
                   {/* Quantity */}
-                  <td className="hidden sm:table-cell px-3 py-2.5 text-right font-mono text-sm text-foreground-muted">
+                  <td className="hidden sm:table-cell px-3 py-2.5 text-right font-mono text-sm tabular-nums text-foreground-muted">
                     {position.quantity}
                   </td>
 
                   {/* Avg Cost */}
-                  <td className="hidden md:table-cell px-3 py-2.5 text-right font-mono text-sm text-foreground-muted">
+                  <td className="hidden md:table-cell px-3 py-2.5 text-right font-mono text-sm tabular-nums text-foreground-muted">
                     {position.averageBuyPrice != null
                       ? formatMoney(position.averageBuyPrice)
                       : '\u2014'}
                   </td>
 
                   {/* Price */}
-                  <td className="hidden md:table-cell px-3 py-2.5 text-right font-mono text-sm">
+                  <td className="hidden md:table-cell px-3 py-2.5 text-right font-mono text-sm tabular-nums">
                     {formatMoney(position.currentPrice)}
                   </td>
 
                   {/* Today's Change */}
                   <td className={clsx(
-                    'hidden lg:table-cell px-3 py-2.5 text-right font-mono text-sm',
+                    'hidden lg:table-cell px-3 py-2.5 text-right font-mono text-sm tabular-nums',
                     pnlTextColor(position.dayChange),
                   )}>
                     {formatSignedMoney(position.dayChange)}

@@ -6,9 +6,10 @@ import {
   ArrowTrendingDownIcon,
   ArrowPathIcon,
 } from '@heroicons/react/24/outline';
-import { useMovers } from '@/hooks';
+import { useMovers, useSparklines } from '@/hooks';
 import type { MoverItem } from '@/types/ideas';
 import { CardSpotlight } from '@/components/ui/CardSpotlight';
+import { MiniSparkline } from '@/components/ui/MiniSparkline';
 import { formatNumber } from '@/lib/format';
 
 /**
@@ -65,6 +66,7 @@ export function TopMovers() {
   const losers = data?.topLosers ?? [];
   const source = data?.source ?? 'unrealized';
   const hasData = gainers.length > 0 || losers.length > 0;
+  const { sparklinesMap } = useSparklines('1M');
 
   if (!hasData) {
     return (
@@ -98,14 +100,21 @@ export function TopMovers() {
               <Link
                 key={item.symbol}
                 href={`/stock/${item.symbol}`}
-                className="flex items-center justify-between p-2 rounded-lg hover:bg-background-hover transition-colors"
+                className="flex items-center justify-between gap-2 p-2 rounded-lg hover:bg-background-hover transition-colors"
               >
                 <span className="font-mono font-semibold">{item.symbol}</span>
+                <div className="w-14 h-5 flex-shrink-0">
+                  <MiniSparkline
+                    data={sparklinesMap[item.symbol] ?? []}
+                    width={56}
+                    height={20}
+                  />
+                </div>
                 <div className="text-right">
-                  <div className="text-sm font-mono text-profit">
+                  <div className="text-sm font-mono tabular-nums text-profit">
                     +{formatNumber(getChangePct(item, source))}%
                   </div>
-                  <div className="text-xs text-foreground-muted font-mono">
+                  <div className="text-xs text-foreground-muted font-mono tabular-nums">
                     ${formatNumber(item.currentPrice)}
                   </div>
                 </div>
@@ -132,14 +141,21 @@ export function TopMovers() {
               <Link
                 key={item.symbol}
                 href={`/stock/${item.symbol}`}
-                className="flex items-center justify-between p-2 rounded-lg hover:bg-background-hover transition-colors"
+                className="flex items-center justify-between gap-2 p-2 rounded-lg hover:bg-background-hover transition-colors"
               >
                 <span className="font-mono font-semibold">{item.symbol}</span>
+                <div className="w-14 h-5 flex-shrink-0">
+                  <MiniSparkline
+                    data={sparklinesMap[item.symbol] ?? []}
+                    width={56}
+                    height={20}
+                  />
+                </div>
                 <div className="text-right">
-                  <div className="text-sm font-mono text-loss">
+                  <div className="text-sm font-mono tabular-nums text-loss">
                     {formatNumber(getChangePct(item, source))}%
                   </div>
-                  <div className="text-xs text-foreground-muted font-mono">
+                  <div className="text-xs text-foreground-muted font-mono tabular-nums">
                     ${formatNumber(item.currentPrice)}
                   </div>
                 </div>

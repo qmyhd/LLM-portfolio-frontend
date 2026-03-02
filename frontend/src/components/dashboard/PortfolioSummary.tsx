@@ -61,14 +61,14 @@ function MetricCard({ title, value, change, changePct, icon: Icon, trend }: Metr
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="metric-label">{title}</p>
-          <p className="metric-value mt-0.5">{value}</p>
+          <p className="metric-value mt-0.5 tabular-nums truncate">{value}</p>
           {(change !== undefined || changePct !== undefined) && (
             <div className="flex items-center gap-1.5 mt-1">
               {trend === 'up' && <ArrowTrendingUpIcon className="w-3.5 h-3.5 text-profit" />}
               {trend === 'down' && <ArrowTrendingDownIcon className="w-3.5 h-3.5 text-loss" />}
               <span
                 className={clsx(
-                  'text-sm font-mono font-medium',
+                  'text-sm font-mono font-medium tabular-nums',
                   trend === 'up' && 'text-profit',
                   trend === 'down' && 'text-loss',
                   trend === 'neutral' && 'text-foreground-muted'

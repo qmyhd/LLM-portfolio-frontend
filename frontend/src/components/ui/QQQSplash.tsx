@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useCallback } from 'react';
-import { Playfair_Display } from 'next/font/google';
+import { DM_Serif_Display } from 'next/font/google';
 
-const playfair = Playfair_Display({ subsets: ['latin'], weight: ['900'] });
+const dmSerif = DM_Serif_Display({ subsets: ['latin'], weight: ['400'] });
 
 /**
  * QQQSplash — Root-level intro animation overlay.
@@ -61,28 +61,17 @@ export function QQQSplash({ onComplete }: { onComplete: () => void }) {
         (el as HTMLElement).style.transform = 'scale(0.5) translateY(40px)';
       });
 
-      // 1 — Scale-in each letter
+      // 1 — Scale-in all letters together with subtle stagger
       await animateAsync(letters, {
         opacity: [0, 1],
-        scale: [0.5, 1],
-        translateY: [40, 0],
-        duration: 700,
+        scale: [0.8, 1],
+        translateY: [20, 0],
+        duration: 500,
         easing: 'easeOutExpo',
-        delay: stagger(150),
+        delay: stagger(50),
       });
 
-      // 2 — Glow pulse
-      await animateAsync(letters, {
-        filter: [
-          'drop-shadow(0 0 20px rgba(88,101,242,0.2))',
-          'drop-shadow(0 0 40px rgba(88,101,242,0.6))',
-          'drop-shadow(0 0 20px rgba(88,101,242,0.3))',
-        ],
-        duration: 600,
-        easing: 'easeInOutSine',
-      });
-
-      // 3 — Subtitle slide-up
+      // 2 — Subtitle slide-up
       if (subtitleRef.current) {
         await animateAsync(subtitleRef.current, {
           opacity: [0, 1],
@@ -92,10 +81,10 @@ export function QQQSplash({ onComplete }: { onComplete: () => void }) {
         });
       }
 
-      // 4 — Hold
+      // 3 — Hold
       await new Promise((r) => setTimeout(r, 300));
 
-      // 5 — Fade out entire overlay
+      // 4 — Fade out entire overlay
       if (overlayRef.current) {
         await animateAsync(overlayRef.current, {
           opacity: [1, 0],
@@ -124,21 +113,19 @@ export function QQQSplash({ onComplete }: { onComplete: () => void }) {
       aria-hidden="true"
     >
       {/* QQQ Letters */}
-      <div className="flex items-center gap-[clamp(0.25rem,1.5vw,1.5rem)]">
+      <div className="flex items-baseline" style={{ gap: 0, letterSpacing: '-0.06em' }}>
         {['Q', 'Q', 'Q'].map((letter, i) => (
           <div
             key={i}
-            className={`qqq-splash-letter ${playfair.className}`}
+            className={`qqq-splash-letter ${dmSerif.className}`}
             style={{
               fontSize: 'clamp(5rem, 14vw, 12rem)',
-              fontWeight: 900,
+              fontWeight: 400,
               lineHeight: 1,
-              letterSpacing: '-0.03em',
-              background: 'linear-gradient(135deg, #5865f2, #9333ea, #5865f2)',
-              backgroundSize: '200% 200%',
+              background: 'linear-gradient(135deg, #5865f2, #9333ea)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
-              filter: 'drop-shadow(0 0 30px rgba(88,101,242,0.3))',
+              filter: 'drop-shadow(0 0 20px rgba(88,101,242,0.25))',
               opacity: 0,
             }}
           >

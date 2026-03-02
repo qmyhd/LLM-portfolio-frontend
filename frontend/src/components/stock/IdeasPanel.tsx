@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { clsx } from 'clsx';
-import { formatNumber, formatRelativeTime } from '@/lib/format';
+import { formatNumber, formatDate } from '@/lib/format';
 import { directionTextColor } from '@/lib/colors';
 import type { StockIdea } from '@/types/api';
 import {
@@ -274,7 +274,7 @@ function IdeaCard({ idea, onAuthorClick }: IdeaCardProps) {
           </span>
           <span className="text-xs text-foreground-muted">{formatNumber((idea.confidence ?? 0) * 100, 0)}%</span>
         </div>
-        <span className="text-xs text-foreground-subtle">{formatRelativeTime(idea.sourceCreatedAt)}</span>
+        <span className="text-xs text-foreground-subtle">{formatDate(idea.sourceCreatedAt, 'short')}</span>
       </div>
 
       {/* Labels */}

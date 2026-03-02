@@ -5,7 +5,8 @@ import { TickerBar } from '@/components/dashboard/TickerBar';
 import { RobinhoodHeader } from '@/components/dashboard/RobinhoodHeader';
 import { PortfolioSummary } from '@/components/dashboard/PortfolioSummary';
 import { HoldingsTable } from '@/components/dashboard/HoldingsTable';
-import { RecentOrders } from '@/components/dashboard/RecentOrders';
+import { TradeRecap } from '@/components/dashboard/TradeRecap';
+import { DailyMoversTable } from '@/components/dashboard/DailyMoversTable';
 import { TopMovers } from '@/components/dashboard/TopMovers';
 import { SentimentOverview } from '@/components/dashboard/SentimentOverview';
 import { CryptoSection } from '@/components/dashboard/CryptoSection';
@@ -47,8 +48,11 @@ export default function DashboardPage() {
             {/* Summary cards strip */}
             <PortfolioSummary />
 
-            {/* Recent Orders (above holdings) */}
-            <RecentOrders />
+            {/* Trade Recap (Blossom-style trade cards) */}
+            <TradeRecap />
+
+            {/* Daily Movers Table (full width) */}
+            <DailyMoversTable />
 
             {/* Two column layout: holdings + sidebar */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

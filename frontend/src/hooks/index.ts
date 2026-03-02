@@ -11,6 +11,7 @@ export { useSparklines } from './useSparklines';
 export { useStockProfile } from './useStockProfile';
 export { useOrders } from './useOrders';
 export { useSentiment } from './useSentiment';
+export { useStockActivities } from './useStockActivities';
 export { useTimeRange, type TimeRange } from './useTimeRange';
 export { useLiveUpdates } from './useLiveUpdates';
 export {
