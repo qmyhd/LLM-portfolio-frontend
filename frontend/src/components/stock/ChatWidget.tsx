@@ -55,17 +55,36 @@ export function ChatWidget({ ticker }: ChatWidgetProps) {
     setInput('');
     setIsLoading(true);
 
-    // Simulate AI response (will be replaced with actual API call)
-    setTimeout(() => {
+    try {
+      const res = await fetch(`/api/stocks/${ticker}/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: content }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to get response');
+      }
+
+      const data = await res.json();
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: generateMockResponse(ticker, content),
+        content: data.response,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, assistantMessage]);
+    } catch {
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: 'Sorry, I encountered an error. Please try again.',
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -79,13 +98,6 @@ export function ChatWidget({ ticker }: ChatWidgetProps) {
 
   return (
     <div className="h-full flex flex-col">
-      {/* Demo mode banner */}
-      <div className="px-4 py-2 bg-status-warning/10 border-b border-status-warning/20 text-center">
-        <span className="text-xs font-medium text-status-warning">
-          Demo Mode — Responses are simulated
-        </span>
-      </div>
-
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map(message => (
@@ -185,27 +197,4 @@ export function ChatWidget({ ticker }: ChatWidgetProps) {
       </form>
     </div>
   );
-}
-
-// Mock response generator (will be replaced with actual AI)
-function generateMockResponse(ticker: string, query: string): string {
-  const lowerQuery = query.toLowerCase();
-  
-  if (lowerQuery.includes('sentiment')) {
-    return `Based on 45 recent mentions of ${ticker}, the overall sentiment is **bullish** with a score of 0.72.\n\n• 68% of mentions are bullish\n• 18% are bearish\n• 14% are neutral\n\nRecent catalysts include strong earnings and positive analyst upgrades.`;
-  }
-  
-  if (lowerQuery.includes('technical') || lowerQuery.includes('analysis')) {
-    return `**Technical Analysis for ${ticker}:**\n\n📈 **Trend:** Bullish (above 50 & 200 EMA)\n📊 **RSI (14):** 62 (neutral-bullish)\n📉 **MACD:** Bullish crossover\n\n**Key Levels:**\n• Resistance: $185, $195\n• Support: $170, $165\n\nThe stock is consolidating after a breakout. Watch for a move above $185 for continuation.`;
-  }
-  
-  if (lowerQuery.includes('summarize') || lowerQuery.includes('ideas')) {
-    return `**Recent Ideas Summary for ${ticker}:**\n\n1. **Bullish Trade Plan** (85% conf) - Breakout play targeting $195, stop at $168\n\n2. **Earnings Catalyst** (72% conf) - Beat expectations, guidance raised\n\n3. **Bearish TA** (65% conf) - Expecting pullback to $160 (RSI overbought)\n\nMost ideas lean bullish with an average confidence of 75%.`;
-  }
-  
-  if (lowerQuery.includes('price') || lowerQuery.includes('level')) {
-    return `**Key Price Levels for ${ticker}:**\n\n🟢 **Strong Support:** $165 (50 EMA + high volume node)\n🟢 **Support:** $170 (recent swing low)\n\n🔴 **Resistance:** $185 (previous high)\n🔴 **Strong Resistance:** $195 (all-time high)\n\n📍 **Current Price:** $178.52\n📊 **Fair Value Estimate:** $190-200`;
-  }
-  
-  return `I analyzed your question about ${ticker}. Based on the available data:\n\n• Current price is $178.52 (+1.88% today)\n• Overall sentiment is bullish (0.72 score)\n• You hold 100 shares with +22.86% unrealized gain\n\nWould you like more details on technical analysis, sentiment, or recent ideas?`;
 }
