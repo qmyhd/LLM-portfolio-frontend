@@ -8,6 +8,7 @@ import {
   FunnelIcon,
 } from '@heroicons/react/24/outline';
 import { useActivities } from '@/hooks';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { TradeCard } from './TradeCard';
 
 const FILTERS = [
@@ -38,10 +39,9 @@ export function ActivityFeed() {
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        <div className="h-10 bg-background-hover rounded animate-pulse" />
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="h-24 bg-background-hover rounded animate-pulse" />
+      <div className="space-y-3 p-4">
+        {[...Array(5)].map((_, i) => (
+          <Skeleton.ListItem key={i} />
         ))}
       </div>
     );

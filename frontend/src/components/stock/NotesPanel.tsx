@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useNotes } from '@/hooks';
 import { formatDate } from '@/lib/format';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { TrashIcon } from '@heroicons/react/24/outline';
 
 interface NotesPanelProps {
@@ -47,9 +48,9 @@ export function NotesPanel({ ticker }: NotesPanelProps) {
 
   if (isLoading) {
     return (
-      <div className="p-4 space-y-3 animate-pulse">
-        <div className="skeleton h-20 rounded-lg" />
-        <div className="skeleton h-16 rounded-lg" />
+      <div className="p-4 space-y-3">
+        <Skeleton.Card />
+        <Skeleton.Card />
       </div>
     );
   }

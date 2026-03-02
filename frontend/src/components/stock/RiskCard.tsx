@@ -7,6 +7,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { formatNumber } from '@/lib/format';
 import { riskLevelColor } from '@/lib/colors';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 interface RiskMetrics {
   beta: number | null;
@@ -53,11 +54,11 @@ export function RiskCard({ ticker }: RiskCardProps) {
 
   if (loading) {
     return (
-      <div className="card p-4 animate-pulse">
-        <div className="skeleton h-4 w-24 mb-3 rounded" />
-        <div className="skeleton h-3 w-full mb-2 rounded" />
-        <div className="skeleton h-3 w-full mb-2 rounded" />
-        <div className="skeleton h-3 w-full rounded" />
+      <div className="card p-4 space-y-3">
+        <Skeleton.Line className="h-4 w-24" />
+        <Skeleton.Line className="h-3 w-full" />
+        <Skeleton.Line className="h-3 w-3/4" />
+        <Skeleton.Line className="h-3 w-1/2" />
       </div>
     );
   }

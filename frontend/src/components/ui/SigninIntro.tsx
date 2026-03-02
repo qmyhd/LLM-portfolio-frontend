@@ -5,6 +5,7 @@ import { signIn } from 'next-auth/react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Suspense } from 'react';
 import { UserIcon, LockClosedIcon } from '@heroicons/react/24/outline';
+import { QQQLoader } from '@/components/ui/QQQLoader';
 import { LiquidGradientBackground } from '@/components/ui/LiquidGradientBackground';
 
 /**
@@ -239,7 +240,7 @@ export default function SigninIntro() {
     <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center bg-[#0a0e1a]">
-          <div className="text-white">Loading...</div>
+          <QQQLoader size="md" />
         </div>
       }
     >

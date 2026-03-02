@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useTranscript } from '@/hooks/useOpenBB';
 import { MicrophoneIcon } from '@heroicons/react/24/outline';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { Select } from '@/components/ui/Select';
 
 interface TranscriptSummaryProps {
@@ -18,9 +19,14 @@ export function TranscriptSummary({ ticker }: TranscriptSummaryProps) {
 
   if (isLoading) {
     return (
-      <div className="p-4 space-y-3 animate-pulse">
-        <div className="skeleton h-4 w-40 rounded" />
-        <div className="skeleton h-32 w-full rounded-lg" />
+      <div className="p-4 space-y-3">
+        <Skeleton.Line className="h-4 w-40" />
+        <Skeleton.Line className="h-3 w-full" />
+        <Skeleton.Line className="h-3 w-5/6" />
+        <Skeleton.Line className="h-3 w-full" />
+        <Skeleton.Line className="h-3 w-4/5" />
+        <Skeleton.Line className="h-3 w-full" />
+        <Skeleton.Line className="h-3 w-2/3" />
       </div>
     );
   }
