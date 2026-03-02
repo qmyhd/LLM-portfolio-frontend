@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { UserIdeasResponse, UserIdea } from '@/types/ideas';
 import type { ApiError } from '@/types/api';
