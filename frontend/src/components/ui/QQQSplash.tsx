@@ -1,6 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
+import { Playfair_Display } from 'next/font/google';
+
+const playfair = Playfair_Display({ subsets: ['latin'], weight: ['900'] });
 
 /**
  * QQQSplash — Root-level intro animation overlay.
@@ -10,10 +13,10 @@ import { useEffect, useRef, useState, useCallback } from 'react';
  * revealing whatever is underneath (dashboard or login).
  *
  * Animation sequence (anime.js v4):
- *   1. QQQ letters scale-in with stagger + spring easing
+ *   1. QQQ letters scale-in with stagger + expo easing
  *   2. Glow pulse on all three letters
  *   3. "LLM Portfolio" subtitle slides up
- *   4. Hold 800ms
+ *   4. Hold 300ms
  *   5. Entire overlay fades + scales out
  *
  * Inspired by Julian Garnier's anime.js v2 logo animation
@@ -25,27 +28,10 @@ export function QQQSplash({ onComplete }: { onComplete: () => void }) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const subtitleRef = useRef<HTMLDivElement>(null);
   const hasRun = useRef(false);
-  const [fontReady, setFontReady] = useState(false);
 
   const reducedMotion =
     typeof window !== 'undefined' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  // Load the display font
-  useEffect(() => {
-    const link = document.createElement('link');
-    link.href =
-      'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@900&display=swap';
-    link.rel = 'stylesheet';
-    document.head.appendChild(link);
-    link.onload = () => setFontReady(true);
-    // Fallback if font times out
-    const timer = setTimeout(() => setFontReady(true), 2000);
-    return () => {
-      clearTimeout(timer);
-      if (link.parentNode) link.parentNode.removeChild(link);
-    };
-  }, []);
 
   const runAnimation = useCallback(async () => {
     if (hasRun.current) return;
@@ -55,9 +41,6 @@ export function QQQSplash({ onComplete }: { onComplete: () => void }) {
       onComplete();
       return;
     }
-
-    // Small delay for font paint
-    await new Promise((r) => setTimeout(r, 200));
 
     try {
       const { animate, stagger } = await import('animejs');
@@ -83,20 +66,20 @@ export function QQQSplash({ onComplete }: { onComplete: () => void }) {
         opacity: [0, 1],
         scale: [0.5, 1],
         translateY: [40, 0],
-        duration: 900,
-        easing: 'easeOutBack',
-        delay: stagger(200),
+        duration: 700,
+        easing: 'easeOutExpo',
+        delay: stagger(150),
       });
 
       // 2 — Glow pulse
       await animateAsync(letters, {
         filter: [
           'drop-shadow(0 0 20px rgba(88,101,242,0.2))',
-          'drop-shadow(0 0 60px rgba(88,101,242,0.5))',
-          'drop-shadow(0 0 30px rgba(88,101,242,0.3))',
+          'drop-shadow(0 0 40px rgba(88,101,242,0.6))',
+          'drop-shadow(0 0 20px rgba(88,101,242,0.3))',
         ],
-        duration: 800,
-        easing: 'easeInOutQuad',
+        duration: 600,
+        easing: 'easeInOutSine',
       });
 
       // 3 — Subtitle slide-up
@@ -104,20 +87,20 @@ export function QQQSplash({ onComplete }: { onComplete: () => void }) {
         await animateAsync(subtitleRef.current, {
           opacity: [0, 1],
           translateY: [20, 0],
-          duration: 600,
+          duration: 400,
           easing: 'easeOutQuart',
         });
       }
 
       // 4 — Hold
-      await new Promise((r) => setTimeout(r, 800));
+      await new Promise((r) => setTimeout(r, 300));
 
       // 5 — Fade out entire overlay
       if (overlayRef.current) {
         await animateAsync(overlayRef.current, {
           opacity: [1, 0],
           scale: [1, 0.96],
-          duration: 600,
+          duration: 500,
           easing: 'easeInQuart',
         });
       }
@@ -130,14 +113,14 @@ export function QQQSplash({ onComplete }: { onComplete: () => void }) {
   }, [reducedMotion, onComplete]);
 
   useEffect(() => {
-    if (fontReady) runAnimation();
-  }, [fontReady, runAnimation]);
+    runAnimation();
+  }, [runAnimation]);
 
   return (
     <div
       ref={overlayRef}
       className="fixed inset-0 z-[9999] flex flex-col items-center justify-center"
-      style={{ backgroundColor: '#0a0e1a' }}
+      style={{ background: 'radial-gradient(ellipse at center, #1a1a2e 0%, #0f0f0f 70%)' }}
       aria-hidden="true"
     >
       {/* QQQ Letters */}
@@ -145,9 +128,8 @@ export function QQQSplash({ onComplete }: { onComplete: () => void }) {
         {['Q', 'Q', 'Q'].map((letter, i) => (
           <div
             key={i}
-            className="qqq-splash-letter"
+            className={`qqq-splash-letter ${playfair.className}`}
             style={{
-              fontFamily: "'Playfair Display', Georgia, serif",
               fontSize: 'clamp(5rem, 14vw, 12rem)',
               fontWeight: 900,
               lineHeight: 1,
