@@ -44,6 +44,7 @@ export interface Position {
   portfolioDiversity?: number; // equity / totalEquity * 100
   companyName?: string;
   assetType?: string; // 'equity' | 'etf' | 'crypto' | 'option'
+  tvSymbol?: string; // TradingView widget symbol (e.g. "COINBASE:BTCUSD", "NASDAQ:AAPL")
 }
 
 // Recon mode debug metadata (only present when ?recon=1)

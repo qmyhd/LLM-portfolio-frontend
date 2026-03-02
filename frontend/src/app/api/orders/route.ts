@@ -18,6 +18,8 @@ export async function GET(request: NextRequest) {
     params.set('limit', limit);
     if (status) params.set('status', status);
     if (ticker) params.set('ticker', ticker);
+    const includeDrip = searchParams.get('include_drip') || '';
+    if (includeDrip) params.set('include_drip', includeDrip);
 
     const response = await backendFetch(`/orders?${params.toString()}`, {
       // Cache for 30 seconds

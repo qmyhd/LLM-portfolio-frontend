@@ -117,50 +117,18 @@ function TradingViewChartInner({
   );
 }
 
-// Format symbol for TradingView (e.g., AAPL -> NASDAQ:AAPL)
-function formatSymbol(symbol: string): string {
-  // Clean up the symbol
+// Format symbol for TradingView — prefer backend-provided tvSymbol
+function formatSymbol(symbol: string, tvSymbol?: string): string {
+  // If backend provides a canonical TV symbol, use it directly
+  if (tvSymbol) return tvSymbol;
+
+  // Fallback: compute from raw ticker (legacy path)
   const cleanSymbol = symbol.toUpperCase().trim();
 
-  // Common crypto symbols
-  const cryptoSymbols = ['BTC', 'ETH', 'XRP', 'SOL', 'ADA', 'DOT', 'DOGE', 'LINK', 'AVAX', 'MATIC'];
-  if (cryptoSymbols.includes(cleanSymbol) || cleanSymbol.endsWith('USD') || cleanSymbol.endsWith('USDT')) {
+  // Crypto — use CRYPTO: prefix with USD suffix
+  const cryptoSymbols = ['BTC', 'ETH', 'XRP', 'SOL', 'ADA', 'DOT', 'DOGE', 'LINK', 'AVAX', 'MATIC', 'SHIB', 'PEPE', 'TRUMP'];
+  if (cryptoSymbols.includes(cleanSymbol)) {
     return `CRYPTO:${cleanSymbol}USD`;
-  }
-
-  // Common forex pairs
-  if (cleanSymbol.length === 6 && /^[A-Z]+$/.test(cleanSymbol)) {
-    const possibleForex = ['EUR', 'USD', 'GBP', 'JPY', 'AUD', 'NZD', 'CAD', 'CHF'];
-    const base = cleanSymbol.substring(0, 3);
-    const quote = cleanSymbol.substring(3);
-    if (possibleForex.includes(base) && possibleForex.includes(quote)) {
-      return `FX:${cleanSymbol}`;
-    }
-  }
-
-  // Nasdaq-listed stocks (common tech)
-  const nasdaqStocks = [
-    'AAPL', 'MSFT', 'GOOGL', 'GOOG', 'AMZN', 'META', 'TSLA', 'NVDA', 'AMD', 'INTC',
-    'NFLX', 'QCOM', 'ADBE', 'PYPL', 'SBUX', 'CMCSA', 'CSCO', 'COST', 'PEP', 'AVGO',
-    'TXN', 'MU', 'AMAT', 'LRCX', 'KLAC', 'ASML', 'MRVL', 'SNPS', 'CDNS', 'PANW',
-    'CRWD', 'ZS', 'DDOG', 'NET', 'SNOW', 'MDB', 'COIN', 'HOOD', 'ABNB', 'RIVN',
-    'LCID', 'PLTR', 'SOFI', 'UPST', 'AFRM', 'ROKU', 'TTD', 'DOCU', 'ZM', 'OKTA',
-  ];
-
-  if (nasdaqStocks.includes(cleanSymbol)) {
-    return `NASDAQ:${cleanSymbol}`;
-  }
-
-  // NYSE-listed stocks
-  const nyseStocks = [
-    'JPM', 'V', 'MA', 'BAC', 'WFC', 'GS', 'MS', 'C', 'AXP', 'BLK',
-    'DIS', 'NKE', 'KO', 'PG', 'JNJ', 'UNH', 'CVX', 'XOM', 'CRM', 'ORCL',
-    'IBM', 'HD', 'WMT', 'TGT', 'LOW', 'MCD', 'CAT', 'DE', 'BA', 'GE',
-    'F', 'GM', 'UBER', 'LYFT', 'SQ', 'BRK.A', 'BRK.B', 'T', 'VZ',
-  ];
-
-  if (nyseStocks.includes(cleanSymbol)) {
-    return `NYSE:${cleanSymbol}`;
   }
 
   // Default to auto-detection (TradingView will figure it out)
