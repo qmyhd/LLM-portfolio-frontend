@@ -32,10 +32,22 @@ export function SentimentCard({ ticker }: SentimentCardProps) {
   const fetchSentiment = async () => {
     try {
       const res = await fetch(`/api/stocks/${ticker}`);
+      if (!res.ok) return;
       const data = await res.json();
-      
-      if (data.sentiment) {
-        setSentiment(data.sentiment);
+
+      const b = data.bullishMentionPct ?? 0;
+      const br = data.bearishMentionPct ?? 0;
+      const n = data.neutralMentionPct ?? 0;
+
+      if (b + br + n > 0) {
+        setSentiment({
+          bullish: b,
+          bearish: br,
+          neutral: n,
+          overall: b > br ? 'bullish' : br > b ? 'bearish' : 'neutral',
+          score: b + br > 0 ? Math.round((b / (b + br)) * 100) : 50,
+          ideaCount: data.mentionCount30d ?? 0,
+        });
       }
     } catch (error) {
       console.error('Failed to fetch sentiment:', error);
