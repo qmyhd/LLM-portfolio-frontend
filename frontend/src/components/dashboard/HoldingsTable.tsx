@@ -202,7 +202,7 @@ export function HoldingsTable() {
         <p className="text-foreground-muted text-xs mb-3">{error.message}</p>
         <button
           onClick={refresh}
-          className="inline-flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors focus-visible:ring-2 focus-visible:ring-primary rounded"
         >
           <ArrowPathIcon className="w-3 h-3" />
           Retry
@@ -383,7 +383,7 @@ export function HoldingsTable() {
         {hasMore && (
           <button
             onClick={() => setVisibleCount(c => c + PAGE_SIZE)}
-            className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+            className="text-xs font-medium text-primary hover:text-primary/80 transition-colors focus-visible:ring-2 focus-visible:ring-primary rounded"
           >
             Show more
           </button>

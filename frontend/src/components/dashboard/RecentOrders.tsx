@@ -5,6 +5,7 @@ import Link from 'next/link';
 import useSWR from 'swr';
 import type { OrdersResponse, Order } from '@/types/api';
 import { formatMoney, formatDate } from '@/lib/format';
+import { CardSpotlight } from '@/components/ui/CardSpotlight';
 
 const fetcher = async (url: string): Promise<OrdersResponse> => {
   const res = await fetch(url);
@@ -21,7 +22,7 @@ export function RecentOrders() {
 
   if (isLoading) {
     return (
-      <div className="card overflow-hidden animate-pulse">
+      <CardSpotlight className="card overflow-hidden animate-pulse">
         <div className="px-5 py-4 border-b border-border flex justify-between">
           <div className="h-5 w-28 bg-background-hover rounded" />
           <div className="h-5 w-16 bg-background-hover rounded" />
@@ -31,16 +32,16 @@ export function RecentOrders() {
             <div key={i} className="h-10 bg-background-hover rounded" />
           ))}
         </div>
-      </div>
+      </CardSpotlight>
     );
   }
 
   if (error) {
     return (
-      <div className="card p-6 text-center">
+      <CardSpotlight className="card p-6 text-center">
         <p className="text-loss font-medium">Failed to load orders</p>
         <p className="text-sm text-foreground-muted mt-1">{error.message}</p>
-      </div>
+      </CardSpotlight>
     );
   }
 
@@ -48,20 +49,20 @@ export function RecentOrders() {
 
   if (orders.length === 0) {
     return (
-      <div className="card p-6 text-center">
+      <CardSpotlight className="card p-6 text-center">
         <p className="text-foreground-muted">No recent orders</p>
-      </div>
+      </CardSpotlight>
     );
   }
 
   return (
-    <div className="card overflow-hidden">
+    <CardSpotlight className="card overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-border">
         <h2 className="text-lg font-semibold">Recent Orders</h2>
         <Link
           href="/orders"
-          className="text-sm text-primary hover:text-primary-hover transition-colors"
+          className="text-sm text-primary hover:text-primary-hover transition-colors focus-visible:ring-2 focus-visible:ring-primary rounded"
         >
           View All →
         </Link>
@@ -89,7 +90,7 @@ export function RecentOrders() {
               return (
                 <tr key={order.brokerageOrderId} className="table-row">
                   <td className="table-cell">
-                    <Link 
+                    <Link
                       href={`/stock/${order.symbol}`}
                       className="font-mono font-semibold hover:text-primary transition-colors"
                     >
@@ -126,6 +127,6 @@ export function RecentOrders() {
           </tbody>
         </table>
       </div>
-    </div>
+    </CardSpotlight>
   );
 }

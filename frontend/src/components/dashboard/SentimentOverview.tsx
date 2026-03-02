@@ -3,6 +3,7 @@
 import useSWR from 'swr';
 import { clsx } from 'clsx';
 import { formatNumber } from '@/lib/format';
+import { CardSpotlight } from '@/components/ui/CardSpotlight';
 
 interface SentimentData {
   ticker: string;
@@ -30,7 +31,7 @@ const fetcher = (url: string) => fetch(url).then(r => {
 
 function SentimentSkeleton() {
   return (
-    <div className="card">
+    <CardSpotlight className="card">
       <div className="px-5 py-4 border-b border-border">
         <div className="h-5 w-24 bg-background-hover rounded animate-pulse" />
       </div>
@@ -45,7 +46,7 @@ function SentimentSkeleton() {
           ))}
         </div>
       </div>
-    </div>
+    </CardSpotlight>
   );
 }
 
@@ -78,7 +79,7 @@ export function SentimentOverview() {
   const neutralCount = total - bullishCount - bearishCount;
 
   return (
-    <div className="card">
+    <CardSpotlight className="card">
       {/* Header */}
       <div className="px-5 py-4 border-b border-border flex items-center justify-between">
         <h2 className="text-lg font-semibold">Sentiment</h2>
@@ -153,6 +154,6 @@ export function SentimentOverview() {
           </div>
         </div>
       </div>
-    </div>
+    </CardSpotlight>
   );
 }

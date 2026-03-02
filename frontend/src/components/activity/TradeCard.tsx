@@ -26,9 +26,9 @@ export function TradeCard({ activity }: TradeCardProps) {
   const content = (
     <div
       className={clsx(
-        'card border-l-4 p-4 transition-colors',
+        'border-l-4 p-4',
         config.border,
-        hasSymbol && 'hover:bg-background-hover cursor-pointer',
+        hasSymbol ? 'card-hover hover:bg-background-hover cursor-pointer' : 'card transition-colors',
       )}
     >
       {/* Top row: badge + symbol + date */}

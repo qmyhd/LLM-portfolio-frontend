@@ -56,7 +56,7 @@ export function ActivityFeed() {
         <p className="text-foreground-muted text-xs mb-3">{error.message}</p>
         <button
           onClick={refresh}
-          className="inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 transition-colors"
+          className="inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 transition-colors focus-visible:ring-2 focus-visible:ring-primary rounded"
         >
           <ArrowPathIcon className="w-4 h-4" />
           Retry

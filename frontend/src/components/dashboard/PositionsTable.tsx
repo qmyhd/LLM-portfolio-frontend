@@ -14,6 +14,7 @@ import type { Position } from '@/types/api';
 import { formatMoney, formatSignedMoney, formatPercent } from '@/lib/format';
 import { pnlTextColor, pnlBgColor } from '@/lib/colors';
 import { Select } from '@/components/ui/Select';
+import { CardSpotlight } from '@/components/ui/CardSpotlight';
 
 type SortKey = 'symbol' | 'equity' | 'openPnl' | 'openPnlPercent';
 type FilterMode = 'all' | 'winners' | 'losers';
@@ -63,7 +64,7 @@ export function PositionsTable() {
 
   if (isLoading) {
     return (
-      <div className="card overflow-hidden animate-pulse">
+      <CardSpotlight className="card overflow-hidden animate-pulse">
         <div className="px-5 py-4 border-b border-border flex justify-between">
           <div className="h-5 w-24 bg-background-hover rounded" />
           <div className="h-5 w-20 bg-background-hover rounded" />
@@ -73,16 +74,16 @@ export function PositionsTable() {
             <div key={i} className="h-10 bg-background-hover rounded" />
           ))}
         </div>
-      </div>
+      </CardSpotlight>
     );
   }
 
   if (error) {
     return (
-      <div className="card p-6 text-center">
+      <CardSpotlight className="card p-6 text-center">
         <p className="text-loss font-medium">Failed to load positions</p>
         <p className="text-sm text-foreground-muted mt-1">{error.message}</p>
-      </div>
+      </CardSpotlight>
     );
   }
 
@@ -90,9 +91,9 @@ export function PositionsTable() {
 
   if (positions.length === 0) {
     return (
-      <div className="card p-6">
+      <CardSpotlight className="card p-6">
         <EmptyState icon={BriefcaseIcon} title="No positions" description="Sync your brokerage to see holdings" />
-      </div>
+      </CardSpotlight>
     );
   }
 
@@ -114,7 +115,7 @@ export function PositionsTable() {
   });
 
   return (
-    <div className="card overflow-hidden">
+    <CardSpotlight className="card overflow-hidden">
       {/* Header with collapse toggle */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-border">
         <button
@@ -248,6 +249,6 @@ export function PositionsTable() {
           </p>
         </div>
       )}
-    </div>
+    </CardSpotlight>
   );
 }
