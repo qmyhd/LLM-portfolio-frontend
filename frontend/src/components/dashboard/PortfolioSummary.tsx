@@ -34,7 +34,7 @@ function MetricCard({ title, value, change, changePct, icon: Icon, trend }: Metr
               {trend === 'down' && <ArrowTrendingDownIcon className="w-3.5 h-3.5 text-loss" />}
               <span
                 className={clsx(
-                  'text-sm font-medium',
+                  'text-sm font-mono font-medium',
                   trend === 'up' && 'text-profit',
                   trend === 'down' && 'text-loss',
                   trend === 'neutral' && 'text-foreground-muted'

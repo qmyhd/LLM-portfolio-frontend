@@ -230,7 +230,7 @@ export function HoldingsTable() {
       {/* Header: title + filter pills */}
       <div className="px-4 py-3 border-b border-border">
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <h2 className="text-sm font-semibold">
+          <h2 className="text-lg font-semibold">
             Holdings
             <span className="ml-1.5 text-xs font-normal text-foreground-muted">
               ({sortedPositions.length})

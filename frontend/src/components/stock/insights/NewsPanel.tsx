@@ -3,25 +3,10 @@
 import { useNews } from '@/hooks/useOpenBB';
 import { ArrowTopRightOnSquareIcon, NewspaperIcon } from '@heroicons/react/24/outline';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { formatRelativeTime } from '@/lib/format';
 
 interface NewsPanelProps {
   ticker: string;
-}
-
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return '';
-  try {
-    const d = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now.getTime() - d.getTime();
-    const diffH = Math.floor(diffMs / 3_600_000);
-    if (diffH < 1) return 'Just now';
-    if (diffH < 24) return `${diffH}h ago`;
-    if (diffH < 48) return 'Yesterday';
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  } catch {
-    return dateStr;
-  }
 }
 
 export function NewsPanel({ ticker }: NewsPanelProps) {
@@ -79,7 +64,7 @@ export function NewsPanel({ ticker }: NewsPanelProps) {
               <span className="text-2xs text-foreground-subtle">&middot;</span>
             )}
             {article.date && (
-              <span className="text-2xs text-foreground-subtle">{formatDate(article.date)}</span>
+              <span className="text-2xs text-foreground-subtle">{formatRelativeTime(article.date)}</span>
             )}
           </div>
           {article.text && (

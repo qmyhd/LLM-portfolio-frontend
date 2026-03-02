@@ -118,7 +118,7 @@ export function RecentOrders() {
                   <td className="table-cell text-right font-mono font-medium">
                     {total > 0 ? formatMoney(total) : '—'}
                   </td>
-                  <td className="table-cell text-right text-foreground-muted text-sm hidden lg:table-cell">
+                  <td className="table-cell text-right text-foreground-subtle text-sm hidden lg:table-cell">
                     {time ? formatDate(time, 'short') : '—'}
                   </td>
                 </tr>

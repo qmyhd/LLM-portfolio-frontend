@@ -122,7 +122,7 @@ export function RawMessagesPanel({ ticker }: RawMessagesPanelProps) {
                 <span className="text-sm font-medium text-foreground">{msg.author}</span>
                 <span className="text-xs text-foreground-muted">#{msg.channel}</span>
               </div>
-              <span className="text-xs text-foreground-muted">{formatTime(msg.createdAt)}</span>
+              <span className="text-xs text-foreground-subtle">{formatTime(msg.createdAt)}</span>
             </div>
 
             {/* Content */}

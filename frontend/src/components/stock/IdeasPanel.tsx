@@ -274,7 +274,7 @@ function IdeaCard({ idea, onAuthorClick }: IdeaCardProps) {
           </span>
           <span className="text-xs text-foreground-muted">{formatNumber((idea.confidence ?? 0) * 100, 0)}%</span>
         </div>
-        <span className="text-xs text-foreground-muted">{formatRelativeTime(idea.sourceCreatedAt)}</span>
+        <span className="text-xs text-foreground-subtle">{formatRelativeTime(idea.sourceCreatedAt)}</span>
       </div>
 
       {/* Labels */}

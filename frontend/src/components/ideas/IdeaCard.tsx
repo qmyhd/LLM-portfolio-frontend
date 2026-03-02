@@ -41,7 +41,7 @@ export function IdeaCard({ idea, onClick }: IdeaCardProps) {
             {idea.status}
           </span>
         </div>
-        <span className="text-xs text-foreground-muted">{formatRelativeTime(idea.createdAt)}</span>
+        <span className="text-xs text-foreground-subtle">{formatRelativeTime(idea.createdAt)}</span>
       </div>
 
       {/* Content preview */}

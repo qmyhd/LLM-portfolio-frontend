@@ -122,7 +122,7 @@ export function SentimentOverview() {
               style={{ width: `${bearishPct}%` }}
             />
           </div>
-          <div className="flex justify-between mt-2 text-xs">
+          <div className="flex justify-between mt-2 text-xs font-mono">
             <span className="text-profit">
               Bullish {formatNumber(bullishPct, 0)}%
             </span>
@@ -135,19 +135,19 @@ export function SentimentOverview() {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-2 pt-2">
           <div className="text-center p-2 bg-profit/10 rounded-lg">
-            <div className="text-lg font-bold text-profit">
+            <div className="text-lg font-bold font-mono text-profit">
               {bullishCount}
             </div>
             <div className="text-2xs text-foreground-muted">Bullish</div>
           </div>
           <div className="text-center p-2 bg-sentiment-neutral/10 rounded-lg">
-            <div className="text-lg font-bold text-sentiment-neutral">
+            <div className="text-lg font-bold font-mono text-sentiment-neutral">
               {neutralCount}
             </div>
             <div className="text-2xs text-foreground-muted">Neutral</div>
           </div>
           <div className="text-center p-2 bg-loss/10 rounded-lg">
-            <div className="text-lg font-bold text-loss">
+            <div className="text-lg font-bold font-mono text-loss">
               {bearishCount}
             </div>
             <div className="text-2xs text-foreground-muted">Bearish</div>
