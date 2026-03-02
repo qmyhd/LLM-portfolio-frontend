@@ -15,6 +15,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     const response = await backendFetch(`/stocks/${ticker}/chat`, {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
 
