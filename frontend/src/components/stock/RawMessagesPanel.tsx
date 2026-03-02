@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { ChatBubbleLeftIcon } from '@heroicons/react/24/outline';
+import { ChatBubbleLeftIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
+import type { ContextMessage } from '@/types/api';
 
 interface RawMessage {
   id: number;
@@ -112,37 +113,7 @@ export function RawMessagesPanel({ ticker }: RawMessagesPanelProps) {
     <div className="h-full overflow-y-auto">
       <div className="p-4 space-y-3">
         {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className="p-3 rounded-lg bg-background-tertiary hover:bg-background-tertiary/80 transition-colors"
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-foreground">{msg.author}</span>
-                <span className="text-xs text-foreground-muted">#{msg.channel}</span>
-              </div>
-              <span className="text-xs text-foreground-subtle">{formatTime(msg.createdAt)}</span>
-            </div>
-
-            {/* Content */}
-            <p className="text-sm text-foreground/90 whitespace-pre-wrap break-words">
-              {msg.ideaText}
-            </p>
-
-            {/* Direction badge */}
-            {msg.direction && (
-              <div className="flex gap-1 mt-2">
-                <span className={`text-xs px-1.5 py-0.5 rounded ${
-                  msg.direction === 'bullish' ? 'bg-profit/20 text-profit' :
-                  msg.direction === 'bearish' ? 'bg-loss/20 text-loss' :
-                  'bg-foreground-muted/20 text-foreground-muted'
-                }`}>
-                  {msg.direction}
-                </span>
-              </div>
-            )}
-          </div>
+          <RawMessageCard key={msg.id} msg={msg} formatTime={formatTime} />
         ))}
       </div>
 
@@ -156,6 +127,91 @@ export function RawMessagesPanel({ ticker }: RawMessagesPanelProps) {
             {loadingMore ? 'Loading...' : 'Load more messages'}
           </button>
         </div>
+      )}
+    </div>
+  );
+}
+
+function RawMessageCard({ msg, formatTime }: { msg: RawMessage; formatTime: (t: string | null) => string }) {
+  const [showContext, setShowContext] = useState(false);
+  const [contextMessages, setContextMessages] = useState<ContextMessage[]>([]);
+  const [contextLoading, setContextLoading] = useState(false);
+
+  const toggleContext = async () => {
+    if (showContext) { setShowContext(false); return; }
+    if (contextMessages.length > 0) { setShowContext(true); return; }
+    setContextLoading(true);
+    try {
+      const res = await fetch(`/api/ideas/${msg.id}/context`);
+      if (res.ok) {
+        const data = await res.json();
+        setContextMessages(data.contextMessages || []);
+      }
+    } catch { /* context is supplementary */ }
+    finally { setContextLoading(false); setShowContext(true); }
+  };
+
+  return (
+    <div className="p-3 rounded-lg bg-background-tertiary hover:bg-background-tertiary/80 transition-colors">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-foreground">{msg.author}</span>
+          <span className="text-xs text-foreground-muted">#{msg.channel}</span>
+        </div>
+        <span className="text-xs text-foreground-subtle">{formatTime(msg.createdAt)}</span>
+      </div>
+
+      {/* Content */}
+      <p className="text-sm text-foreground/90 whitespace-pre-wrap break-words">{msg.ideaText}</p>
+
+      {/* Direction badge + context toggle */}
+      <div className="flex items-center justify-between mt-2">
+        {msg.direction ? (
+          <span className={`text-xs px-1.5 py-0.5 rounded ${
+            msg.direction === 'bullish' ? 'bg-profit/20 text-profit' :
+            msg.direction === 'bearish' ? 'bg-loss/20 text-loss' :
+            'bg-foreground-muted/20 text-foreground-muted'
+          }`}>
+            {msg.direction}
+          </span>
+        ) : <span />}
+        <button
+          onClick={toggleContext}
+          className="flex items-center gap-1 text-xs text-foreground-muted hover:text-primary transition-colors"
+        >
+          {contextLoading ? (
+            <span className="animate-pulse">Loading...</span>
+          ) : (
+            <>
+              {showContext ? <ChevronUpIcon className="h-3 w-3" /> : <ChevronDownIcon className="h-3 w-3" />}
+              {showContext ? 'Hide context' : 'Show context'}
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Context accordion */}
+      {showContext && contextMessages.length > 0 && (
+        <div className="mt-2 border border-border rounded-lg overflow-hidden">
+          {contextMessages.map((cm) => (
+            <div
+              key={cm.messageId}
+              className={`px-3 py-2 text-xs border-b border-border last:border-b-0 ${
+                cm.isParent ? 'bg-primary/5 border-l-2 border-l-primary' : 'bg-background-secondary/50'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-medium text-foreground">{cm.isParent && '▶ '}@{cm.author}</span>
+                <span className="text-foreground-subtle">{formatTime(cm.sentAt)}</span>
+              </div>
+              <p className="text-foreground/80 whitespace-pre-wrap break-words">{cm.content}</p>
+            </div>
+          ))}
+        </div>
+      )}
+      {showContext && contextMessages.length === 0 && !contextLoading && (
+        <p className="mt-2 text-xs text-foreground-muted italic">No context available</p>
       )}
     </div>
   );
