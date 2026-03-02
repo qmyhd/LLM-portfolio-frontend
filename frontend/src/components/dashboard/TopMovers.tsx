@@ -30,6 +30,7 @@ function sourceLabel(source: 'intraday' | 'unrealized'): string {
 
 export function TopMovers() {
   const { data, error, isLoading, refresh } = useMovers({ limit: 3 });
+  const { sparklinesMap } = useSparklines('1M');
 
   if (isLoading) {
     return (
@@ -66,7 +67,6 @@ export function TopMovers() {
   const losers = data?.topLosers ?? [];
   const source = data?.source ?? 'unrealized';
   const hasData = gainers.length > 0 || losers.length > 0;
-  const { sparklinesMap } = useSparklines('1M');
 
   if (!hasData) {
     return (
