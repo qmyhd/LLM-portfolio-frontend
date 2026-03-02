@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { BanknotesIcon } from '@heroicons/react/24/outline';
-import type { StockProfileCurrent } from '@/types/api';
-import { toUiStockPosition, type UiStockPosition } from '@/lib/mappers';
-import { formatMoney, formatSignedMoney, formatPercent, formatNumber } from '@/lib/format';
+import type { Position } from '@/types/api';
+import { formatMoney, formatSignedMoney, formatPercent, formatQuantity } from '@/lib/format';
 import { pnlTextColor } from '@/lib/colors';
 import { PortfolioDiversityRing } from './PortfolioDiversityRing';
 
@@ -12,39 +11,70 @@ interface RobinhoodPositionCardProps {
   ticker: string;
 }
 
+interface AggregatedPosition {
+  totalShares: number;
+  totalValue: number;
+  totalCost: number;
+  weightedAvgCost: number;
+  dayChange: number;
+  dayChangePct: number | null;
+  unrealizedPL: number;
+  unrealizedPLPct: number;
+  diversity: number | null;
+  accounts: { name: string; shares: number; value: number }[];
+}
+
+function aggregatePositions(positions: Position[], totalEquity: number): AggregatedPosition {
+  const totalShares = positions.reduce((s, p) => s + p.quantity, 0);
+  const totalValue = positions.reduce((s, p) => s + p.equity, 0);
+  const totalCost = positions.reduce((s, p) => s + p.quantity * p.averageBuyPrice, 0);
+  const weightedAvgCost = totalShares > 0 ? totalCost / totalShares : 0;
+  const dayChange = positions.reduce((s, p) => s + (p.dayChange ?? 0), 0);
+  const unrealizedPL = totalValue - totalCost;
+  const unrealizedPLPct = totalCost > 0 ? (unrealizedPL / totalCost) * 100 : 0;
+
+  // Day change pct: weighted by equity
+  let dayChangePct: number | null = null;
+  const positionsWithDay = positions.filter((p) => p.dayChangePercent != null);
+  if (positionsWithDay.length > 0) {
+    const weightedSum = positionsWithDay.reduce((s, p) => s + (p.dayChangePercent ?? 0) * p.equity, 0);
+    const totalEq = positionsWithDay.reduce((s, p) => s + p.equity, 0);
+    dayChangePct = totalEq > 0 ? weightedSum / totalEq : null;
+  }
+
+  const diversity = totalEquity > 0 ? (totalValue / totalEquity) * 100 : null;
+
+  const accounts = positions.map((p) => ({
+    name: p.accountId,
+    shares: p.quantity,
+    value: p.equity,
+  }));
+
+  return { totalShares, totalValue, totalCost, weightedAvgCost, dayChange, dayChangePct, unrealizedPL, unrealizedPLPct, diversity, accounts };
+}
+
 export function RobinhoodPositionCard({ ticker }: RobinhoodPositionCardProps) {
-  const [position, setPosition] = useState<UiStockPosition | null>(null);
-  const [diversity, setDiversity] = useState<number | null>(null);
+  const [agg, setAgg] = useState<AggregatedPosition | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch stock profile (has position data)
-        const res = await fetch(`/api/stocks/${ticker}`);
-        const data: StockProfileCurrent = await res.json();
-        setPosition(toUiStockPosition(data));
-
-        // Fetch portfolio for diversity calculation
-        const portfolioRes = await fetch('/api/portfolio');
-        if (portfolioRes.ok) {
-          const portfolioData = await portfolioRes.json();
-          const posMatch = portfolioData.positions?.find(
-            (p: { symbol: string }) => p.symbol === ticker,
-          );
-          if (posMatch?.portfolioDiversity != null) {
-            setDiversity(posMatch.portfolioDiversity);
-          } else if (posMatch && portfolioData.summary?.totalEquity > 0) {
-            setDiversity((posMatch.equity / portfolioData.summary.totalEquity) * 100);
-          }
-        }
+        const res = await fetch('/api/portfolio');
+        if (!res.ok) { setAgg(null); return; }
+        const data = await res.json();
+        const positions: Position[] = (data.positions || []).filter(
+          (p: Position) => p.symbol === ticker,
+        );
+        if (positions.length === 0) { setAgg(null); return; }
+        const totalEquity = data.summary?.totalEquity ?? 0;
+        setAgg(aggregatePositions(positions, totalEquity));
       } catch {
-        setPosition(null);
+        setAgg(null);
       } finally {
         setLoading(false);
       }
     };
-
     fetchData();
   }, [ticker]);
 
@@ -58,7 +88,7 @@ export function RobinhoodPositionCard({ ticker }: RobinhoodPositionCardProps) {
     );
   }
 
-  if (!position) {
+  if (!agg) {
     return (
       <div className="card p-4">
         <div className="flex items-center gap-2 text-foreground-muted mb-2">
@@ -82,11 +112,11 @@ export function RobinhoodPositionCard({ ticker }: RobinhoodPositionCardProps) {
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div className="min-h-[3.5rem]">
           <p className="text-xs text-foreground-muted mb-1">Shares</p>
-          <p className="text-lg font-bold font-mono tabular-nums">{formatNumber(position.quantity, 4)}</p>
+          <p className="text-lg font-bold font-mono tabular-nums">{formatQuantity(agg.totalShares)}</p>
         </div>
         <div className="min-h-[3.5rem]">
           <p className="text-xs text-foreground-muted mb-1">Market value</p>
-          <p className="text-lg font-bold font-mono tabular-nums">{formatMoney(position.marketValue)}</p>
+          <p className="text-lg font-bold font-mono tabular-nums">{formatMoney(agg.totalValue)}</p>
         </div>
       </div>
 
@@ -94,12 +124,12 @@ export function RobinhoodPositionCard({ ticker }: RobinhoodPositionCardProps) {
       <div className="flex items-center justify-between mb-4">
         <div className="min-h-[3.5rem]">
           <p className="text-xs text-foreground-muted mb-1">Average cost</p>
-          <p className="text-base font-mono font-semibold tabular-nums">{formatMoney(position.averageCost)}</p>
+          <p className="text-base font-mono font-semibold tabular-nums">{formatMoney(agg.weightedAvgCost)}</p>
         </div>
-        {diversity != null && (
+        {agg.diversity != null && (
           <div className="text-center">
             <p className="text-xs text-foreground-muted mb-1">Diversity</p>
-            <PortfolioDiversityRing percentage={diversity} size={56} />
+            <PortfolioDiversityRing percentage={agg.diversity} size={56} />
           </div>
         )}
       </div>
@@ -107,20 +137,40 @@ export function RobinhoodPositionCard({ ticker }: RobinhoodPositionCardProps) {
       {/* Today's return */}
       <div className="py-3 border-t border-border">
         <p className="text-xs text-foreground-muted mb-1">Today&apos;s return</p>
-        <span className={`text-sm font-semibold font-mono tabular-nums ${pnlTextColor(position.dayChange)}`}>
-          {formatSignedMoney(position.dayChange)}{' '}
-          ({formatPercent(position.dayChangePercent, 2, { showSign: true })})
+        <span className={`text-sm font-semibold font-mono tabular-nums ${pnlTextColor(agg.dayChange)}`}>
+          {formatSignedMoney(agg.dayChange)}{' '}
+          ({formatPercent(agg.dayChangePct, 2, { showSign: true })})
         </span>
       </div>
 
       {/* Total return */}
       <div className="py-3 border-t border-border">
         <p className="text-xs text-foreground-muted mb-1">Total return</p>
-        <span className={`text-sm font-semibold font-mono tabular-nums ${pnlTextColor(position.unrealizedPL)}`}>
-          {formatSignedMoney(position.unrealizedPL)}{' '}
-          ({formatPercent(position.unrealizedPLPercent, 2, { showSign: true })})
+        <span className={`text-sm font-semibold font-mono tabular-nums ${pnlTextColor(agg.unrealizedPL)}`}>
+          {formatSignedMoney(agg.unrealizedPL)}{' '}
+          ({formatPercent(agg.unrealizedPLPct, 2, { showSign: true })})
         </span>
       </div>
+
+      {/* Per-account breakdown (only if multiple accounts) */}
+      {agg.accounts.length > 1 && (
+        <div className="pt-3 border-t border-border">
+          <p className="text-xs text-foreground-muted mb-2">Accounts</p>
+          <div className="space-y-1.5">
+            {agg.accounts.map((acct) => (
+              <div key={acct.name} className="flex items-center justify-between text-xs">
+                <span className="text-foreground-muted truncate max-w-[120px]" title={acct.name}>
+                  {acct.name.slice(0, 8)}...
+                </span>
+                <div className="flex items-center gap-3 font-mono tabular-nums">
+                  <span className="text-foreground-muted">{formatQuantity(acct.shares)} sh</span>
+                  <span className="text-foreground">{formatMoney(acct.value)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
