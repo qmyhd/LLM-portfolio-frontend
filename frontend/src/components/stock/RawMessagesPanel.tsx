@@ -1,15 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ChatBubbleLeftIcon } from '@heroicons/react/24/outline';
 
 interface RawMessage {
-  id: string;
-  content: string;
+  id: number;
+  messageId: string;
+  ticker: string;
+  direction: string;
+  ideaText: string;
   author: string;
-  channelName: string;
-  timestamp: string;
-  symbols: string[];
+  channel: string;
+  createdAt: string | null;
+  labels: string[];
 }
 
 interface RawMessagesPanelProps {
@@ -19,54 +22,61 @@ interface RawMessagesPanelProps {
 export function RawMessagesPanel({ ticker }: RawMessagesPanelProps) {
   const [messages, setMessages] = useState<RawMessage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
+  const [cursor, setCursor] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
 
-  useEffect(() => {
-    fetchMessages();
-  }, [ticker]);
-
-  const fetchMessages = async () => {
+  const fetchMessages = useCallback(async (append = false) => {
     try {
-      // Mock data - would fetch from /api/stocks/[ticker]/messages
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      
-      const mockMessages: RawMessage[] = [];
-      const now = new Date();
-      const channels = ['trading-ideas', 'market-chat', 'daily-discussion'];
-      const authors = ['trader_42', 'chart_master', 'swing_king', 'momentum_joe', 'options_guru'];
+      if (append) setLoadingMore(true);
+      else setLoading(true);
 
-      for (let i = 0; i < 15; i++) {
-        const hoursAgo = Math.floor(Math.random() * 72);
-        const date = new Date(now);
-        date.setHours(date.getHours() - hoursAgo);
+      const offset = append ? cursor : 0;
+      const res = await fetch(`/api/sentiment/messages?ticker=${encodeURIComponent(ticker)}&limit=20&cursor=${offset}`);
+      if (!res.ok) return;
+      const data = await res.json();
 
-        mockMessages.push({
-          id: `msg_${i}`,
-          content: generateMockMessage(ticker, i),
-          author: authors[Math.floor(Math.random() * authors.length)],
-          channelName: channels[Math.floor(Math.random() * channels.length)],
-          timestamp: date.toISOString(),
-          symbols: [ticker, ...(Math.random() > 0.7 ? ['SPY'] : [])],
-        });
+      const newMessages: RawMessage[] = (data.messages || []).map((m: Record<string, unknown>) => ({
+        id: m.id as number,
+        messageId: m.messageId as string,
+        ticker: m.ticker as string,
+        direction: m.direction as string,
+        ideaText: m.ideaText as string,
+        author: (m.author as string) || 'Unknown',
+        channel: (m.channel as string) || 'unknown',
+        createdAt: (m.createdAt as string) || null,
+        labels: (m.labels as string[]) || [],
+      }));
+
+      if (append) {
+        setMessages(prev => [...prev, ...newMessages]);
+      } else {
+        setMessages(newMessages);
       }
 
-      // Sort by timestamp descending
-      mockMessages.sort((a, b) => 
-        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-      );
-
-      setMessages(mockMessages);
+      setHasMore(data.nextCursor != null);
+      setCursor(data.nextCursor ?? 0);
     } catch (error) {
       console.error('Failed to fetch messages:', error);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
-  };
+  }, [ticker, cursor]);
 
-  const formatTime = (timestamp: string) => {
+  useEffect(() => {
+    setCursor(0);
+    setMessages([]);
+    fetchMessages();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ticker]);
+
+  const formatTime = (timestamp: string | null) => {
+    if (!timestamp) return '';
     const date = new Date(timestamp);
     const now = new Date();
     const diffHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
+
     if (diffHours < 1) return 'Just now';
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffHours < 48) return 'Yesterday';
@@ -92,7 +102,7 @@ export function RawMessagesPanel({ ticker }: RawMessagesPanelProps) {
         <ChatBubbleLeftIcon className="h-12 w-12 text-foreground-muted mb-4" />
         <h3 className="text-lg font-medium text-foreground mb-2">No Messages</h3>
         <p className="text-sm text-foreground-muted">
-          No recent messages mentioning ${ticker}
+          {`No recent messages mentioning ${ticker}`}
         </p>
       </div>
     );
@@ -110,58 +120,43 @@ export function RawMessagesPanel({ ticker }: RawMessagesPanelProps) {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-foreground">{msg.author}</span>
-                <span className="text-xs text-foreground-muted">#{msg.channelName}</span>
+                <span className="text-xs text-foreground-muted">#{msg.channel}</span>
               </div>
-              <span className="text-xs text-foreground-muted">{formatTime(msg.timestamp)}</span>
+              <span className="text-xs text-foreground-muted">{formatTime(msg.createdAt)}</span>
             </div>
 
             {/* Content */}
             <p className="text-sm text-foreground/90 whitespace-pre-wrap break-words">
-              {msg.content}
+              {msg.ideaText}
             </p>
 
-            {/* Symbols */}
-            {msg.symbols.length > 1 && (
+            {/* Direction badge */}
+            {msg.direction && (
               <div className="flex gap-1 mt-2">
-                {msg.symbols.map((sym) => (
-                  <span
-                    key={sym}
-                    className={`text-xs px-1.5 py-0.5 rounded ${
-                      sym === ticker
-                        ? 'bg-primary/20 text-primary'
-                        : 'bg-background-secondary text-foreground-muted'
-                    }`}
-                  >
-                    ${sym}
-                  </span>
-                ))}
+                <span className={`text-xs px-1.5 py-0.5 rounded ${
+                  msg.direction === 'bullish' ? 'bg-profit/20 text-profit' :
+                  msg.direction === 'bearish' ? 'bg-loss/20 text-loss' :
+                  'bg-foreground-muted/20 text-foreground-muted'
+                }`}>
+                  {msg.direction}
+                </span>
               </div>
             )}
           </div>
         ))}
       </div>
+
+      {hasMore && (
+        <div className="p-4 text-center">
+          <button
+            onClick={() => fetchMessages(true)}
+            disabled={loadingMore}
+            className="text-sm text-primary hover:text-primary/80 transition-colors"
+          >
+            {loadingMore ? 'Loading...' : 'Load more messages'}
+          </button>
+        </div>
+      )}
     </div>
   );
-}
-
-function generateMockMessage(ticker: string, index: number): string {
-  const messages = [
-    `$${ticker} looking strong at this level. Support held perfectly.`,
-    `Just added to my $${ticker} position. This pullback was the opportunity I was waiting for.`,
-    `$${ticker} breaking out of the wedge pattern. Volume confirming the move.`,
-    `Anyone else watching $${ticker}? The RSI divergence is interesting here.`,
-    `$${ticker} earnings next week. Implied vol is getting spicy.`,
-    `Closed half of my $${ticker} calls for 150% gain. Letting the rest ride.`,
-    `$${ticker} at key resistance. Needs to break through 180 to confirm the trend.`,
-    `$${ticker} consolidating nicely. Building a base for the next leg up.`,
-    `Looking at $${ticker} weekly chart - higher lows forming. Bullish setup.`,
-    `$${ticker} sector rotation could benefit this name. Watching closely.`,
-    `$${ticker} just hit my price target. Taking profits here.`,
-    `$${ticker} - the fundamentals support a move higher. Growth story intact.`,
-    `Interesting flow in $${ticker} options. Big call buying at the ask.`,
-    `$${ticker} filling the gap from last month. Could be a good entry.`,
-    `$${ticker} insider buying reported. That's a positive signal.`,
-  ];
-  
-  return messages[index % messages.length];
 }
