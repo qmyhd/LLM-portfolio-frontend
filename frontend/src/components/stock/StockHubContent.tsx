@@ -21,7 +21,7 @@ import {
   ChevronUpIcon,
 } from '@heroicons/react/24/outline';
 import { useStockProfile } from '@/hooks/useStockProfile';
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
 
 type ChartProvider = 'lightweight' | 'tradingview';
 type TabKey = 'chat' | 'ideas' | 'raw' | 'insights' | 'notes';
@@ -259,7 +259,7 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
         </div>
 
         {/* Desktop: resizable panels */}
-        <PanelGroup direction="horizontal" autoSaveId="stock-panel-sizes" className="hidden lg:flex h-full">
+        <PanelGroup orientation="horizontal" className="hidden lg:flex h-full">
           {/* Left panel: Chart + Trades */}
           <Panel defaultSize={60} minSize={30}>
             <div className="flex flex-col h-full">
