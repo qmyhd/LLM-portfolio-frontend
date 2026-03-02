@@ -1,7 +1,8 @@
 'use client';
 
 import { useNews } from '@/hooks/useOpenBB';
-import { ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline';
+import { ArrowTopRightOnSquareIcon, NewspaperIcon } from '@heroicons/react/24/outline';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 interface NewsPanelProps {
   ticker: string;
@@ -46,8 +47,8 @@ export function NewsPanel({ ticker }: NewsPanelProps) {
 
   if (!data?.articles?.length) {
     return (
-      <div className="p-4 text-center text-foreground-muted text-sm">
-        No news available for {ticker}
+      <div className="p-4">
+        <EmptyState icon={NewspaperIcon} title="No news available" />
       </div>
     );
   }

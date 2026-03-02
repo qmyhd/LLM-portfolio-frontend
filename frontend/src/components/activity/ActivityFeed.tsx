@@ -6,7 +6,9 @@ import {
   ArrowPathIcon,
   MagnifyingGlassIcon,
   FunnelIcon,
+  ClockIcon,
 } from '@heroicons/react/24/outline';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { useActivities } from '@/hooks';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { TradeCard } from './TradeCard';
@@ -106,8 +108,8 @@ export function ActivityFeed() {
 
       {/* Cards */}
       {filtered.length === 0 ? (
-        <div className="card p-6 text-center">
-          <p className="text-foreground-muted text-sm">No activities found</p>
+        <div className="card p-6">
+          <EmptyState icon={ClockIcon} title="No activities found" description="Activity data will appear after your next sync" />
         </div>
       ) : (
         <div className="space-y-3">

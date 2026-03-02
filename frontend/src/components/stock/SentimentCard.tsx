@@ -5,7 +5,9 @@ import {
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
   MinusIcon,
+  ChatBubbleLeftIcon,
 } from '@heroicons/react/24/outline';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { directionTextColor } from '@/lib/colors';
 
 interface Sentiment {
@@ -69,7 +71,7 @@ export function SentimentCard({ ticker }: SentimentCardProps) {
   if (!sentiment) {
     return (
       <div className="card p-4">
-        <p className="text-sm text-foreground-muted">No sentiment data</p>
+        <EmptyState icon={ChatBubbleLeftIcon} title="No sentiment data" description="No Discord mentions found for this ticker" />
       </div>
     );
   }

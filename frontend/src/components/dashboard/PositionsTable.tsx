@@ -6,7 +6,9 @@ import {
   ChevronUpIcon,
   ChevronDownIcon,
   FunnelIcon,
+  BriefcaseIcon,
 } from '@heroicons/react/24/outline';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { usePortfolio } from '@/hooks';
 import type { Position } from '@/types/api';
 import { formatMoney, formatSignedMoney, formatPercent } from '@/lib/format';
@@ -88,8 +90,8 @@ export function PositionsTable() {
 
   if (positions.length === 0) {
     return (
-      <div className="card p-6 text-center">
-        <p className="text-foreground-muted">No open positions</p>
+      <div className="card p-6">
+        <EmptyState icon={BriefcaseIcon} title="No positions" description="Sync your brokerage to see holdings" />
       </div>
     );
   }

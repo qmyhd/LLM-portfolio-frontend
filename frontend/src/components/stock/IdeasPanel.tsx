@@ -12,7 +12,9 @@ import {
   MinusIcon,
   ChevronDownIcon,
   XMarkIcon,
+  LightBulbIcon,
 } from '@heroicons/react/24/outline';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { Select } from '@/components/ui/Select';
 
 /** Extract a price level value from the levels array by kind. */
@@ -228,14 +230,12 @@ export function IdeasPanel({ ticker }: IdeasPanelProps) {
       {/* Ideas list */}
       <div className="flex-1 overflow-y-auto">
         {filteredIdeas.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-32 text-foreground-muted">
-            <p>No ideas found</p>
-            {hasActiveFilters && (
-              <button onClick={clearFilters} className="text-xs text-primary mt-2 hover:underline">
-                Clear filters
-              </button>
-            )}
-          </div>
+          <EmptyState
+            icon={LightBulbIcon}
+            title="No ideas found"
+            description="Ideas from Discord will appear here"
+            action={hasActiveFilters ? { label: 'Clear filters', onClick: clearFilters } : undefined}
+          />
         ) : (
           <div className="divide-y divide-border">
             {filteredIdeas.map((idea) => (

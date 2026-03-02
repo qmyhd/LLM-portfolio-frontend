@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { useNotes } from '@/hooks';
 import { formatDate } from '@/lib/format';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { TrashIcon } from '@heroicons/react/24/outline';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { TrashIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
 
 interface NotesPanelProps {
   ticker: string;
@@ -65,9 +66,7 @@ export function NotesPanel({ ticker }: NotesPanelProps) {
           <p className="text-sm text-loss">Failed to load notes</p>
         )}
         {notes.length === 0 && !error && (
-          <p className="text-sm text-foreground-muted text-center py-4">
-            No notes yet for {ticker}
-          </p>
+          <EmptyState icon={PencilSquareIcon} title="No notes yet" description="Add a note to track your thoughts" />
         )}
         {notes.map((note) => (
           <div

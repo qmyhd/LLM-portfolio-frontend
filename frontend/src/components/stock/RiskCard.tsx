@@ -5,6 +5,7 @@ import {
   ShieldCheckIcon,
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { formatNumber } from '@/lib/format';
 import { riskLevelColor } from '@/lib/colors';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -66,7 +67,7 @@ export function RiskCard({ ticker }: RiskCardProps) {
   if (!risk) {
     return (
       <div className="card p-4">
-        <p className="text-sm text-foreground-muted">No risk data available</p>
+        <EmptyState icon={ShieldCheckIcon} title="No risk data available" />
       </div>
     );
   }
