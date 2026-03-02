@@ -353,7 +353,7 @@ export default function PositionsPage() {
                         {pos.symbol}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-sm text-foreground-muted">
+                    <td className="px-4 py-3 text-sm text-foreground-muted max-w-[200px] truncate" title={pos.companyName}>
                       {pos.companyName}
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-sm">
