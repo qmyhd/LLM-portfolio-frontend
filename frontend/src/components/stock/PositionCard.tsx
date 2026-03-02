@@ -8,7 +8,7 @@ import {
 } from '@heroicons/react/24/outline';
 import type { StockProfileCurrent } from '@/types/api';
 import { toUiStockPosition, type UiStockPosition } from '@/lib/mappers';
-import { formatMoney, formatPercent } from '@/lib/format';
+import { formatMoney, formatPercent, formatQuantity } from '@/lib/format';
 
 interface PositionCardProps {
   ticker: string;
@@ -70,7 +70,7 @@ export function PositionCard({ ticker }: PositionCardProps) {
           <BanknotesIcon className="h-4 w-4" />
           <span className="text-sm font-medium">Your Position</span>
         </div>
-        <span className="text-xs text-foreground-muted">{position.quantity} shares</span>
+        <span className="text-xs text-foreground-muted">{formatQuantity(position.quantity)} shares</span>
       </div>
 
       {/* Market Value */}

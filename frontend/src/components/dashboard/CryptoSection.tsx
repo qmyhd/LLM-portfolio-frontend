@@ -9,7 +9,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { usePortfolio } from '@/hooks';
 import type { Position } from '@/types/api';
-import { formatMoney, formatPercent, formatSignedMoney } from '@/lib/format';
+import { formatMoney, formatPercent, formatSignedMoney, formatQuantity } from '@/lib/format';
 import { pnlTextColor, pnlBgColor } from '@/lib/colors';
 import { CardSpotlight } from '@/components/ui/CardSpotlight';
 
@@ -116,7 +116,7 @@ export function CryptoSection() {
                     </Link>
                   </td>
                   <td className="px-3 py-2.5 text-right font-mono text-sm text-foreground-muted">
-                    {position.quantity}
+                    {formatQuantity(position.quantity)}
                   </td>
                   <td className="px-3 py-2.5 text-right font-mono text-sm">
                     {formatMoney(position.currentPrice)}

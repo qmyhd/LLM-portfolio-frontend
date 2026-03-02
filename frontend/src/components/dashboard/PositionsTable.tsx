@@ -11,7 +11,7 @@ import {
 import { EmptyState } from '@/components/ui/EmptyState';
 import { usePortfolio } from '@/hooks';
 import type { Position } from '@/types/api';
-import { formatMoney, formatSignedMoney, formatPercent } from '@/lib/format';
+import { formatMoney, formatSignedMoney, formatPercent, formatQuantity } from '@/lib/format';
 import { pnlTextColor, pnlBgColor } from '@/lib/colors';
 import { Select } from '@/components/ui/Select';
 import { CardSpotlight } from '@/components/ui/CardSpotlight';
@@ -214,7 +214,7 @@ export function PositionsTable() {
                   </Link>
                 </td>
                 <td className="table-cell text-right font-mono hidden sm:table-cell">
-                  {position.quantity}
+                  {formatQuantity(position.quantity)}
                 </td>
                 <td className="table-cell text-right font-mono hidden md:table-cell">
                   {formatMoney(position.currentPrice)}

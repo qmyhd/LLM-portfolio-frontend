@@ -10,7 +10,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { usePortfolio, useSparklines } from '@/hooks';
 import type { Position } from '@/types/api';
-import { formatMoney, formatPercent, formatSignedMoney } from '@/lib/format';
+import { formatMoney, formatPercent, formatSignedMoney, formatQuantity } from '@/lib/format';
 import { pnlTextColor, pnlBgColor } from '@/lib/colors';
 import { COMPANY_NAMES } from '@/lib/mappers';
 import { CardSpotlight } from '@/components/ui/CardSpotlight';
@@ -342,7 +342,7 @@ export function HoldingsTable() {
 
                   {/* Quantity */}
                   <td className="hidden sm:table-cell px-3 py-2.5 text-right font-mono text-sm tabular-nums text-foreground-muted">
-                    {position.quantity}
+                    {formatQuantity(position.quantity)}
                   </td>
 
                   {/* Avg Cost */}

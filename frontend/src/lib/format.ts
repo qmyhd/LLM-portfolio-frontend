@@ -161,3 +161,23 @@ export function formatRelativeTime(
     day: 'numeric',
   });
 }
+
+/**
+ * Format a share quantity — strips floating-point noise.
+ * Whole numbers → 0 decimals, fractional → up to 4 decimals (trailing zeros stripped).
+ * `formatQuantity(10)`              → `"10"`
+ * `formatQuantity(1.7226000000001)` → `"1.7226"`
+ * `formatQuantity(0.5)`             → `"0.5"`
+ * `formatQuantity(null)`            → `"—"`
+ */
+export function formatQuantity(
+  n: number | null | undefined,
+  opts?: { placeholder?: string },
+): string {
+  const placeholder = opts?.placeholder ?? '—';
+  if (n == null || Number.isNaN(n)) return placeholder;
+  const v = safe(n);
+  if (Number.isInteger(v)) return v.toLocaleString();
+  // Round to 4 decimals to strip IEEE 754 noise, then remove trailing zeros
+  return parseFloat(v.toFixed(4)).toString();
+}

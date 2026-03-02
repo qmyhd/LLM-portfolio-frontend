@@ -19,7 +19,7 @@ import { TopBar } from '@/components/layout/TopBar';
 import type { Position as ApiPosition } from '@/types/api';
 import type { SyncResponse } from '@/types/ideas';
 import { toUiPosition, type UiPosition } from '@/lib/mappers';
-import { formatMoney, formatPercent, formatNumber } from '@/lib/format';
+import { formatMoney, formatPercent, formatNumber, formatQuantity } from '@/lib/format';
 
 type SyncStatus = 'idle' | 'syncing' | 'success' | 'partial' | 'error';
 
@@ -357,7 +357,7 @@ export default function PositionsPage() {
                       {pos.companyName}
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-sm">
-                      {pos.quantity}
+                      {formatQuantity(pos.quantity)}
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-sm text-foreground-muted">
                       {formatMoney(pos.averageCost)}
