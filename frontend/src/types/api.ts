@@ -239,6 +239,25 @@ export interface IdeasResponse {
 }
 
 // =============================================================================
+// Idea Context (surrounding Discord messages)
+// =============================================================================
+
+export interface ContextMessage {
+  messageId: string;
+  content: string;
+  author: string;
+  sentAt: string;
+  channel: string;
+  isParent: boolean;
+}
+
+export interface IdeaContextResponse {
+  idea: StockIdea;
+  parentMessage: ContextMessage | null;
+  contextMessages: ContextMessage[];
+}
+
+// =============================================================================
 // Chat (OpenAI-powered stock analysis)
 // =============================================================================
 

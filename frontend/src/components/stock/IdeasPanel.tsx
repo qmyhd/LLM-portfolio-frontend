@@ -2,15 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { clsx } from 'clsx';
-import { formatNumber, formatDate } from '@/lib/format';
+import { formatNumber, formatDate, formatRelativeTime } from '@/lib/format';
 import { directionTextColor } from '@/lib/colors';
-import type { StockIdea } from '@/types/api';
+import type { StockIdea, ContextMessage } from '@/types/api';
 import {
   FunnelIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
   MinusIcon,
   ChevronDownIcon,
+  ChevronUpIcon,
   XMarkIcon,
   LightBulbIcon,
 } from '@heroicons/react/24/outline';
@@ -254,6 +255,10 @@ interface IdeaCardProps {
 }
 
 function IdeaCard({ idea, onAuthorClick }: IdeaCardProps) {
+  const [showContext, setShowContext] = useState(false);
+  const [contextMessages, setContextMessages] = useState<ContextMessage[]>([]);
+  const [contextLoading, setContextLoading] = useState(false);
+
   const DirectionIcon =
     idea.direction === 'bullish'
       ? ArrowTrendingUpIcon
@@ -262,6 +267,30 @@ function IdeaCard({ idea, onAuthorClick }: IdeaCardProps) {
       : MinusIcon;
 
   const directionColor = directionTextColor(idea.direction);
+
+  const toggleContext = async () => {
+    if (showContext) {
+      setShowContext(false);
+      return;
+    }
+    if (contextMessages.length > 0) {
+      setShowContext(true);
+      return;
+    }
+    setContextLoading(true);
+    try {
+      const res = await fetch(`/api/ideas/${idea.id}/context`);
+      if (res.ok) {
+        const data = await res.json();
+        setContextMessages(data.contextMessages || []);
+      }
+    } catch {
+      // Silently fail — context is supplementary
+    } finally {
+      setContextLoading(false);
+      setShowContext(true);
+    }
+  };
 
   return (
     <div className="p-4 hover:bg-background-tertiary/50 transition-colors">
@@ -322,13 +351,63 @@ function IdeaCard({ idea, onAuthorClick }: IdeaCardProps) {
         );
       })()}
 
-      {/* Author */}
-      <button
-        onClick={() => onAuthorClick(idea.author)}
-        className="mt-2 text-xs text-foreground-muted hover:text-primary transition-colors"
-      >
-        @{idea.author}
-      </button>
+      {/* Author + Context toggle row */}
+      <div className="flex items-center justify-between mt-2">
+        <button
+          onClick={() => onAuthorClick(idea.author)}
+          className="text-xs text-foreground-muted hover:text-primary transition-colors"
+        >
+          @{idea.author}
+        </button>
+        <button
+          onClick={toggleContext}
+          className="flex items-center gap-1 text-xs text-foreground-muted hover:text-primary transition-colors"
+        >
+          {contextLoading ? (
+            <span className="animate-pulse">Loading...</span>
+          ) : (
+            <>
+              {showContext ? (
+                <ChevronUpIcon className="h-3 w-3" />
+              ) : (
+                <ChevronDownIcon className="h-3 w-3" />
+              )}
+              {showContext ? 'Hide context' : 'Show context'}
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Context accordion */}
+      {showContext && contextMessages.length > 0 && (
+        <div className="mt-3 border border-border rounded-lg overflow-hidden">
+          {contextMessages.map((msg) => (
+            <div
+              key={msg.messageId}
+              className={clsx(
+                'px-3 py-2 text-xs border-b border-border last:border-b-0',
+                msg.isParent
+                  ? 'bg-primary/5 border-l-2 border-l-primary'
+                  : 'bg-background-secondary/50',
+              )}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-medium text-foreground">
+                  {msg.isParent && '▶ '}@{msg.author}
+                </span>
+                <span className="text-foreground-subtle">
+                  {formatRelativeTime(msg.sentAt)}
+                </span>
+              </div>
+              <p className="text-foreground/80 whitespace-pre-wrap break-words">{msg.content}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {showContext && contextMessages.length === 0 && !contextLoading && (
+        <p className="mt-3 text-xs text-foreground-muted italic">No context messages available</p>
+      )}
     </div>
   );
 }
