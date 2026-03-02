@@ -11,6 +11,7 @@ import { usePortfolio } from '@/hooks';
 import type { Position } from '@/types/api';
 import { formatMoney, formatSignedMoney, formatPercent } from '@/lib/format';
 import { pnlTextColor, pnlBgColor } from '@/lib/colors';
+import { Select } from '@/components/ui/Select';
 
 type SortKey = 'symbol' | 'equity' | 'openPnl' | 'openPnlPercent';
 type FilterMode = 'all' | 'winners' | 'losers';
@@ -131,16 +132,16 @@ export function PositionsTable() {
         {!isCollapsed && (
           <div className="flex items-center gap-2">
             <FunnelIcon className="w-4 h-4 text-foreground-muted" />
-            <select
+            <Select
               value={filter}
-              onChange={(e) => setFilter(e.target.value as FilterMode)}
-              className="bg-background-secondary border border-border rounded-md px-2 py-1 text-sm text-foreground cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              aria-label="Filter positions"
-            >
-              <option value="all">All</option>
-              <option value="winners">Winners</option>
-              <option value="losers">Losers</option>
-            </select>
+              onChange={(v) => setFilter(v as FilterMode)}
+              options={[
+                { value: 'all', label: 'All' },
+                { value: 'winners', label: 'Winners' },
+                { value: 'losers', label: 'Losers' },
+              ]}
+              size="sm"
+            />
           </div>
         )}
       </div>

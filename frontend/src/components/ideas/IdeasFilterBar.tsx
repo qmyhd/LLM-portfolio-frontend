@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import type { IdeasFilters } from '@/types/ideas';
+import { Select } from '@/components/ui/Select';
 
 interface IdeasFilterBarProps {
   filters: IdeasFilters;
@@ -53,40 +54,32 @@ export function IdeasFilterBar({ filters, onFiltersChange }: IdeasFilterBarProps
       />
 
       {/* Source filter */}
-      <select
-        className="input w-32 text-sm"
+      <Select
         value={filters.source || ''}
-        onChange={(e) =>
-          onFiltersChange({
-            ...filters,
-            source: (e.target.value as IdeasFilters['source']) || undefined,
-            offset: 0,
-          })
-        }
-      >
-        <option value="">All Sources</option>
-        <option value="discord">Discord</option>
-        <option value="manual">Manual</option>
-        <option value="transcribe">Transcribe</option>
-      </select>
+        onChange={(v) => onFiltersChange({ ...filters, source: (v as IdeasFilters['source']) || undefined, offset: 0 })}
+        options={[
+          { value: '', label: 'All Sources' },
+          { value: 'discord', label: 'Discord' },
+          { value: 'manual', label: 'Manual' },
+          { value: 'transcribe', label: 'Transcribe' },
+        ]}
+        size="sm"
+        className="w-32"
+      />
 
       {/* Status filter */}
-      <select
-        className="input w-32 text-sm"
+      <Select
         value={filters.status || ''}
-        onChange={(e) =>
-          onFiltersChange({
-            ...filters,
-            status: (e.target.value as IdeasFilters['status']) || undefined,
-            offset: 0,
-          })
-        }
-      >
-        <option value="">All Statuses</option>
-        <option value="draft">Draft</option>
-        <option value="refined">Refined</option>
-        <option value="archived">Archived</option>
-      </select>
+        onChange={(v) => onFiltersChange({ ...filters, status: (v as IdeasFilters['status']) || undefined, offset: 0 })}
+        options={[
+          { value: '', label: 'All Statuses' },
+          { value: 'draft', label: 'Draft' },
+          { value: 'refined', label: 'Refined' },
+          { value: 'archived', label: 'Archived' },
+        ]}
+        size="sm"
+        className="w-32"
+      />
 
       {/* Content search */}
       <input

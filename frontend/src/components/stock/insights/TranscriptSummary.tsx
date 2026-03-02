@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useTranscript } from '@/hooks/useOpenBB';
 import { MicrophoneIcon } from '@heroicons/react/24/outline';
+import { Select } from '@/components/ui/Select';
 
 interface TranscriptSummaryProps {
   ticker: string;
@@ -28,27 +29,27 @@ export function TranscriptSummary({ ticker }: TranscriptSummaryProps) {
     <div className="flex flex-col h-full">
       {/* Year/Quarter selector */}
       <div className="flex items-center gap-2 p-3 border-b border-border/50">
-        <select
-          value={year}
-          onChange={(e) => setYear(Number(e.target.value))}
-          className="bg-background-tertiary text-foreground text-xs rounded-md px-2 py-1.5 border border-border focus:border-primary focus:outline-none"
-        >
-          {[...Array(5)].map((_, i) => {
+        <Select
+          value={String(year)}
+          onChange={(v) => setYear(Number(v))}
+          options={[...Array(5)].map((_, i) => {
             const y = currentYear - i;
-            return <option key={y} value={y}>{y}</option>;
+            return { value: String(y), label: String(y) };
           })}
-        </select>
-        <select
-          value={quarter ?? ''}
-          onChange={(e) => setQuarter(e.target.value ? Number(e.target.value) : undefined)}
-          className="bg-background-tertiary text-foreground text-xs rounded-md px-2 py-1.5 border border-border focus:border-primary focus:outline-none"
-        >
-          <option value="">All Quarters</option>
-          <option value="1">Q1</option>
-          <option value="2">Q2</option>
-          <option value="3">Q3</option>
-          <option value="4">Q4</option>
-        </select>
+          size="sm"
+        />
+        <Select
+          value={quarter != null ? String(quarter) : ''}
+          onChange={(v) => setQuarter(v ? Number(v) : undefined)}
+          options={[
+            { value: '', label: 'All Quarters' },
+            { value: '1', label: 'Q1' },
+            { value: '2', label: 'Q2' },
+            { value: '3', label: 'Q3' },
+            { value: '4', label: 'Q4' },
+          ]}
+          size="sm"
+        />
       </div>
 
       {/* Transcript content */}

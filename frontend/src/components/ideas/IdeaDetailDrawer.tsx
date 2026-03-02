@@ -7,6 +7,7 @@ import { TickerAutocomplete } from './TickerAutocomplete';
 import { TagsInput } from './TagsInput';
 import { RefineDiffPreview } from './RefineDiffPreview';
 import type { UserIdea, UpdateIdeaRequest, RefineResponse, IdeaStatus, IdeaContextResponse } from '@/types/ideas';
+import { Select } from '@/components/ui/Select';
 
 interface IdeaDetailDrawerProps {
   idea: UserIdea | null;
@@ -200,15 +201,15 @@ export function IdeaDetailDrawer({
             <label className="text-xs text-foreground-muted uppercase tracking-wider mb-1.5 block">
               Status
             </label>
-            <select
-              className="input text-sm"
+            <Select
               value={editStatus}
-              onChange={(e) => setEditStatus(e.target.value as IdeaStatus)}
-            >
-              <option value="draft">Draft</option>
-              <option value="refined">Refined</option>
-              <option value="archived">Archived</option>
-            </select>
+              onChange={(v) => setEditStatus(v as IdeaStatus)}
+              options={[
+                { value: 'draft', label: 'Draft' },
+                { value: 'refined', label: 'Refined' },
+                { value: 'archived', label: 'Archived' },
+              ]}
+            />
           </div>
 
           {/* Meta info */}

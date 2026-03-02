@@ -5,10 +5,10 @@ import Link from 'next/link';
 import {
   ArrowUpIcon,
   ArrowDownIcon,
-  FunnelIcon,
   MagnifyingGlassIcon,
   ClipboardDocumentListIcon,
 } from '@heroicons/react/24/outline';
+import { Select } from '@/components/ui/Select';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
 import type { Order as ApiOrder } from '@/types/api';
@@ -84,19 +84,16 @@ export default function OrdersPage() {
           </div>
           
           {/* Filter */}
-          <div className="relative">
-            <FunnelIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-muted" />
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="input pl-9 pr-8 appearance-none cursor-pointer"
-            >
-              <option value="all">All Orders</option>
-              <option value="filled">Filled</option>
-              <option value="pending">Pending</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-          </div>
+          <Select
+            value={filter}
+            onChange={(v) => setFilter(v)}
+            options={[
+              { value: 'all', label: 'All Orders' },
+              { value: 'filled', label: 'Filled' },
+              { value: 'pending', label: 'Pending' },
+              { value: 'cancelled', label: 'Cancelled' },
+            ]}
+          />
         </div>
       </div>
 

@@ -13,6 +13,7 @@ import {
   ChevronDownIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
+import { Select } from '@/components/ui/Select';
 
 /** Extract a price level value from the levels array by kind. */
 function getLevelValue(idea: StockIdea, kind: string): number | null {
@@ -141,14 +142,15 @@ export function IdeasPanel({ ticker }: IdeasPanelProps) {
           </div>
           
           {/* Sort dropdown */}
-          <select
+          <Select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as SortMode)}
-            className="text-xs bg-background-tertiary text-foreground rounded px-2 py-1 border-none focus:ring-1 focus:ring-primary"
-          >
-            <option value="time">Latest</option>
-            <option value="confidence">Confidence</option>
-          </select>
+            onChange={(v) => setSortBy(v as SortMode)}
+            options={[
+              { value: 'time', label: 'Latest' },
+              { value: 'confidence', label: 'Confidence' },
+            ]}
+            size="sm"
+          />
         </div>
 
         {/* Label + Author filters */}
@@ -199,18 +201,15 @@ export function IdeasPanel({ ticker }: IdeasPanelProps) {
 
           {/* Author dropdown */}
           {authors.length > 0 && (
-            <select
+            <Select
               value={authorFilter || ''}
-              onChange={(e) => setAuthorFilter(e.target.value || null)}
-              className="text-xs bg-background-tertiary text-foreground rounded px-2 py-1 border-none focus:ring-1 focus:ring-primary"
-            >
-              <option value="">All Authors</option>
-              {authors.map((author) => (
-                <option key={author} value={author}>
-                  @{author}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setAuthorFilter(v || null)}
+              options={[
+                { value: '', label: 'All Authors' },
+                ...authors.map((a) => ({ value: a, label: `@${a}` })),
+              ]}
+              size="sm"
+            />
           )}
 
           {/* Clear filters */}
