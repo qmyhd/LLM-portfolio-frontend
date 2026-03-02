@@ -285,7 +285,7 @@ export function HoldingsTable() {
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-border">
+          <tbody className="divide-y divide-border stagger-fade-in">
             {visiblePositions.map(position => {
               const companyName = position.companyName || COMPANY_NAMES[position.symbol] || '';
               return (

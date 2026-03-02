@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect, useRef } from 'react';
 import { clsx } from 'clsx';
 import {
   ArrowTrendingUpIcon,
@@ -11,6 +12,39 @@ import { usePortfolio } from '@/hooks';
 import { CardSpotlight } from '@/components/ui/CardSpotlight';
 import { formatMoney, formatSignedMoney, formatSignedPct } from '@/lib/format';
 import { trendDirection } from '@/lib/colors';
+
+/**
+ * Animate a number from its previous value to a target using easeOutExpo.
+ */
+function useCountUp(target: number, duration = 400) {
+  const [value, setValue] = useState(0);
+  const prevRef = useRef(0);
+
+  useEffect(() => {
+    if (target === 0) { setValue(0); return; }
+    const start = prevRef.current;
+    const startTime = performance.now();
+
+    let rafId: number;
+    function tick(now: number) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // easeOutExpo
+      const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      setValue(start + (target - start) * eased);
+      if (progress < 1) {
+        rafId = requestAnimationFrame(tick);
+      }
+    }
+
+    rafId = requestAnimationFrame(tick);
+    prevRef.current = target;
+
+    return () => cancelAnimationFrame(rafId);
+  }, [target, duration]);
+
+  return value;
+}
 
 interface MetricCardProps {
   title: string;
@@ -87,6 +121,7 @@ function MetricCardSkeleton() {
 
 export function PortfolioSummary() {
   const { data, error, isLoading } = usePortfolio();
+  const animatedTotal = useCountUp(data?.summary?.totalEquity ?? 0);
 
   if (isLoading) {
     return (
@@ -125,7 +160,7 @@ export function PortfolioSummary() {
       <div className="snap-start min-w-[160px] flex-1">
         <MetricCard
           title="Market Value"
-          value={formatMoney(summary.totalEquity)}
+          value={formatMoney(animatedTotal)}
           change={summary.dayChange}
           changePct={summary.dayChangePercent}
           icon={ChartBarIcon}

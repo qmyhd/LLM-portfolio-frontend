@@ -93,7 +93,7 @@ export function TopMovers() {
             <ArrowTrendingUpIcon className="w-4 h-4 text-profit" />
             <span className="text-sm font-medium text-profit">Gainers</span>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 stagger-fade-in">
             {gainers.map((item) => (
               <Link
                 key={item.symbol}
@@ -127,7 +127,7 @@ export function TopMovers() {
             <ArrowTrendingDownIcon className="w-4 h-4 text-loss" />
             <span className="text-sm font-medium text-loss">Losers</span>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 stagger-fade-in">
             {losers.map((item) => (
               <Link
                 key={item.symbol}
