@@ -142,7 +142,7 @@ function RawMessageCard({ msg, formatTime }: { msg: RawMessage; formatTime: (t: 
     if (contextMessages.length > 0) { setShowContext(true); return; }
     setContextLoading(true);
     try {
-      const res = await fetch(`/api/ideas/${msg.id}/context`);
+      const res = await fetch(`/api/stocks/${msg.ticker}/ideas/${msg.messageId}/context`);
       if (res.ok) {
         const data = await res.json();
         setContextMessages(data.contextMessages || []);
