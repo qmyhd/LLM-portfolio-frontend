@@ -14,6 +14,7 @@ import { FundamentalsCard } from './FundamentalsCard';
 import { OpenBBInsightsPanel } from './OpenBBInsightsPanel';
 import { TradesPanel } from './TradesPanel';
 import { NotesPanel } from './NotesPanel';
+import { AnalysisPanel } from './AnalysisPanel';
 import {
   ArrowPathIcon,
   ChartBarIcon,
@@ -24,11 +25,12 @@ import { useStockProfile } from '@/hooks/useStockProfile';
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
 
 type ChartProvider = 'lightweight' | 'tradingview';
-type TabKey = 'chat' | 'ideas' | 'raw' | 'insights' | 'notes';
+type TabKey = 'chat' | 'ideas' | 'analysis' | 'raw' | 'insights' | 'notes';
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'chat', label: 'Chat' },
   { key: 'ideas', label: 'Ideas' },
+  { key: 'analysis', label: 'Analysis' },
   { key: 'raw', label: 'Raw' },
   { key: 'insights', label: 'Insights' },
   { key: 'notes', label: 'Notes' },
@@ -250,6 +252,7 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
               >
                 {activeTab === 'chat' && <ChatWidget ticker={ticker} key={`chat-${refreshKey}`} />}
                 {activeTab === 'ideas' && <IdeasPanel ticker={ticker} key={`ideas-${refreshKey}`} />}
+                {activeTab === 'analysis' && <AnalysisPanel ticker={ticker} key={`analysis-${refreshKey}`} />}
                 {activeTab === 'raw' && <RawMessagesPanel ticker={ticker} key={`raw-${refreshKey}`} />}
                 {activeTab === 'insights' && <OpenBBInsightsPanel ticker={ticker} key={`insights-${refreshKey}`} />}
                 {activeTab === 'notes' && <NotesPanel ticker={ticker} key={`notes-${refreshKey}`} />}

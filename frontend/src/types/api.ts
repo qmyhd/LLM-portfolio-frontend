@@ -463,6 +463,44 @@ export interface ConnectionsResponse {
 }
 
 // =============================================================================
+// Multi-Agent Stock Analysis
+// =============================================================================
+
+export type AnalysisSignal = 'strong_buy' | 'buy' | 'hold' | 'sell' | 'strong_sell';
+
+export interface AgentSignal {
+  agent_id: string;
+  signal: 'bullish' | 'bearish' | 'neutral';
+  confidence: number; // 0-1
+  reasoning: string;
+  metrics: Record<string, unknown>;
+}
+
+export interface ConsensusReport {
+  ticker: string;
+  overall_signal: AnalysisSignal;
+  overall_confidence: number; // 0-1
+  bull_bear_score: number; // -1 to 1
+  agent_signals: AgentSignal[];
+  summary: string;
+  data_sources: string[];
+  computed_at: string; // ISO datetime
+  model_used: string;
+}
+
+export interface PortfolioRiskReport {
+  var_95_1d: number;
+  var_95_5d: number;
+  concentration_hhi: number;
+  diversification_ratio: number;
+  correlation_matrix: Record<string, Record<string, number>>;
+  top_risk_contributors: Array<{ symbol: string; weight: number; contribution: number }>;
+  sector_exposure: Record<string, number>;
+  computed_at: string; // ISO datetime
+  data_sources: string[];
+}
+
+// =============================================================================
 // Sparklines (batch close prices for portfolio sparklines)
 // =============================================================================
 

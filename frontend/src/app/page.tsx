@@ -13,6 +13,7 @@ import { CryptoSection } from '@/components/dashboard/CryptoSection';
 import { DebugOverlay } from '@/components/dashboard/DebugOverlay';
 import { ReconPanel } from '@/components/dashboard/ReconPanel';
 import { ConnectionBanner } from '@/components/dashboard/ConnectionBanner';
+import { PortfolioRiskCard } from '@/components/dashboard/PortfolioRiskCard';
 
 export default function DashboardPage() {
   return (
@@ -63,6 +64,7 @@ export default function DashboardPage() {
 
               <div className="space-y-6">
                 <TopMovers />
+                <PortfolioRiskCard />
                 <SentimentOverview />
               </div>
             </div>

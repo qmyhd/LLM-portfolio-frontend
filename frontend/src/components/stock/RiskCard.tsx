@@ -16,6 +16,7 @@ interface RiskMetrics {
   riskLevel: 'low' | 'medium' | 'high';
   maxDrawdown: number;
   sharpeRatio: number | null;
+  positionSizePct: number | null;
 }
 
 interface RiskCardProps {
@@ -32,22 +33,31 @@ export function RiskCard({ ticker }: RiskCardProps) {
 
   const fetchRisk = async () => {
     try {
-      const res = await fetch(`/api/stocks/${ticker}`);
+      const res = await fetch(`/api/stocks/${ticker}/analysis/risk`);
+      if (!res.ok) throw new Error(`${res.status}`);
       const data = await res.json();
-      
-      // Generate risk metrics (would come from backend in production)
-      const beta = data.beta || (0.8 + Math.random() * 0.8);
-      const volatility = 15 + Math.random() * 25;
-      
+
+      // Extract risk metrics from the agent_signals
+      const riskAgent = data.agent_signals?.find(
+        (s: { agent_id: string }) => s.agent_id === 'risk'
+      );
+      const metrics = riskAgent?.metrics || {};
+
+      const vol = metrics.annualized_vol != null
+        ? metrics.annualized_vol * 100
+        : null;
+
       setRisk({
-        beta,
-        volatility,
-        riskLevel: volatility < 20 ? 'low' : volatility < 35 ? 'medium' : 'high',
-        maxDrawdown: -(10 + Math.random() * 30),
-        sharpeRatio: 0.5 + Math.random() * 1.5,
+        beta: metrics.beta ?? null,
+        volatility: vol ?? 0,
+        riskLevel: vol == null ? 'medium' : vol < 20 ? 'low' : vol < 40 ? 'medium' : 'high',
+        maxDrawdown: metrics.max_drawdown != null ? metrics.max_drawdown * 100 : 0,
+        sharpeRatio: metrics.sharpe_ratio ?? null,
+        positionSizePct: metrics.position_size_pct ?? null,
       });
-    } catch (error) {
-      console.error('Failed to fetch risk:', error);
+    } catch {
+      // Graceful fallback — show empty state
+      setRisk(null);
     } finally {
       setLoading(false);
     }
@@ -98,7 +108,7 @@ export function RiskCard({ ticker }: RiskCardProps) {
 
         {/* Volatility */}
         <div className="flex justify-between text-sm">
-          <span className="text-foreground-muted">30D Volatility</span>
+          <span className="text-foreground-muted">Annualized Vol</span>
           <span className="font-mono text-foreground">{formatNumber(risk.volatility, 1)}%</span>
         </div>
 
@@ -115,6 +125,14 @@ export function RiskCard({ ticker }: RiskCardProps) {
             <span className={`font-mono ${risk.sharpeRatio > 1 ? 'text-profit' : 'text-foreground'}`}>
               {formatNumber(risk.sharpeRatio)}
             </span>
+          </div>
+        )}
+
+        {/* Position Size */}
+        {risk.positionSizePct !== null && (
+          <div className="flex justify-between text-sm">
+            <span className="text-foreground-muted">Suggested Size</span>
+            <span className="font-mono text-foreground">{formatNumber(risk.positionSizePct, 1)}%</span>
           </div>
         )}
       </div>

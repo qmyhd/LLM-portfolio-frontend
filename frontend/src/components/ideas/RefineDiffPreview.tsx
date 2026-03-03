@@ -24,6 +24,11 @@ export function RefineDiffPreview({
       <div className="flex items-center gap-2">
         <SparklesIcon className="h-5 w-5 text-primary" />
         <h3 className="text-sm font-semibold">AI-Refined Suggestion</h3>
+        {refined.reflectionApplied && (
+          <span className="text-[10px] px-1.5 py-0.5 bg-amber-500/15 text-amber-400 rounded font-medium">
+            Reflection Applied
+          </span>
+        )}
       </div>
       <p className="text-xs text-foreground-muted">{refined.changesSummary}</p>
 

@@ -47,6 +47,7 @@ export interface RefineResponse {
   extractedSymbols: string[];
   suggestedTags: string[];
   changesSummary: string;
+  reflectionApplied: boolean;
 }
 
 export interface IdeasFilters {
