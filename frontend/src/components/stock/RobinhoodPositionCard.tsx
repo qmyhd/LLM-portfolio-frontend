@@ -113,7 +113,7 @@ export function RobinhoodPositionCard({ ticker }: RobinhoodPositionCardProps) {
           {formatSignedMoney(agg.unrealizedPL)}
         </p>
         <p className={`text-sm font-semibold font-mono tabular-nums ${pnlTextColor(agg.unrealizedPL)}`}>
-          {agg.unrealizedPL >= 0 ? '▲' : '▼'} {formatPercent(agg.unrealizedPLPct, 2, { showSign: true })}
+          {agg.unrealizedPL >= 0 ? '▲' : '▼'} {formatPercent(agg.unrealizedPLPct, 2)}
         </p>
         <p className="text-xs text-foreground-muted mt-0.5">Total return</p>
       </div>
