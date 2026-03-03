@@ -93,7 +93,7 @@
 
   /* Metric display */
   .metric-value {
-    @apply text-2xl font-bold font-mono tracking-tight;
+    @apply text-base sm:text-xl lg:text-2xl font-bold font-mono tracking-tight;
   }
 
   .metric-label {
