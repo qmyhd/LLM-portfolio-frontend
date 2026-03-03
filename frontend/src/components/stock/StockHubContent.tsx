@@ -262,7 +262,8 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
         </div>
 
         {/* Desktop: resizable panels */}
-        <PanelGroup orientation="horizontal" className="hidden lg:flex h-full">
+        <div className="hidden lg:flex h-full">
+        <PanelGroup orientation="horizontal" className="h-full">
           {/* Left panel: Chart + Trades */}
           <Panel defaultSize={60} minSize={30}>
             <div className="flex flex-col h-full">
@@ -355,6 +356,7 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
             </aside>
           </Panel>
         </PanelGroup>
+        </div>
       </div>
     </main>
   );
