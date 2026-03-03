@@ -263,7 +263,7 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
 
         {/* Desktop: resizable panels */}
         <div className="hidden lg:flex h-full">
-        <PanelGroup orientation="horizontal" className="h-full">
+          <PanelGroup orientation="horizontal" className="h-full">
           {/* Left panel: Chart + Trades */}
           <Panel defaultSize={60} minSize={30}>
             <div className="flex flex-col h-full">
@@ -348,6 +348,7 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
                 >
                   {activeTab === 'chat' && <ChatWidget ticker={ticker} key={`chat-${refreshKey}`} />}
                   {activeTab === 'ideas' && <IdeasPanel ticker={ticker} key={`ideas-${refreshKey}`} />}
+                  {activeTab === 'analysis' && <AnalysisPanel ticker={ticker} key={`analysis-${refreshKey}`} />}
                   {activeTab === 'raw' && <RawMessagesPanel ticker={ticker} key={`raw-${refreshKey}`} />}
                   {activeTab === 'insights' && <OpenBBInsightsPanel ticker={ticker} key={`insights-${refreshKey}`} />}
                   {activeTab === 'notes' && <NotesPanel ticker={ticker} key={`notes-${refreshKey}`} />}
@@ -355,7 +356,7 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
               </div>
             </aside>
           </Panel>
-        </PanelGroup>
+          </PanelGroup>
         </div>
       </div>
     </main>
