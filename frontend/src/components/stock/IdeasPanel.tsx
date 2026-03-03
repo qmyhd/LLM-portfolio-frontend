@@ -240,7 +240,7 @@ export function IdeasPanel({ ticker }: IdeasPanelProps) {
         ) : (
           <div className="divide-y divide-border">
             {filteredIdeas.map((idea) => (
-              <IdeaCard key={idea.id} idea={idea} onAuthorClick={setAuthorFilter} />
+              <IdeaCard key={idea.id} idea={idea} ticker={ticker} onAuthorClick={setAuthorFilter} />
             ))}
           </div>
         )}
@@ -251,10 +251,11 @@ export function IdeasPanel({ ticker }: IdeasPanelProps) {
 
 interface IdeaCardProps {
   idea: StockIdea;
+  ticker: string;
   onAuthorClick: (author: string) => void;
 }
 
-function IdeaCard({ idea, onAuthorClick }: IdeaCardProps) {
+function IdeaCard({ idea, ticker, onAuthorClick }: IdeaCardProps) {
   const [showContext, setShowContext] = useState(false);
   const [contextMessages, setContextMessages] = useState<ContextMessage[]>([]);
   const [contextLoading, setContextLoading] = useState(false);
@@ -279,7 +280,7 @@ function IdeaCard({ idea, onAuthorClick }: IdeaCardProps) {
     }
     setContextLoading(true);
     try {
-      const res = await fetch(`/api/ideas/${idea.id}/context`);
+      const res = await fetch(`/api/stocks/${ticker}/ideas/${idea.messageId}/context`);
       if (res.ok) {
         const data = await res.json();
         setContextMessages(data.contextMessages || []);
