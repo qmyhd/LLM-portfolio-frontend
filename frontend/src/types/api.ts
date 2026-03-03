@@ -445,6 +445,39 @@ export interface StockActivitiesResponse {
 }
 
 // =============================================================================
+// Enriched Trades (unified orders + activities with P/L)
+// =============================================================================
+
+export interface EnrichedTrade {
+  id: string;
+  source: 'activity' | 'order';
+  type: 'BUY' | 'SELL' | 'DIVIDEND' | 'FEE' | string;
+  symbol: string;
+  tradeDate: string | null;
+  price: number | null;
+  units: number | null;
+  amount: number;
+  fee: number;
+  description: string | null;
+  // Enrichment from positions
+  currentPrice: number | null;
+  avgCost: number | null;
+  totalShares: number | null;
+  marketValue: number | null;
+  portfolioPct: number | null;
+  unrealizedPnl: number | null;
+  unrealizedPnlPct: number | null;
+  realizedPnl: number | null;
+  realizedPnlPct: number | null;
+}
+
+export interface EnrichedTradesResponse {
+  trades: EnrichedTrade[];
+  ticker?: string;
+  total: number;
+}
+
+// =============================================================================
 // Brokerage Connections (SnapTrade)
 // =============================================================================
 
