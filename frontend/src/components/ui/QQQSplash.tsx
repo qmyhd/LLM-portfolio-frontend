@@ -141,6 +141,25 @@ export function QQQSplash({ onComplete }: { onComplete: () => void }) {
           <span className="text-[#5865f2]">Portfolio</span>
         </h1>
       </div>
+
+      {/* Progress bar */}
+      <div
+        className="absolute left-1/2 -translate-x-1/2"
+        style={{ bottom: '15%', width: 'min(200px, 60vw)' }}
+      >
+        <div
+          className="h-[2px] rounded-full overflow-hidden"
+          style={{ background: 'rgba(255,255,255,0.08)' }}
+        >
+          <div
+            className="h-full rounded-full splash-progress-bar"
+            style={{
+              background: 'linear-gradient(90deg, #5865f2, #9333ea)',
+              width: 0,
+            }}
+          />
+        </div>
+      </div>
     </div>
   );
 }

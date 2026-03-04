@@ -153,7 +153,7 @@ export function StockMetrics({ ticker }: StockMetricsProps) {
       {data.currentPositionQty != null && data.currentPositionQty > 0 && (
         <div>
           <SectionHeader title="Your Position" icon={BanknotesIcon} />
-          <MetricRow label="Shares" value={data.currentPositionQty.toString()} />
+          <MetricRow label="Shares" value={formatNumber(data.currentPositionQty, data.currentPositionQty % 1 === 0 ? 0 : 4)} />
           <MetricRow
             label="Value"
             value={data.currentPositionValue != null ? formatMoney(data.currentPositionValue) : '—'}
@@ -171,6 +171,20 @@ export function StockMetrics({ ticker }: StockMetricsProps) {
             label="P/L %"
             {...fmtReturn(data.unrealizedPnlPct)}
           />
+          {data.totalOrdersCount > 0 && (
+            <>
+              <MetricRow
+                label="Total Orders"
+                value={`${data.totalOrdersCount} (${data.buyOrdersCount}B / ${data.sellOrdersCount}S)`}
+              />
+              {data.avgOrderSize != null && (
+                <MetricRow label="Avg Order" value={formatMoney(data.avgOrderSize)} />
+              )}
+              {data.firstTradeDate && (
+                <MetricRow label="First Trade" value={new Date(data.firstTradeDate).toLocaleDateString()} />
+              )}
+            </>
+          )}
         </div>
       )}
 

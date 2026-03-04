@@ -46,8 +46,8 @@ interface ColumnDef {
 const COLUMNS: ColumnDef[] = [
   { key: 'symbol', label: 'Symbol', align: 'left', sortable: true },
   { key: 'equity', label: 'Market Value', shortLabel: 'Value', align: 'right', sortable: true },
-  { key: 'openPnlPercent', label: 'P/L %', align: 'right', sortable: true },
-  { key: 'quantity', label: 'Qty', align: 'right', hideClass: 'hidden sm:table-cell', sortable: true },
+  { key: 'openPnlPercent', label: 'Total P/L %', shortLabel: 'P/L %', align: 'right', sortable: true },
+  { key: 'quantity', label: 'Shares', align: 'right', hideClass: 'hidden sm:table-cell', sortable: true },
   { key: 'averageBuyPrice', label: 'Avg Cost', align: 'right', hideClass: 'hidden md:table-cell', sortable: true },
   { key: 'currentPrice', label: 'Price', align: 'right', hideClass: 'hidden md:table-cell', sortable: true },
   { key: 'dayChange', label: "Today", align: 'right', hideClass: 'hidden lg:table-cell', sortable: true },
@@ -302,24 +302,34 @@ export function HoldingsTable() {
                     />
                   </td>
 
-                  {/* Symbol + company */}
+                  {/* Symbol + company + price on mobile */}
                   <td className="px-3 py-2.5">
                     <Link
                       href={`/stock/${position.symbol}`}
                       className="hover:text-primary transition-colors"
                     >
-                      <span className="font-mono font-semibold text-sm">{position.symbol}</span>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="font-mono font-semibold text-sm">{position.symbol}</span>
+                        <span className="md:hidden text-[11px] text-foreground-muted font-mono tabular-nums">
+                          {formatMoney(position.currentPrice)}
+                        </span>
+                      </div>
                       {companyName && (
-                        <p className="text-[11px] text-foreground-muted truncate max-w-[120px]">
+                        <p className="text-[11px] text-foreground-muted truncate max-w-[140px]">
                           {companyName}
                         </p>
                       )}
                     </Link>
                   </td>
 
-                  {/* Market Value */}
-                  <td className="px-3 py-2.5 text-right font-mono text-sm tabular-nums">
-                    {formatMoney(position.equity)}
+                  {/* Market Value + shares on mobile */}
+                  <td className="px-3 py-2.5 text-right">
+                    <div className="font-mono text-sm tabular-nums">
+                      {formatMoney(position.equity)}
+                    </div>
+                    <div className="sm:hidden text-[10px] text-foreground-muted font-mono tabular-nums mt-0.5">
+                      {formatQuantity(position.quantity)} shares
+                    </div>
                   </td>
 
                   {/* P/L % + avg cost */}
@@ -335,7 +345,7 @@ export function HoldingsTable() {
                     </span>
                     {position.averageBuyPrice != null && (
                       <div className="text-[10px] text-foreground-muted font-mono tabular-nums mt-0.5">
-                        {formatMoney(position.averageBuyPrice)}
+                        AVG {formatMoney(position.averageBuyPrice)}
                       </div>
                     )}
                   </td>

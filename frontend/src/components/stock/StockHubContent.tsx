@@ -127,7 +127,7 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
   return (
     <main className="flex-1 overflow-y-auto bg-background">
       {/* ── Top section: Header + Position + Returns ── */}
-      <div className="border-b border-border">
+      <div className="border-b border-border/60 bg-background-secondary/30">
         {profile ? (
           <RobinhoodStockHeader
             ticker={ticker}
@@ -151,12 +151,12 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
         </div>
 
         {/* Collapsible More Stats */}
-        <div className="border-t border-border">
+        <div className="border-t border-border/40">
           <button
             onClick={toggleMoreStats}
-            className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-medium text-foreground-muted hover:text-foreground transition-colors"
+            className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-medium text-foreground-muted hover:text-foreground hover:bg-background-hover/50 transition-colors"
           >
-            <span>Stats &amp; Fundamentals</span>
+            <span className="uppercase tracking-wider">Stats &amp; Fundamentals</span>
             {moreStatsOpen ? (
               <ChevronUpIcon className="w-3.5 h-3.5" />
             ) : (
@@ -181,8 +181,8 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
         {/* Mobile: stacked layout */}
         <div className="flex flex-col lg:hidden">
           {/* Chart */}
-          <div className="border-b border-border">
-            <div className="flex items-center justify-end gap-1 px-3 py-1.5 border-b border-border bg-background-secondary/50">
+          <div className="border-b border-border/60">
+            <div className="flex items-center justify-end gap-1 px-3 py-1.5 border-b border-border/40 bg-background-secondary/30">
               <button
                 onClick={toggleChartProvider}
                 className={clsx(
@@ -215,16 +215,16 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
           </div>
 
           {/* Trades (mobile) */}
-          <div className="border-b border-border max-h-[250px] overflow-y-auto">
-            <div className="px-3 py-2 border-b border-border bg-background-secondary/50">
-              <span className="text-xs font-medium text-foreground-muted">Recent Trades</span>
+          <div className="border-b border-border/60 max-h-[250px] overflow-y-auto">
+            <div className="px-3 py-2 border-b border-border/40 bg-background-secondary/30 sticky top-0 z-10">
+              <span className="text-xs font-medium uppercase tracking-wider text-foreground-muted">Recent Trades</span>
             </div>
             <TradesPanel ticker={ticker} key={`trades-mobile-${refreshKey}`} />
           </div>
 
           {/* Tabs (mobile) */}
-          <div className="min-h-[300px] flex flex-col bg-background-secondary/80">
-            <div className="flex border-b border-border bg-background-secondary overflow-x-auto">
+          <div className="min-h-[300px] flex flex-col">
+            <div className="flex border-b border-border/60 bg-background-secondary/30 overflow-x-auto">
               {TABS.map((tab) => (
                 <button
                   key={tab.key}
@@ -268,7 +268,7 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
           <Panel defaultSize={60} minSize={30}>
             <div className="flex flex-col h-full">
               {/* Chart controls */}
-              <div className="flex items-center justify-end gap-1 px-3 py-1.5 border-b border-border bg-background-secondary/50">
+              <div className="flex items-center justify-end gap-1 px-3 py-1.5 border-b border-border/40 bg-background-secondary/30">
                 <button
                   onClick={toggleChartProvider}
                   className={clsx(
@@ -302,9 +302,9 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
               </div>
 
               {/* Trades pinned below chart */}
-              <div className="border-t border-border max-h-[250px] overflow-y-auto flex-shrink-0">
-                <div className="px-3 py-2 border-b border-border bg-background-secondary/50 sticky top-0 z-10">
-                  <span className="text-xs font-medium text-foreground-muted">Recent Trades</span>
+              <div className="border-t border-border/40 max-h-[250px] overflow-y-auto flex-shrink-0">
+                <div className="px-3 py-2 border-b border-border/40 bg-background-secondary/30 sticky top-0 z-10">
+                  <span className="text-xs font-medium uppercase tracking-wider text-foreground-muted">Recent Trades</span>
                 </div>
                 <TradesPanel ticker={ticker} key={`trades-${refreshKey}`} />
               </div>
@@ -312,13 +312,13 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
           </Panel>
 
           {/* Resize handle */}
-          <PanelResizeHandle className="w-1.5 bg-border hover:bg-primary/50 transition-colors cursor-col-resize" />
+          <PanelResizeHandle className="w-1.5 bg-border/50 hover:bg-primary/50 transition-colors cursor-col-resize" />
 
           {/* Right panel: Tabs */}
           <Panel defaultSize={40} minSize={25}>
-            <aside className="h-full flex flex-col bg-background-secondary/80 backdrop-blur-md">
+            <aside className="h-full flex flex-col">
               {/* Tab switcher */}
-              <div className="flex border-b border-border bg-background-secondary overflow-x-auto">
+              <div className="flex border-b border-border/60 bg-background-secondary/30 overflow-x-auto">
                 {TABS.map((tab) => (
                   <button
                     key={tab.key}
