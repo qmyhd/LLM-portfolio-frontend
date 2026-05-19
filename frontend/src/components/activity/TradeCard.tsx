@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { clsx } from 'clsx';
 import type { Activity } from '@/types/api';
 import { formatMoney, formatNumber, formatDate } from '@/lib/format';
-import { pnlTextColor } from '@/lib/colors';
 
 const TYPE_CONFIG: Record<string, { label: string; color: string; border: string }> = {
   BUY: { label: 'BUY', color: 'bg-profit/15 text-profit', border: 'border-l-profit' },
@@ -58,10 +57,10 @@ export function TradeCard({ activity }: TradeCardProps) {
           ) : null}
         </div>
         <div className="text-right">
-          <span className={`font-mono font-semibold text-sm ${pnlTextColor(activity.amount)}`}>
+          <span className="font-mono font-semibold text-sm text-foreground">
             {formatMoney(Math.abs(activity.amount))}
           </span>
-          {activity.fee > 0 && (
+          {activity.fee != null && activity.fee > 0 && (
             <div className="text-xs text-foreground-muted">
               Fee: {formatMoney(activity.fee)}
             </div>

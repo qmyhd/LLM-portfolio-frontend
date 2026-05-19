@@ -168,7 +168,7 @@ export function RobinhoodPositionCard({ ticker }: RobinhoodPositionCardProps) {
             {agg.accounts.map((acct) => (
               <div key={acct.name} className="flex items-center justify-between text-xs">
                 <span className="text-foreground-muted truncate max-w-[120px]" title={acct.name}>
-                  {acct.name.slice(0, 8)}...
+                  {acct.name.length > 8 ? `${acct.name.slice(0, 8)}…` : acct.name}
                 </span>
                 <div className="flex items-center gap-3 font-mono tabular-nums">
                   <span className="text-foreground-muted">{formatQuantity(acct.shares)} sh</span>

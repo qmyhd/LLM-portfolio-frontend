@@ -44,7 +44,20 @@ function getTradeStyle(trade: EnrichedTrade): TradeStyle {
   }
 
   if (type === 'SELL') {
-    const profitable = (trade.realizedPnl ?? 0) >= 0;
+    // realizedPnl is null when the position is fully closed (no current cost
+    // basis available) or when the backend can't compute P/L. Default to a
+    // neutral style in that case rather than falsely flagging the SELL as
+    // profitable.
+    if (trade.realizedPnl == null) {
+      return {
+        borderColor: 'border-l-foreground-muted',
+        badgeBg: 'bg-foreground-muted/20',
+        badgeText: 'text-foreground-muted',
+        icon: '\u25BC',
+        label: 'SELL',
+      };
+    }
+    const profitable = trade.realizedPnl >= 0;
     return {
       borderColor: profitable ? 'border-l-profit' : 'border-l-loss',
       badgeBg: profitable ? 'bg-profit/20' : 'bg-loss/20',

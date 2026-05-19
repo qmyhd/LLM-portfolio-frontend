@@ -90,8 +90,7 @@ export interface UiOrder {
 }
 
 /**
- * Position sub-model derived from StockProfileCurrent,
- * used by PositionCard on the stock detail page.
+ * Position sub-model derived from StockProfileCurrent.
  */
 export interface UiStockPosition {
   quantity: number;

@@ -20,8 +20,8 @@ export default function RootLayout({
       <body className="min-h-screen bg-background">
         <SplashGate>
           <PageTransition>{children}</PageTransition>
+          <Analytics />
         </SplashGate>
-        <Analytics />
       </body>
     </html>
   );
