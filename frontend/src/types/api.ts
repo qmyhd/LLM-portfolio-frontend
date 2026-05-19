@@ -140,6 +140,8 @@ export interface StockProfileCurrent {
   mentionCount30d: number;
   mentionCount7d: number;
   avgSentimentScore: number | null;
+  avgSentimentScore30d: number | null;
+  avgSentimentScore7d: number | null;
   bullishMentionPct: number | null;
   bearishMentionPct: number | null;
   neutralMentionPct: number | null;
