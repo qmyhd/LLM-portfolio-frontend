@@ -272,7 +272,11 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
 
         {/* Desktop: resizable panels */}
         <div className="hidden lg:flex h-full">
-          <PanelGroup direction="horizontal" className="h-full">
+          {/* NOTE: react-resizable-panels v4.7.0 (bvaughn) uses `orientation`,
+              not `direction`. Earlier audit pushed for `direction` based on
+              older versions of the lib — that was wrong for this version.
+              Verified against node_modules/.../react-resizable-panels.d.ts. */}
+          <PanelGroup orientation="horizontal" className="h-full">
           {/* Left panel: Chart + Trades */}
           <Panel defaultSize={60} minSize={30}>
             <div className="flex flex-col h-full">
