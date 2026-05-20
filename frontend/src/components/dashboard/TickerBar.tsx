@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePortfolio } from '@/hooks';
+import { useBucket } from '@/contexts/BucketContext';
+import { stockHref } from '@/lib/bucket';
 import { formatNumber, formatSignedPct } from '@/lib/format';
 import { pnlTextColor } from '@/lib/colors';
 import type { Position } from '@/types/api';
@@ -31,6 +33,7 @@ function deriveTickerItems(positions: Position[]): TickerItem[] {
 export function TickerBar() {
   const { data, isLoading } = usePortfolio();
   const [isPaused, setIsPaused] = useState(false);
+  const bucket = useBucket();
 
   if (isLoading || !data?.positions || data.positions.length === 0) {
     return null;
@@ -58,7 +61,7 @@ export function TickerBar() {
         {allItems.map((item, i) => (
           <Link
             key={`${item.symbol}-${i}`}
-            href={`/stock/${item.symbol}`}
+            href={stockHref(item.symbol, bucket)}
             className="inline-flex items-center gap-2 text-sm hover:text-primary transition-colors"
           >
             <span className="font-mono font-semibold">{item.symbol}</span>

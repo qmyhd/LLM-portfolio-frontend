@@ -5,6 +5,7 @@ import { BanknotesIcon } from '@heroicons/react/24/outline';
 import type { Position } from '@/types/api';
 import { formatMoney, formatSignedMoney, formatPercent, formatQuantity } from '@/lib/format';
 import { pnlTextColor } from '@/lib/colors';
+import { useBucket, withBucket } from '@/contexts/BucketContext';
 
 interface RobinhoodPositionCardProps {
   ticker: string;
@@ -55,13 +56,18 @@ function aggregatePositions(positions: Position[], totalEquity: number): Aggrega
 export function RobinhoodPositionCard({ ticker }: RobinhoodPositionCardProps) {
   const [agg, setAgg] = useState<AggregatedPosition | null>(null);
   const [loading, setLoading] = useState(true);
+  const bucket = useBucket();
 
   useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
     const fetchData = async () => {
       try {
-        const res = await fetch('/api/portfolio');
+        const res = await fetch(withBucket('/api/portfolio', bucket));
+        if (cancelled) return;
         if (!res.ok) { setAgg(null); return; }
         const data = await res.json();
+        if (cancelled) return;
         const positions: Position[] = (data.positions || []).filter(
           (p: Position) => p.symbol === ticker,
         );
@@ -69,13 +75,16 @@ export function RobinhoodPositionCard({ ticker }: RobinhoodPositionCardProps) {
         const totalEquity = data.summary?.totalEquity ?? 0;
         setAgg(aggregatePositions(positions, totalEquity));
       } catch {
-        setAgg(null);
+        if (!cancelled) setAgg(null);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
     fetchData();
-  }, [ticker]);
+    return () => {
+      cancelled = true;
+    };
+  }, [ticker, bucket]);
 
   if (loading) {
     return (

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
 import {
@@ -11,6 +12,7 @@ import {
 } from '@heroicons/react/24/outline';
 import useSWR from 'swr';
 import type { ConnectionsResponse } from '@/types/api';
+import { BUCKET_NAMES, BUCKET_LABELS, type BucketName } from '@/lib/bucket';
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -38,10 +40,15 @@ const STATUS_CONFIG = {
 } as const;
 
 export default function SettingsPage() {
-  const { data, error, isLoading } = useSWR<ConnectionsResponse>(
+  const { data, error, isLoading, mutate } = useSWR<ConnectionsResponse>(
     '/api/connections',
     fetcher,
   );
+
+  // Track per-account bucket-update state so we can show a spinner / error
+  // inline next to the dropdown.
+  const [updating, setUpdating] = useState<Record<string, boolean>>({});
+  const [updateError, setUpdateError] = useState<Record<string, string>>({});
 
   const handleReconnect = async () => {
     try {
@@ -52,6 +59,44 @@ export default function SettingsPage() {
       }
     } catch (e) {
       console.error('Failed to open connection portal:', e);
+    }
+  };
+
+  const handleBucketChange = async (accountId: string, bucket: BucketName) => {
+    setUpdating((s) => ({ ...s, [accountId]: true }));
+    setUpdateError((s) => ({ ...s, [accountId]: '' }));
+
+    // Optimistic update — patch the local SWR cache so the dropdown reflects
+    // the chosen value immediately. Roll back on error.
+    const prev = data;
+    if (prev) {
+      const next: ConnectionsResponse = {
+        connections: prev.connections.map((c) =>
+          c.accountId === accountId ? { ...c, bucket } : c,
+        ),
+      };
+      mutate(next, { revalidate: false });
+    }
+
+    try {
+      const res = await fetch('/api/connections', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accountId, bucket }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `Update failed (${res.status})`);
+      }
+      // Revalidate from server so we pick up any normalization.
+      mutate();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Failed to update bucket';
+      setUpdateError((s) => ({ ...s, [accountId]: msg }));
+      // Roll back optimistic update.
+      if (prev) mutate(prev, { revalidate: false });
+    } finally {
+      setUpdating((s) => ({ ...s, [accountId]: false }));
     }
   };
 
@@ -88,11 +133,13 @@ export default function SettingsPage() {
                   STATUS_CONFIG[conn.connectionStatus] ??
                   STATUS_CONFIG.connected;
                 const StatusIcon = config.icon;
+                const isUpdating = !!updating[conn.accountId];
+                const rowError = updateError[conn.accountId];
 
                 return (
                   <div
                     key={conn.accountId}
-                    className="card flex items-center justify-between p-4 mb-2"
+                    className="card flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 mb-2 gap-3"
                   >
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-foreground truncate">
@@ -112,8 +159,34 @@ export default function SettingsPage() {
                           Last sync: {new Date(conn.lastSync).toLocaleString()}
                         </p>
                       )}
+                      {rowError && (
+                        <p className="text-xs text-loss mt-1">{rowError}</p>
+                      )}
                     </div>
-                    <div className="flex items-center gap-3 ml-4 flex-shrink-0">
+                    <div className="flex flex-wrap items-center gap-3 sm:ml-4 sm:flex-shrink-0">
+                      <label className="flex items-center gap-2 text-xs text-foreground-muted">
+                        Bucket
+                        <select
+                          // Default to 'other' if the backend returns a
+                          // null/missing bucket (shouldn't happen with the
+                          // server-side COALESCE, but be defensive).
+                          value={conn.bucket ?? 'other'}
+                          disabled={isUpdating}
+                          onChange={(e) =>
+                            handleBucketChange(
+                              conn.accountId,
+                              e.target.value as BucketName,
+                            )
+                          }
+                          className="bg-background-secondary border border-border rounded-md px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-60"
+                        >
+                          {BUCKET_NAMES.map((b) => (
+                            <option key={b} value={b}>
+                              {BUCKET_LABELS[b]}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
                       <span
                         className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${config.color}`}
                       >
@@ -133,6 +206,12 @@ export default function SettingsPage() {
                   </div>
                 );
               })}
+
+              <p className="mt-3 text-xs text-foreground-muted">
+                Buckets classify accounts by trading strategy. Filters on positions,
+                trades, risk, and analysis are applied per bucket. Reassigning is
+                retroactive — past data immediately re-labels to the new bucket.
+              </p>
 
               {!isLoading && !data?.connections?.length && !error && (
                 <button

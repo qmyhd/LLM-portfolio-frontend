@@ -1,4 +1,5 @@
 import useSWR from 'swr';
+import { useBucket, withBucket } from '@/contexts/BucketContext';
 import type { EnrichedTradesResponse } from '@/types/api';
 
 const fetcher = async (url: string): Promise<EnrichedTradesResponse> => {
@@ -9,8 +10,9 @@ const fetcher = async (url: string): Promise<EnrichedTradesResponse> => {
 
 /** Fetch enriched trades for a specific stock. */
 export function useStockTrades(ticker: string, limit = 20) {
+  const bucket = useBucket();
   const { data, error, isLoading } = useSWR<EnrichedTradesResponse>(
-    `/api/stocks/${ticker}/trades?limit=${limit}`,
+    withBucket(`/api/stocks/${ticker}/trades?limit=${limit}`, bucket),
     fetcher,
     { revalidateOnFocus: false, dedupingInterval: 30000 },
   );
@@ -19,8 +21,9 @@ export function useStockTrades(ticker: string, limit = 20) {
 
 /** Fetch recent enriched trades across all stocks (dashboard). */
 export function useRecentTrades(limit = 10) {
+  const bucket = useBucket();
   const { data, error, isLoading } = useSWR<EnrichedTradesResponse>(
-    `/api/trades?limit=${limit}`,
+    withBucket(`/api/trades?limit=${limit}`, bucket),
     fetcher,
     { revalidateOnFocus: false, dedupingInterval: 30000 },
   );

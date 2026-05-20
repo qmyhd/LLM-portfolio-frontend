@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { EnrichedTradesResponse, ApiError } from '@/types/api';
 import { backendFetch, authGuard } from '@/lib/api-client';
+import { forwardBucket } from '@/lib/bucket';
 
 interface RouteParams {
   params: Promise<{ ticker: string }>;
@@ -18,10 +19,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Forward query params
     const { searchParams } = new URL(request.url);
-    const limit = searchParams.get('limit') || '20';
+    const qs = new URLSearchParams();
+    qs.set('limit', searchParams.get('limit') || '20');
+    const offset = searchParams.get('offset');
+    if (offset) qs.set('offset', offset);
+    forwardBucket(request, qs);
 
     const response = await backendFetch(
-      `/stocks/${normalizedTicker}/trades?limit=${limit}`,
+      `/stocks/${normalizedTicker}/trades?${qs.toString()}`,
       { next: { revalidate: 30 } },
     );
 

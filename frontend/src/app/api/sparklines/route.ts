@@ -2,14 +2,18 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { SparklineResponse, ApiError } from '@/types/api';
 import { backendFetch, authGuard } from '@/lib/api-client';
+import { forwardBucket } from '@/lib/bucket';
 
-// GET /api/sparklines?period=1M — proxy to backend GET /portfolio/sparklines
+// GET /api/sparklines?period=1M&bucket=long_term — proxy to backend GET /portfolio/sparklines
 export async function GET(request: NextRequest) {
   try {
     await authGuard();
 
-    const period = request.nextUrl.searchParams.get('period') || '1M';
-    const response = await backendFetch(`/portfolio/sparklines?period=${period}`, {
+    const params = new URLSearchParams();
+    params.set('period', request.nextUrl.searchParams.get('period') || '1M');
+    forwardBucket(request, params);
+
+    const response = await backendFetch(`/portfolio/sparklines?${params.toString()}`, {
       next: { revalidate: 300 }, // Cache 5 minutes
     });
 

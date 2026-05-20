@@ -12,6 +12,7 @@ import { formatNumber, formatCompact, formatMoney, formatSignedMoney, formatSign
 import { pnlTextColor, trendDirection } from '@/lib/colors';
 import { COMPANY_NAMES } from '@/lib/mappers';
 import type { StockProfileCurrent } from '@/types/api';
+import { useBucket, withBucket } from '@/contexts/BucketContext';
 
 interface StockMetricsProps {
   ticker: string;
@@ -65,8 +66,11 @@ function MetricsSkeleton() {
 }
 
 export function StockMetrics({ ticker }: StockMetricsProps) {
+  // Bucket scopes the position metrics + order counts. Other fields
+  // (sentiment, label counts, company metadata) are stock-wide.
+  const bucket = useBucket();
   const { data, isLoading, error } = useSWR<StockProfileCurrent>(
-    `/api/stocks/${ticker}`,
+    withBucket(`/api/stocks/${ticker}`, bucket),
     fetcher,
     { revalidateOnFocus: false, dedupingInterval: 30000 }
   );

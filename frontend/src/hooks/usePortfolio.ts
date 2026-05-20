@@ -7,6 +7,7 @@
 
 import useSWR from 'swr';
 import { useLiveUpdates } from './useLiveUpdates';
+import { useBucket, withBucket } from '@/contexts/BucketContext';
 import type { PortfolioSummary, Position } from '@/types/api';
 
 export interface PortfolioData {
@@ -52,12 +53,13 @@ const fetcher = async (url: string): Promise<PortfolioData> => {
 export function usePortfolio(options: UsePortfolioOptions = {}) {
   const { refreshInterval = 60000, disablePolling = false } = options;
   const { isEnabled } = useLiveUpdates();
-  
+  const bucket = useBucket();
+
   // Only poll if live updates are enabled and not explicitly disabled
   const shouldPoll = isEnabled && !disablePolling;
-  
+
   const { data, error, isLoading, isValidating, mutate } = useSWR<PortfolioData>(
-    '/api/portfolio',
+    withBucket('/api/portfolio', bucket),
     fetcher,
     {
       refreshInterval: shouldPoll ? refreshInterval : 0,

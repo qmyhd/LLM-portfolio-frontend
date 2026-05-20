@@ -6,9 +6,12 @@ import type { Order } from '@/types/api';
 import { formatMoney, formatDate } from '@/lib/format';
 import { CardSpotlight } from '@/components/ui/CardSpotlight';
 import { useOrders } from '@/hooks/useOrders';
+import { useBucket } from '@/contexts/BucketContext';
+import { stockHref } from '@/lib/bucket';
 
 export function RecentOrders() {
   const { data, error, isLoading } = useOrders({ limit: 5 });
+  const bucket = useBucket();
 
   if (isLoading) {
     return (
@@ -51,7 +54,7 @@ export function RecentOrders() {
       <div className="flex items-center justify-between px-5 py-4 border-b border-border">
         <h2 className="text-lg font-semibold">Recent Orders</h2>
         <Link
-          href="/orders"
+          href="/portfolio/orders"
           className="text-sm text-primary hover:text-primary-hover transition-colors focus-visible:ring-2 focus-visible:ring-primary rounded"
         >
           View All →
@@ -81,7 +84,7 @@ export function RecentOrders() {
                 <tr key={order.brokerageOrderId} className="table-row">
                   <td className="table-cell">
                     <Link
-                      href={`/stock/${order.symbol}`}
+                      href={stockHref(order.symbol, bucket)}
                       className="font-mono font-semibold hover:text-primary transition-colors"
                     >
                       {order.symbol}

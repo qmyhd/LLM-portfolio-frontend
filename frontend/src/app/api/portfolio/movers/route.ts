@@ -3,15 +3,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { MoversResponse } from '@/types/ideas';
 import type { ApiError } from '@/types/api';
 import { backendFetch, authGuard } from '@/lib/api-client';
+import { forwardBucket } from '@/lib/bucket';
 
 export async function GET(request: NextRequest) {
   try {
     await authGuard();
 
     const { searchParams } = new URL(request.url);
-    const limit = searchParams.get('limit') || '10';
+    const params = new URLSearchParams();
+    params.set('limit', searchParams.get('limit') || '10');
+    forwardBucket(request, params);
 
-    const response = await backendFetch(`/portfolio/movers?limit=${limit}`, {
+    const response = await backendFetch(`/portfolio/movers?${params.toString()}`, {
       next: { revalidate: 30 },
     });
 

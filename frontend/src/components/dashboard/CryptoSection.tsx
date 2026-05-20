@@ -8,6 +8,8 @@ import {
   ChevronUpIcon,
 } from '@heroicons/react/24/outline';
 import { usePortfolio } from '@/hooks';
+import { useBucket } from '@/contexts/BucketContext';
+import { stockHref } from '@/lib/bucket';
 import type { Position } from '@/types/api';
 import { formatMoney, formatPercent, formatSignedMoney, formatQuantity } from '@/lib/format';
 import { pnlTextColor, pnlBgColor } from '@/lib/colors';
@@ -18,6 +20,7 @@ const LS_SHOW_CRYPTO = 'show-crypto';
 export function CryptoSection() {
   const { data } = usePortfolio();
   const [isOpen, setIsOpen] = useState(true);
+  const bucket = useBucket();
 
   useEffect(() => {
     try {
@@ -109,7 +112,7 @@ export function CryptoSection() {
                 >
                   <td className="px-3 py-2.5">
                     <Link
-                      href={`/stock/${position.symbol}`}
+                      href={stockHref(position.symbol, bucket)}
                       className="hover:text-primary transition-colors font-mono font-semibold text-sm"
                     >
                       {position.symbol}

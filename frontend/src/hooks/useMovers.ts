@@ -6,6 +6,7 @@
 
 import useSWR from 'swr';
 import { useLiveUpdates } from './useLiveUpdates';
+import { useBucket, withBucket } from '@/contexts/BucketContext';
 import type { MoversResponse } from '@/types/ideas';
 
 const fetcher = async (url: string): Promise<MoversResponse> => {
@@ -36,9 +37,10 @@ interface UseMoversOptions {
 export function useMovers(options: UseMoversOptions = {}) {
   const { limit = 10, refreshInterval = 60000, disablePolling = false } = options;
   const { isEnabled } = useLiveUpdates();
+  const bucket = useBucket();
   const shouldPoll = isEnabled && !disablePolling;
 
-  const url = `/api/portfolio/movers?limit=${limit}`;
+  const url = withBucket(`/api/portfolio/movers?limit=${limit}`, bucket);
 
   const { data, error, isLoading, isValidating, mutate } = useSWR<MoversResponse>(
     url,

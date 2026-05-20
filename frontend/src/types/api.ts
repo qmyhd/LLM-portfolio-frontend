@@ -5,6 +5,8 @@
  * Keep in sync with src/api/routes/*.py in LLM-portfolio-project.
  */
 
+import type { BucketName } from '@/lib/bucket';
+
 // =============================================================================
 // Portfolio & Positions
 // =============================================================================
@@ -491,6 +493,12 @@ export interface ConnectionInfo {
   disabledAt: string | null;
   errorMessage: string | null;
   lastSync: string | null;
+  bucket: BucketName;
+}
+
+export interface BucketUpdateResponse {
+  accountId: string;
+  bucket: BucketName;
 }
 
 export interface ConnectionsResponse {

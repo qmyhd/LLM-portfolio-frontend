@@ -32,6 +32,21 @@ const nextConfig = {
       bodySizeLimit: '2mb',
     },
   },
+
+  // Backwards-compatible redirects after the research-first IA restructure.
+  // /positions, /orders, /activity moved under /portfolio. Permanent so
+  // search engines + bookmarks update; the bot / Discord links continue
+  // to work without per-link edits.
+  async redirects() {
+    return [
+      { source: '/positions', destination: '/portfolio/positions', permanent: true },
+      { source: '/positions/:path*', destination: '/portfolio/positions/:path*', permanent: true },
+      { source: '/orders', destination: '/portfolio/orders', permanent: true },
+      { source: '/orders/:path*', destination: '/portfolio/orders/:path*', permanent: true },
+      { source: '/activity', destination: '/portfolio/activity', permanent: true },
+      { source: '/activity/:path*', destination: '/portfolio/activity/:path*', permanent: true },
+    ];
+  },
 };
 
 export default nextConfig;

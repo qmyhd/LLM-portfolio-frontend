@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { EnrichedTradesResponse, ApiError } from '@/types/api';
 import { backendFetch, authGuard } from '@/lib/api-client';
+import { forwardBucket } from '@/lib/bucket';
 
 // GET /api/trades - Get recent enriched trades across all stocks
 export async function GET(request: NextRequest) {
@@ -11,10 +12,14 @@ export async function GET(request: NextRequest) {
 
     // Forward query params
     const { searchParams } = new URL(request.url);
-    const limit = searchParams.get('limit') || '10';
+    const params = new URLSearchParams();
+    params.set('limit', searchParams.get('limit') || '10');
+    const days = searchParams.get('days');
+    if (days) params.set('days', days);
+    forwardBucket(request, params);
 
     const response = await backendFetch(
-      `/trades/recent?limit=${limit}`,
+      `/trades/recent?${params.toString()}`,
       { next: { revalidate: 30 } },
     );
 

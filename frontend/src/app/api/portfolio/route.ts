@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { PortfolioResponse, ApiError } from '@/types/api';
 import { backendFetch, authGuard } from '@/lib/api-client';
+import { forwardBucket } from '@/lib/bucket';
 
 // GET /api/portfolio - Get portfolio summary and positions
 export async function GET(request: NextRequest) {
@@ -16,6 +17,7 @@ export async function GET(request: NextRequest) {
     if (assetClass) params.set('asset_class', assetClass);
     const accountId = request.nextUrl.searchParams.get('account_id');
     if (accountId) params.set('account_id', accountId);
+    forwardBucket(request, params);
     const qs = params.toString();
     const backendPath = qs ? `/portfolio?${qs}` : '/portfolio';
 

@@ -5,6 +5,7 @@
  */
 
 import useSWR from 'swr';
+import { useBucket, withBucket } from '@/contexts/BucketContext';
 import type { SparklineResponse } from '@/types/api';
 
 const fetcher = async (url: string): Promise<SparklineResponse> => {
@@ -22,7 +23,8 @@ const fetcher = async (url: string): Promise<SparklineResponse> => {
 };
 
 export function useSparklines(period: '1W' | '1M' | '3M' = '1M') {
-  const url = `/api/sparklines?period=${period}`;
+  const bucket = useBucket();
+  const url = withBucket(`/api/sparklines?period=${period}`, bucket);
 
   const { data, error, isLoading } = useSWR<SparklineResponse>(url, fetcher, {
     refreshInterval: 300000, // 5 minutes

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { clsx } from 'clsx';
 import { PaperAirplaneIcon, SparklesIcon } from '@heroicons/react/24/outline';
+import { useBucket, withBucket } from '@/contexts/BucketContext';
 
 interface ChatWidgetProps {
   ticker: string;
@@ -35,6 +36,7 @@ export function ChatWidget({ ticker }: ChatWidgetProps) {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const bucket = useBucket();
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -56,7 +58,7 @@ export function ChatWidget({ ticker }: ChatWidgetProps) {
     setIsLoading(true);
 
     try {
-      const res = await fetch(`/api/stocks/${ticker}/chat`, {
+      const res = await fetch(withBucket(`/api/stocks/${ticker}/chat`, bucket), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: content }),

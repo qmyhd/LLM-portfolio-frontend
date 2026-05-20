@@ -6,6 +6,7 @@
  */
 
 import useSWR from 'swr';
+import { useBucket } from '@/contexts/BucketContext';
 import type { OrdersResponse } from '@/types/api';
 
 interface UseOrdersOptions {
@@ -42,12 +43,14 @@ const fetcher = async (url: string): Promise<OrdersResponse> => {
  */
 export function useOrders(options: UseOrdersOptions = {}) {
   const { limit = 50, status, ticker, includeDrip } = options;
+  const bucket = useBucket();
 
   const params = new URLSearchParams();
   params.set('limit', String(limit));
   if (status && status !== 'all') params.set('status', status);
   if (ticker) params.set('ticker', ticker);
   if (includeDrip) params.set('include_drip', '1');
+  if (bucket) params.set('bucket', bucket);
 
   const { data, error, isLoading, isValidating, mutate } = useSWR<OrdersResponse>(
     `/api/orders?${params.toString()}`,

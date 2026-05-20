@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { PortfolioRiskReport, ApiError } from '@/types/api';
 import { backendFetch, authGuard } from '@/lib/api-client';
+import { forwardBucket } from '@/lib/bucket';
 
 // GET /api/portfolio/risk - Portfolio-wide risk analysis
 export async function GET(request: NextRequest) {
@@ -9,9 +10,11 @@ export async function GET(request: NextRequest) {
     await authGuard();
 
     const { searchParams } = new URL(request.url);
-    const refresh = searchParams.get('refresh') || 'false';
+    const params = new URLSearchParams();
+    params.set('refresh', searchParams.get('refresh') || 'false');
+    forwardBucket(request, params);
 
-    const response = await backendFetch(`/portfolio/risk?refresh=${refresh}`, {
+    const response = await backendFetch(`/portfolio/risk?${params.toString()}`, {
       next: { revalidate: 120 },
     });
 

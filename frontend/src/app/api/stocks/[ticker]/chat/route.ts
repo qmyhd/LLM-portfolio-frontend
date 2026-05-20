@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { ChatResponse, ApiError } from '@/types/api';
 import { backendFetch, authGuard } from '@/lib/api-client';
+import { forwardBucket } from '@/lib/bucket';
 
 interface RouteParams {
   params: Promise<{ ticker: string }>;
@@ -14,11 +15,21 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     const body = await request.json();
 
-    const response = await backendFetch(`/stocks/${ticker}/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
+    // Bucket scopes only the position context fed to the LLM. Forward via
+    // query string since the backend reads it from there (POST + query is
+    // valid HTTP and matches the backend's signature).
+    const qs = new URLSearchParams();
+    forwardBucket(request, qs);
+    const qsStr = qs.toString();
+
+    const response = await backendFetch(
+      `/stocks/${ticker}/chat${qsStr ? `?${qsStr}` : ''}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      },
+    );
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));

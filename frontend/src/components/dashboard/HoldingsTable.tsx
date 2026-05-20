@@ -9,6 +9,9 @@ import {
   ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 import { usePortfolio, useSparklines } from '@/hooks';
+import { useBucket } from '@/contexts/BucketContext';
+import { stockHref } from '@/lib/bucket';
+import { AssetBadge } from '@/components/ui/AssetBadge';
 import type { Position } from '@/types/api';
 import { formatMoney, formatPercent, formatSignedMoney, formatQuantity } from '@/lib/format';
 import { pnlTextColor, pnlBgColor } from '@/lib/colors';
@@ -98,6 +101,7 @@ function getSortValue(position: Position, key: SortKey): number | string {
 
 export function HoldingsTable() {
   const { data, error, isLoading, refresh } = usePortfolio();
+  const bucket = useBucket();
   const { sparklinesMap } = useSparklines('1M');
 
   // Persisted sort state
@@ -305,11 +309,12 @@ export function HoldingsTable() {
                   {/* Symbol + company + price on mobile */}
                   <td className="px-3 py-2.5">
                     <Link
-                      href={`/stock/${position.symbol}`}
+                      href={stockHref(position.symbol, bucket)}
                       className="hover:text-primary transition-colors"
                     >
                       <div className="flex items-baseline gap-1.5">
                         <span className="font-mono font-semibold text-sm">{position.symbol}</span>
+                        <AssetBadge assetType={position.assetType} />
                         <span className="md:hidden text-[11px] text-foreground-muted font-mono tabular-nums">
                           {formatMoney(position.currentPrice)}
                         </span>

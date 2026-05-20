@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { clsx } from 'clsx';
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import { usePortfolio } from '@/hooks';
+import { useBucket } from '@/contexts/BucketContext';
+import { stockHref } from '@/lib/bucket';
 import type { Position } from '@/types/api';
 import { formatMoney, formatSignedPct } from '@/lib/format';
 import { pnlTextColor, pnlBgColor } from '@/lib/colors';
@@ -46,6 +48,7 @@ export function DailyMoversTable() {
   const { data, error, isLoading, refresh } = usePortfolio();
   const [sortMode, setSortMode] = useState<SortMode>('1D');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const bucket = useBucket();
 
   // Sort all positions by absolute change % (descending)
   const sortedPositions = useMemo(() => {
@@ -205,7 +208,7 @@ export function DailyMoversTable() {
                   {/* Symbol + company name */}
                   <td className="px-3 py-2.5">
                     <Link
-                      href={`/stock/${position.symbol}`}
+                      href={stockHref(position.symbol, bucket)}
                       className="hover:text-primary transition-colors"
                     >
                       <span className="font-mono font-semibold text-sm">

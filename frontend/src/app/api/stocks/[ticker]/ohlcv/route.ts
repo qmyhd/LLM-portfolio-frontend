@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { OHLCVSeries, ApiError } from '@/types/api';
 import { backendFetch, authGuard } from '@/lib/api-client';
+import { forwardBucket } from '@/lib/bucket';
 
 interface RouteParams {
   params: Promise<{ ticker: string }>;
@@ -18,10 +19,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Parse query params
     const { searchParams } = new URL(request.url);
-    const period = searchParams.get('period') || '1M';
+    const qs = new URLSearchParams();
+    qs.set('period', searchParams.get('period') || '1M');
+    forwardBucket(request, qs);
 
     const response = await backendFetch(
-      `/stocks/${normalizedTicker}/ohlcv?period=${period}`,
+      `/stocks/${normalizedTicker}/ohlcv?${qs.toString()}`,
       {
         // Cache for 5 minutes (OHLCV data updates less frequently)
         next: { revalidate: 300 },

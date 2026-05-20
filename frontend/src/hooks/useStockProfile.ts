@@ -7,6 +7,7 @@
  */
 
 import useSWR from 'swr';
+import { useBucket, withBucket } from '@/contexts/BucketContext';
 import type { StockProfileCurrent } from '@/types/api';
 
 const fetcher = async (url: string): Promise<StockProfileCurrent> => {
@@ -29,7 +30,10 @@ const fetcher = async (url: string): Promise<StockProfileCurrent> => {
  * ```
  */
 export function useStockProfile(ticker: string | null) {
-  const url = ticker ? `/api/stocks/${ticker.toUpperCase()}` : null;
+  const bucket = useBucket();
+  const url = ticker
+    ? withBucket(`/api/stocks/${ticker.toUpperCase()}`, bucket)
+    : null;
 
   const { data, error, isLoading, isValidating, mutate } = useSWR<StockProfileCurrent>(
     url,

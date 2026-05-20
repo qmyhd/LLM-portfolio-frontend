@@ -10,6 +10,7 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import type { OHLCVSeries, OHLCVBar, ChartOrder } from '@/types/api';
+import { useBucket, withBucket } from '@/contexts/BucketContext';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -71,9 +72,11 @@ export function StockChart({ ticker, onOrderSelect }: StockChartProps) {
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const chartContainerRef = useRef<HTMLDivElement>(null);
 
-  // Fetch real OHLCV data via BFF
+  // Fetch real OHLCV data via BFF — bucket scopes the trade-marker overlay
+  // (price bars themselves are stock-wide and unaffected).
+  const bucket = useBucket();
   const { data: series, error, isLoading } = useSWR<OHLCVSeries>(
-    `/api/stocks/${ticker}/ohlcv?period=${period}`,
+    withBucket(`/api/stocks/${ticker}/ohlcv?period=${period}`, bucket),
     fetcher,
     { revalidateOnFocus: false, dedupingInterval: 60_000 },
   );

@@ -7,6 +7,8 @@ import {
   ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 import { useMovers, useSparklines } from '@/hooks';
+import { useBucket } from '@/contexts/BucketContext';
+import { stockHref } from '@/lib/bucket';
 import type { MoverItem } from '@/types/ideas';
 import { CardSpotlight } from '@/components/ui/CardSpotlight';
 import { MiniSparkline } from '@/components/ui/MiniSparkline';
@@ -30,6 +32,7 @@ function sourceLabel(source: 'intraday' | 'unrealized'): string {
 
 export function TopMovers() {
   const { data, error, isLoading, refresh } = useMovers({ limit: 3 });
+  const bucket = useBucket();
   const { sparklinesMap } = useSparklines('1M');
 
   if (isLoading) {
@@ -99,7 +102,7 @@ export function TopMovers() {
             {gainers.map((item) => (
               <Link
                 key={item.symbol}
-                href={`/stock/${item.symbol}`}
+                href={stockHref(item.symbol, bucket)}
                 className="flex items-center justify-between gap-2 p-2 rounded-lg hover:bg-background-hover transition-colors"
               >
                 <span className="font-mono font-semibold">{item.symbol}</span>
@@ -140,7 +143,7 @@ export function TopMovers() {
             {losers.map((item) => (
               <Link
                 key={item.symbol}
-                href={`/stock/${item.symbol}`}
+                href={stockHref(item.symbol, bucket)}
                 className="flex items-center justify-between gap-2 p-2 rounded-lg hover:bg-background-hover transition-colors"
               >
                 <span className="font-mono font-semibold">{item.symbol}</span>

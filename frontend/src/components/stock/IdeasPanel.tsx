@@ -50,6 +50,7 @@ const ALL_LABELS = Object.keys(LABEL_COLORS);
 export function IdeasPanel({ ticker }: IdeasPanelProps) {
   const [ideas, setIdeas] = useState<StockIdea[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [directionFilter, setDirectionFilter] = useState<FilterMode>('all');
   const [labelFilter, setLabelFilter] = useState<string | null>(null);
   const [authorFilter, setAuthorFilter] = useState<string | null>(null);
@@ -58,15 +59,24 @@ export function IdeasPanel({ ticker }: IdeasPanelProps) {
 
   useEffect(() => {
     fetchIdeas();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ticker]);
 
   const fetchIdeas = async () => {
+    setLoading(true);
+    setError(null);
     try {
       const res = await fetch(`/api/stocks/${ticker}/ideas?limit=50`);
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody?.error || errBody?.detail || `Server error (${res.status})`);
+      }
       const data = await res.json();
       setIdeas(data.ideas || []);
-    } catch (error) {
-      console.error('Failed to fetch ideas:', error);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Failed to load ideas';
+      setError(msg);
+      console.error('Failed to fetch ideas:', e);
     } finally {
       setLoading(false);
     }
@@ -108,6 +118,22 @@ export function IdeasPanel({ ticker }: IdeasPanelProps) {
             <div className="skeleton h-16 w-full rounded-lg" />
           </div>
         ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 text-center">
+        <XMarkIcon className="mx-auto h-10 w-10 text-loss/60 mb-2" />
+        <p className="text-sm font-medium text-loss">Couldn&apos;t load ideas</p>
+        <p className="text-xs text-foreground-muted mt-1">{error}</p>
+        <button
+          onClick={fetchIdeas}
+          className="mt-3 text-xs text-primary hover:underline"
+        >
+          Try again
+        </button>
       </div>
     );
   }

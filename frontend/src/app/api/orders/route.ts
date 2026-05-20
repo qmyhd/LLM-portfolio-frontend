@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { OrdersResponse, ApiError } from '@/types/api';
 import { backendFetch, authGuard } from '@/lib/api-client';
+import { forwardBucket } from '@/lib/bucket';
 
 // GET /api/orders - Get recent orders
 export async function GET(request: NextRequest) {
@@ -21,6 +22,7 @@ export async function GET(request: NextRequest) {
     if (ticker) params.set('ticker', ticker);
     const includeDrip = searchParams.get('include_drip') || '';
     if (includeDrip) params.set('include_drip', includeDrip);
+    forwardBucket(request, params);
 
     const response = await backendFetch(`/orders?${params.toString()}`, {
       // Cache for 30 seconds

@@ -14,6 +14,7 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
 import { formatNumber, formatCompact } from '@/lib/format';
 import { FAVORITE_COLOR } from '@/lib/colors';
+import { stockHref } from '@/lib/bucket';
 
 interface WatchlistItem {
   symbol: string;
@@ -185,7 +186,7 @@ export default function WatchlistPage() {
           {items.map((item) => (
             <Link
               key={item.symbol}
-              href={`/stock/${item.symbol}`}
+              href={stockHref(item.symbol, null)}
               className="card group relative p-4 transition-all hover:border-primary"
             >
               {/* Remove button */}

@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { clsx } from 'clsx';
 import type { Activity } from '@/types/api';
 import { formatMoney, formatNumber, formatDate } from '@/lib/format';
+import { useBucket } from '@/contexts/BucketContext';
+import { stockHref } from '@/lib/bucket';
 
 const TYPE_CONFIG: Record<string, { label: string; color: string; border: string }> = {
   BUY: { label: 'BUY', color: 'bg-profit/15 text-profit', border: 'border-l-profit' },
@@ -21,6 +23,7 @@ export function TradeCard({ activity }: TradeCardProps) {
   const config = TYPE_CONFIG[type] || TYPE_CONFIG.FEE;
   const symbol = activity.symbol;
   const hasSymbol = symbol && symbol.trim() !== '';
+  const bucket = useBucket();
 
   const content = (
     <div
@@ -71,7 +74,7 @@ export function TradeCard({ activity }: TradeCardProps) {
   );
 
   if (hasSymbol) {
-    return <Link href={`/stock/${symbol}`}>{content}</Link>;
+    return <Link href={stockHref(symbol, bucket)}>{content}</Link>;
   }
 
   return content;

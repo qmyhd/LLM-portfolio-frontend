@@ -3,6 +3,7 @@
  */
 
 import useSWR from 'swr';
+import { useBucket } from '@/contexts/BucketContext';
 import type { ActivitiesResponse } from '@/types/api';
 
 const fetcher = async (url: string): Promise<ActivitiesResponse> => {
@@ -29,6 +30,7 @@ interface UseActivitiesOptions {
 
 export function useActivities(options: UseActivitiesOptions = {}) {
   const { activityType, symbol, limit = 50, startDate, endDate } = options;
+  const bucket = useBucket();
 
   const buildUrl = () => {
     const params = new URLSearchParams();
@@ -37,6 +39,7 @@ export function useActivities(options: UseActivitiesOptions = {}) {
     if (limit) params.set('limit', String(limit));
     if (startDate) params.set('startDate', startDate);
     if (endDate) params.set('endDate', endDate);
+    if (bucket) params.set('bucket', bucket);
     const qs = params.toString();
     return `/api/activities${qs ? `?${qs}` : ''}`;
   };

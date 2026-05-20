@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { StockActivitiesResponse, ApiError } from '@/types/api';
 import { backendFetch, authGuard } from '@/lib/api-client';
+import { forwardBucket } from '@/lib/bucket';
 
 interface RouteParams {
   params: Promise<{ ticker: string }>;
@@ -18,11 +19,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Forward pagination query params
     const { searchParams } = new URL(request.url);
-    const limit = searchParams.get('limit') || '50';
-    const offset = searchParams.get('offset') || '0';
+    const qs = new URLSearchParams();
+    qs.set('limit', searchParams.get('limit') || '50');
+    qs.set('offset', searchParams.get('offset') || '0');
+    forwardBucket(request, qs);
 
     const response = await backendFetch(
-      `/stocks/${normalizedTicker}/activities?limit=${limit}&offset=${offset}`,
+      `/stocks/${normalizedTicker}/activities?${qs.toString()}`,
       { next: { revalidate: 60 } },
     );
 

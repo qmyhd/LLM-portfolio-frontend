@@ -7,6 +7,7 @@ import { ClipboardDocumentIcon, CheckIcon } from '@heroicons/react/24/outline';
 import type { ReconMeta, ReconPositionMeta, PortfolioResponse } from '@/types/api';
 import { formatMoney } from '@/lib/format';
 import { RECON_SOURCE_COLORS } from '@/lib/colors';
+import { useBucket, withBucket } from '@/contexts/BucketContext';
 
 const RECON_ENABLED =
   process.env.NODE_ENV !== 'production' ||
@@ -52,6 +53,8 @@ export function ReconPanel() {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  const bucket = useBucket();
+
   useEffect(() => {
     if (!isRecon || !RECON_ENABLED) {
       setRecon(null);
@@ -62,7 +65,7 @@ export function ReconPanel() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch('/api/portfolio?recon=1');
+        const res = await fetch(withBucket('/api/portfolio?recon=1', bucket));
         if (!res.ok) throw new Error(`${res.status}`);
         const data: PortfolioResponse = await res.json();
         setRecon(data.recon ?? null);
@@ -75,7 +78,7 @@ export function ReconPanel() {
     };
 
     fetchRecon();
-  }, [isRecon]);
+  }, [isRecon, bucket]);
 
   const copyReconJson = useCallback(() => {
     if (!recon) return;

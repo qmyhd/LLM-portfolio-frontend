@@ -14,8 +14,13 @@ import {
   ExclamationTriangleIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
+import { Suspense } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
+import { BucketSwitcher } from '@/components/portfolio/BucketSwitcher';
+import { useBucket, withBucket } from '@/contexts/BucketContext';
+import { stockHref } from '@/lib/bucket';
+import { AssetBadge } from '@/components/ui/AssetBadge';
 import type { Position as ApiPosition } from '@/types/api';
 import type { SyncResponse } from '@/types/ideas';
 import { toUiPosition, type UiPosition } from '@/lib/mappers';
@@ -36,11 +41,12 @@ export default function PositionsPage() {
   const [syncFeedback, setSyncFeedback] = useState<SyncFeedback>({ status: 'idle', message: '' });
   const [sortBy, setSortBy] = useState<'value' | 'pl' | 'dayChange'>('value');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const bucket = useBucket();
 
   const fetchPositions = useCallback(async () => {
     try {
       setFetchError(null);
-      const res = await fetch('/api/portfolio');
+      const res = await fetch(withBucket('/api/portfolio', bucket));
       if (!res.ok) {
         const errBody = await res.json().catch(() => ({}));
         throw new Error(errBody?.error || errBody?.detail || `Server error (${res.status})`);
@@ -57,7 +63,7 @@ export default function PositionsPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [bucket]);
 
   useEffect(() => {
     fetchPositions();
@@ -159,6 +165,10 @@ export default function PositionsPage() {
         <TopBar />
         <main className="flex-1 overflow-y-auto p-6">
     <div className="max-w-7xl mx-auto space-y-6">
+      <Suspense fallback={<div className="h-9 mb-4 border-b border-border" aria-hidden />}>
+        <BucketSwitcher />
+      </Suspense>
+
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -338,20 +348,37 @@ export default function PositionsPage() {
                 <tr>
                   <td colSpan={9} className="px-4 py-12 text-center">
                     <BriefcaseIcon className="mx-auto h-10 w-10 text-foreground-muted/50 mb-2" />
-                    <p className="text-foreground-muted">No positions found</p>
-                    <p className="text-xs text-foreground-subtle mt-1">Sync your brokerage to see holdings</p>
+                    {bucket ? (
+                      <>
+                        <p className="text-foreground-muted">
+                          No positions in this bucket
+                        </p>
+                        <p className="text-xs text-foreground-subtle mt-1">
+                          Switch to <span className="font-semibold">All</span> above, or assign accounts to this bucket in{' '}
+                          <Link href="/settings" className="text-primary hover:underline">Settings</Link>.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-foreground-muted">No positions found</p>
+                        <p className="text-xs text-foreground-subtle mt-1">Sync your brokerage to see holdings</p>
+                      </>
+                    )}
                   </td>
                 </tr>
               ) : (
                 sortedPositions.map((pos) => (
                   <tr key={pos.symbol} className="table-row">
                     <td className="px-4 py-3">
-                      <Link
-                        href={`/stock/${pos.symbol}`}
-                        className="font-bold text-foreground hover:text-primary"
-                      >
-                        {pos.symbol}
-                      </Link>
+                      <span className="inline-flex items-center gap-1.5">
+                        <Link
+                          href={stockHref(pos.symbol, bucket)}
+                          className="font-bold text-foreground hover:text-primary"
+                        >
+                          {pos.symbol}
+                        </Link>
+                        <AssetBadge assetType={pos.assetType} />
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-sm text-foreground-muted max-w-[200px] truncate" title={pos.companyName}>
                       {pos.companyName}
@@ -393,7 +420,7 @@ export default function PositionsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <Link
-                        href={`/stock/${pos.symbol}`}
+                        href={stockHref(pos.symbol, bucket)}
                         className="rounded p-1.5 text-foreground-muted transition-colors hover:bg-background-tertiary hover:text-foreground"
                       >
                         <ChartBarIcon className="h-4 w-4" />

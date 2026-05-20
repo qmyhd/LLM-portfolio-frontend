@@ -23,6 +23,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useStockProfile } from '@/hooks/useStockProfile';
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
+import { BucketBadge } from '@/components/portfolio/BucketBadge';
 
 type ChartProvider = 'lightweight' | 'tradingview';
 type TabKey = 'chat' | 'ideas' | 'analysis' | 'raw' | 'insights' | 'notes';
@@ -126,6 +127,14 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
 
   return (
     <main className="flex-1 overflow-y-auto bg-background">
+      {/* Bucket filter badge — only renders when ?bucket= is set, signals
+          that position metrics on this page are scoped to one strategy. */}
+      <div className="px-4 pt-3 -mb-1 flex justify-end">
+        <Suspense fallback={null}>
+          <BucketBadge />
+        </Suspense>
+      </div>
+
       {/* ── Top section: Header + Position + Returns ── */}
       <div className="border-b border-border/60 bg-background-secondary/30">
         {profile ? (
@@ -263,7 +272,7 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
 
         {/* Desktop: resizable panels */}
         <div className="hidden lg:flex h-full">
-          <PanelGroup orientation="horizontal" className="h-full">
+          <PanelGroup direction="horizontal" className="h-full">
           {/* Left panel: Chart + Trades */}
           <Panel defaultSize={60} minSize={30}>
             <div className="flex flex-col h-full">

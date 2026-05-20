@@ -4,6 +4,8 @@ import { clsx } from 'clsx';
 import Link from 'next/link';
 import { formatMoney, formatNumber, formatDate, formatPercent } from '@/lib/format';
 import { pnlTextColor } from '@/lib/colors';
+import { useBucket } from '@/contexts/BucketContext';
+import { stockHref } from '@/lib/bucket';
 import type { EnrichedTrade } from '@/types/api';
 
 // ---------------------------------------------------------------------------
@@ -120,6 +122,7 @@ export function BlossomTradeCard({ trade, showSymbol = true, compact = false }: 
   const type = trade.type.toUpperCase();
   const isSell = type === 'SELL';
   const isBuy = type === 'BUY';
+  const bucket = useBucket();
 
   return (
     <div
@@ -146,7 +149,7 @@ export function BlossomTradeCard({ trade, showSymbol = true, compact = false }: 
           {/* Ticker link */}
           {showSymbol && (
             <Link
-              href={`/stock/${trade.symbol}`}
+              href={stockHref(trade.symbol, bucket)}
               className="font-mono font-semibold text-sm hover:text-primary transition-colors truncate"
             >
               {trade.symbol}

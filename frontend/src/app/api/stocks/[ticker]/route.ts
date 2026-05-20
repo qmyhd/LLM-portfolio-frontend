@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { StockProfileCurrent, ApiError } from '@/types/api';
 import { backendFetch, authGuard } from '@/lib/api-client';
+import { forwardBucket } from '@/lib/bucket';
 
 interface RouteParams {
   params: Promise<{ ticker: string }>;
@@ -16,10 +17,17 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const { ticker } = await params;
     const normalizedTicker = ticker.toUpperCase();
 
-    const response = await backendFetch(`/stocks/${normalizedTicker}`, {
-      // Cache for 60 seconds
-      next: { revalidate: 60 },
-    });
+    const qs = new URLSearchParams();
+    forwardBucket(request, qs);
+    const qsStr = qs.toString();
+
+    const response = await backendFetch(
+      `/stocks/${normalizedTicker}${qsStr ? `?${qsStr}` : ''}`,
+      {
+        // Cache for 60 seconds
+        next: { revalidate: 60 },
+      },
+    );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));

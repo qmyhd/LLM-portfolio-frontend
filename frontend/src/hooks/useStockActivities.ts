@@ -1,4 +1,5 @@
 import useSWR from 'swr';
+import { useBucket, withBucket } from '@/contexts/BucketContext';
 import type { StockActivitiesResponse } from '@/types/api';
 
 const fetcher = async (url: string): Promise<StockActivitiesResponse> => {
@@ -8,8 +9,9 @@ const fetcher = async (url: string): Promise<StockActivitiesResponse> => {
 };
 
 export function useStockActivities(ticker: string, limit = 50) {
+  const bucket = useBucket();
   const { data, error, isLoading } = useSWR<StockActivitiesResponse>(
-    `/api/stocks/${ticker}/activities?limit=${limit}`,
+    withBucket(`/api/stocks/${ticker}/activities?limit=${limit}`, bucket),
     fetcher,
     { revalidateOnFocus: false, dedupingInterval: 30000 },
   );

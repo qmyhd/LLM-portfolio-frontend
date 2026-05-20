@@ -14,6 +14,8 @@ import {
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import { FAVORITE_COLOR } from '@/lib/colors';
 import { MobileSidebar } from './Sidebar';
+import { useBucket } from '@/contexts/BucketContext';
+import { stockHref } from '@/lib/bucket';
 
 interface SearchResult {
   symbol: string;
@@ -29,6 +31,9 @@ interface TopBarProps {
 export function TopBar({ currentTicker }: TopBarProps) {
   const router = useRouter();
   const { mutate } = useSWRConfig();
+  // useBucket returns null when no BucketProvider is in scope (Research side)
+  // — stockHref(symbol, null) gracefully renders /stock/<symbol> in that case.
+  const bucket = useBucket();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -96,16 +101,16 @@ export function TopBar({ currentTicker }: TopBarProps) {
       ? searchResults[selectedIndex].symbol
       : searchQuery.trim().toUpperCase();
     if (ticker) {
-      router.push(`/stock/${ticker}`);
+      router.push(stockHref(ticker, bucket));
       setSearchQuery('');
       setIsSearchFocused(false);
       setSearchResults([]);
     }
-  }, [searchQuery, router, selectedIndex, searchResults]);
+  }, [searchQuery, router, selectedIndex, searchResults, bucket]);
 
   // Navigate to stock
   const navigateToStock = (symbol: string) => {
-    router.push(`/stock/${symbol}`);
+    router.push(stockHref(symbol, bucket));
     setSearchQuery('');
     setIsSearchFocused(false);
     setSearchResults([]);

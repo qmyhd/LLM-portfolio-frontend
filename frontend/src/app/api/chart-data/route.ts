@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { ApiError } from '@/types/api';
 import { backendFetch, authGuard } from '@/lib/api-client';
+import { forwardBucket } from '@/lib/bucket';
 
 /**
  * OHLCV Chart Data API
@@ -69,6 +70,8 @@ export async function GET(request: NextRequest) {
       start: fromDate.toISOString().split('T')[0],
       end: toDate.toISOString().split('T')[0],
     });
+    // Forward bucket so the trade-marker overlay scopes to the active bucket.
+    forwardBucket(request, queryParams);
 
     // Fetch from backend API - /stocks/{ticker}/ohlcv endpoint
     const response = await backendFetch(`/stocks/${symbol.toUpperCase()}/ohlcv?${queryParams.toString()}`, {

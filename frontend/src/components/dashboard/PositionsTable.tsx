@@ -10,6 +10,9 @@ import {
 } from '@heroicons/react/24/outline';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { usePortfolio } from '@/hooks';
+import { useBucket } from '@/contexts/BucketContext';
+import { stockHref } from '@/lib/bucket';
+import { AssetBadge } from '@/components/ui/AssetBadge';
 import type { Position } from '@/types/api';
 import { formatMoney, formatSignedMoney, formatPercent, formatQuantity } from '@/lib/format';
 import { pnlTextColor, pnlBgColor } from '@/lib/colors';
@@ -27,6 +30,7 @@ export function PositionsTable() {
   const [sortAsc, setSortAsc] = useState(false);
   const [filter, setFilter] = useState<FilterMode>('all');
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const bucket = useBucket();
 
   // Initialize from localStorage, default collapsed on mobile
   useEffect(() => {
@@ -207,10 +211,13 @@ export function PositionsTable() {
               <tr key={position.symbol} className="table-row">
                 <td className="table-cell">
                   <Link 
-                    href={`/stock/${position.symbol}`}
+                    href={stockHref(position.symbol, bucket)}
                     className="hover:text-primary transition-colors"
                   >
-                    <div className="font-mono font-semibold">{position.symbol}</div>
+                    <div className="font-mono font-semibold inline-flex items-center gap-1.5">
+                      {position.symbol}
+                      <AssetBadge assetType={position.assetType} />
+                    </div>
                   </Link>
                 </td>
                 <td className="table-cell text-right font-mono hidden sm:table-cell">

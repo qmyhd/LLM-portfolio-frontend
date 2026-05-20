@@ -68,7 +68,7 @@ export function TradeRecap() {
       <div className="flex items-center justify-between px-5 py-4 border-b border-border">
         <h2 className="text-lg font-semibold">Recent Trades</h2>
         <Link
-          href="/activity"
+          href="/portfolio/activity"
           className="text-sm text-primary hover:text-primary-hover transition-colors focus-visible:ring-2 focus-visible:ring-primary rounded"
         >
           View All &rarr;

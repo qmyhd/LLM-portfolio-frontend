@@ -197,6 +197,16 @@
     flex-shrink: 0;
   }
 
+  /* Hide scrollbar utility — used by BucketSwitcher and other strips where
+     we want horizontal scrolling without a visible scrollbar. */
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE/Edge */
+    scrollbar-width: none;     /* Firefox */
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;             /* Chrome/Safari/Webkit */
+  }
+
   /* Pre-defined snap card widths */
   .snap-card {
     @apply bg-background-secondary border border-border rounded-xl shadow-card;

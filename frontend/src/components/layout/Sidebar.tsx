@@ -12,6 +12,7 @@ import {
   Cog6ToothIcon,
   StarIcon,
   LightBulbIcon,
+  BriefcaseIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
 } from '@heroicons/react/24/outline';
@@ -22,17 +23,30 @@ import {
   ArrowsRightLeftIcon as ArrowsRightLeftIconSolid,
   StarIcon as StarIconSolid,
   LightBulbIcon as LightBulbIconSolid,
+  BriefcaseIcon as BriefcaseIconSolid,
 } from '@heroicons/react/24/solid';
 import { formatNumber } from '@/lib/format';
+import { useBucket } from '@/contexts/BucketContext';
+import { stockHref } from '@/lib/bucket';
 
-const navigation = [
-  { name: 'Dashboard', href: '/', icon: HomeIcon, activeIcon: HomeIconSolid },
+// Research-first nav. The home page (`/`) hosts the ideas feed and
+// quick-jump tiles. Portfolio is a separate tab so trading data stays
+// separated from research/analysis. Positions / Orders / Activity live
+// under /portfolio and inherit the bucket switcher set by that layout.
+const researchNav = [
+  { name: 'Research', href: '/', icon: HomeIcon, activeIcon: HomeIconSolid, exact: true },
   { name: 'Watchlist', href: '/watchlist', icon: StarIcon, activeIcon: StarIconSolid },
   { name: 'Ideas', href: '/ideas', icon: LightBulbIcon, activeIcon: LightBulbIconSolid },
-  { name: 'Positions', href: '/positions', icon: ChartBarIcon, activeIcon: ChartBarIconSolid },
-  { name: 'Orders', href: '/orders', icon: ClipboardDocumentListIcon, activeIcon: ClipboardDocumentListIconSolid },
-  { name: 'Activity', href: '/activity', icon: ArrowsRightLeftIcon, activeIcon: ArrowsRightLeftIconSolid },
 ];
+
+const portfolioNav = [
+  { name: 'Portfolio', href: '/portfolio', icon: BriefcaseIcon, activeIcon: BriefcaseIconSolid, exact: true },
+  { name: 'Positions', href: '/portfolio/positions', icon: ChartBarIcon, activeIcon: ChartBarIconSolid },
+  { name: 'Orders', href: '/portfolio/orders', icon: ClipboardDocumentListIcon, activeIcon: ClipboardDocumentListIconSolid },
+  { name: 'Activity', href: '/portfolio/activity', icon: ArrowsRightLeftIcon, activeIcon: ArrowsRightLeftIconSolid },
+];
+
+const navigation = [...researchNav, ...portfolioNav];
 
 interface FavoriteStock {
   ticker: string;
@@ -43,6 +57,10 @@ export function Sidebar() {
   const pathname = usePathname();
   const [favorites, setFavorites] = useState<FavoriteStock[]>([]);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  // Bucket flows through to favorite stock links so the user keeps the
+  // active filter when jumping to a stock from the sidebar. Returns null
+  // on the Research side, in which case stockHref renders a plain URL.
+  const bucket = useBucket();
 
   // Load collapse state from localStorage
   useEffect(() => {
@@ -127,35 +145,20 @@ export function Sidebar() {
           </div>
         )}
 
-        {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          <div className="space-y-1">
-            {navigation.map((item) => {
-              const isActive = item.href === '/'
-                ? pathname === '/'
-                : pathname.startsWith(item.href);
-              const Icon = isActive ? item.activeIcon : item.icon;
-
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={clsx(
-                    'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                    isActive
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-foreground-muted hover:text-foreground hover:bg-background-hover',
-                    isCollapsed && 'justify-center px-0'
-                  )}
-                  title={isCollapsed ? item.name : undefined}
-                  aria-current={isActive ? 'page' : undefined}
-                >
-                  <Icon className="w-5 h-5 flex-shrink-0" />
-                  {!isCollapsed && item.name}
-                </Link>
-              );
-            })}
-          </div>
+        {/* Navigation — Research group first (the focus of the site), then Portfolio */}
+        <nav className="flex-1 px-3 py-4 space-y-4 overflow-y-auto">
+          <NavGroup
+            title="Research"
+            items={researchNav}
+            pathname={pathname}
+            isCollapsed={isCollapsed}
+          />
+          <NavGroup
+            title="Portfolio"
+            items={portfolioNav}
+            pathname={pathname}
+            isCollapsed={isCollapsed}
+          />
 
           {/* Favorites section - hidden when collapsed */}
           {!isCollapsed && (
@@ -172,7 +175,7 @@ export function Sidebar() {
                   favorites.map((stock) => (
                     <Link
                       key={stock.ticker}
-                      href={`/stock/${stock.ticker}`}
+                      href={stockHref(stock.ticker, bucket)}
                       className={clsx(
                         'flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors',
                         pathname === `/stock/${stock.ticker}`
@@ -222,6 +225,63 @@ export function Sidebar() {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Nav group helper — renders a labeled section of nav items.
+// ---------------------------------------------------------------------------
+
+interface NavItem {
+  name: string;
+  href: string;
+  icon: typeof HomeIcon;
+  activeIcon: typeof HomeIconSolid;
+  exact?: boolean;
+}
+
+interface NavGroupProps {
+  title: string;
+  items: NavItem[];
+  pathname: string;
+  isCollapsed: boolean;
+}
+
+function NavGroup({ title, items, pathname, isCollapsed }: NavGroupProps) {
+  return (
+    <div className="space-y-1">
+      {!isCollapsed && (
+        <h3 className="px-3 text-xs font-semibold text-foreground-subtle uppercase tracking-wider mb-1">
+          {title}
+        </h3>
+      )}
+      {items.map((item) => {
+        // `exact` items only highlight on exact match (so /portfolio doesn't
+        // light up when on /portfolio/positions). Others use prefix match.
+        const isActive = item.exact
+          ? pathname === item.href
+          : pathname === item.href || pathname.startsWith(`${item.href}/`);
+        const Icon = isActive ? item.activeIcon : item.icon;
+        return (
+          <Link
+            key={item.name}
+            href={item.href}
+            className={clsx(
+              'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+              isActive
+                ? 'bg-primary/10 text-primary'
+                : 'text-foreground-muted hover:text-foreground hover:bg-background-hover',
+              isCollapsed && 'justify-center px-0',
+            )}
+            title={isCollapsed ? item.name : undefined}
+            aria-current={isActive ? 'page' : undefined}
+          >
+            <Icon className="w-5 h-5 flex-shrink-0" />
+            {!isCollapsed && item.name}
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
 // Mobile sidebar (drawer)
 export function MobileSidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const pathname = usePathname();
@@ -254,28 +314,39 @@ export function MobileSidebar({ isOpen, onClose }: { isOpen: boolean; onClose: (
           </button>
         </div>
         
-        <nav className="px-3 py-4 space-y-1">
-          {navigation.map((item) => {
-            const isActive = pathname === item.href;
-            const Icon = isActive ? item.activeIcon : item.icon;
-            
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                onClick={onClose}
-                className={clsx(
-                  'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                  isActive
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-foreground-muted hover:text-foreground hover:bg-background-hover'
-                )}
-              >
-                <Icon className="w-5 h-5" />
-                {item.name}
-              </Link>
-            );
-          })}
+        <nav className="px-3 py-4 space-y-4">
+          {[
+            { title: 'Research', items: researchNav },
+            { title: 'Portfolio', items: portfolioNav },
+          ].map((group) => (
+            <div key={group.title} className="space-y-1">
+              <h3 className="px-3 text-xs font-semibold text-foreground-subtle uppercase tracking-wider mb-1">
+                {group.title}
+              </h3>
+              {group.items.map((item) => {
+                const isActive = item.exact
+                  ? pathname === item.href
+                  : pathname === item.href || pathname.startsWith(`${item.href}/`);
+                const Icon = isActive ? item.activeIcon : item.icon;
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    onClick={onClose}
+                    className={clsx(
+                      'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                      isActive
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-foreground-muted hover:text-foreground hover:bg-background-hover',
+                    )}
+                  >
+                    <Icon className="w-5 h-5" />
+                    {item.name}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
         </nav>
       </div>
     </>

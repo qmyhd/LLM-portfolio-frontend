@@ -8,16 +8,21 @@ import {
   MagnifyingGlassIcon,
   ClipboardDocumentListIcon,
 } from '@heroicons/react/24/outline';
+import { Suspense } from 'react';
 import { Select } from '@/components/ui/Select';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
+import { BucketSwitcher } from '@/components/portfolio/BucketSwitcher';
 import { toUiOrder } from '@/lib/mappers';
 import { formatMoney } from '@/lib/format';
 import { useOrders } from '@/hooks/useOrders';
+import { useBucket } from '@/contexts/BucketContext';
+import { stockHref } from '@/lib/bucket';
 
 export default function OrdersPage() {
   const [filter, setFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
+  const bucket = useBucket();
 
   const { data: ordersData, isLoading: loading } = useOrders({
     status: filter !== 'all' ? filter : undefined,
@@ -50,6 +55,10 @@ export default function OrdersPage() {
         <TopBar />
         <main className="flex-1 overflow-y-auto p-6">
     <div className="max-w-7xl mx-auto space-y-6">
+      <Suspense fallback={<div className="h-9 mb-4 border-b border-border" aria-hidden />}>
+        <BucketSwitcher />
+      </Suspense>
+
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -116,8 +125,21 @@ export default function OrdersPage() {
                 <tr>
                   <td colSpan={8} className="px-4 py-12 text-center">
                     <ClipboardDocumentListIcon className="mx-auto h-10 w-10 text-foreground-muted/50 mb-2" />
-                    <p className="text-foreground-muted">No orders found</p>
-                    <p className="text-xs text-foreground-subtle mt-1">Try adjusting your filter or search</p>
+                    {bucket ? (
+                      <>
+                        <p className="text-foreground-muted">
+                          No orders in this bucket
+                        </p>
+                        <p className="text-xs text-foreground-subtle mt-1">
+                          Switch to <span className="font-semibold">All</span> above, or adjust the status/symbol filter.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-foreground-muted">No orders found</p>
+                        <p className="text-xs text-foreground-subtle mt-1">Try adjusting your filter or search</p>
+                      </>
+                    )}
                   </td>
                 </tr>
               ) : (
@@ -128,7 +150,7 @@ export default function OrdersPage() {
                     </td>
                     <td className="px-4 py-3">
                       <Link
-                        href={`/stock/${order.symbol}`}
+                        href={stockHref(order.symbol, bucket)}
                         className="font-medium text-foreground hover:text-primary"
                       >
                         {order.symbol}

@@ -7,19 +7,32 @@ import {
 } from '@heroicons/react/24/outline';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { formatNumber } from '@/lib/format';
+import { useBucket, withBucket } from '@/contexts/BucketContext';
 import type { PortfolioRiskReport } from '@/types/api';
 
 export function PortfolioRiskCard() {
   const [risk, setRisk] = useState<PortfolioRiskReport | null>(null);
   const [loading, setLoading] = useState(true);
+  const bucket = useBucket();
 
   useEffect(() => {
-    fetch('/api/portfolio/risk')
+    let cancelled = false;
+    setLoading(true);
+    fetch(withBucket('/api/portfolio/risk', bucket))
       .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setRisk(data))
-      .catch(() => setRisk(null))
-      .finally(() => setLoading(false));
-  }, []);
+      .then((data) => {
+        if (!cancelled) setRisk(data);
+      })
+      .catch(() => {
+        if (!cancelled) setRisk(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [bucket]);
 
   if (loading) {
     return (
