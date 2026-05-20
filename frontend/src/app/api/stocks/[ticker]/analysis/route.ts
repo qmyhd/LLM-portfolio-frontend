@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { ConsensusReport, ApiError } from '@/types/api';
 import { backendFetch, authGuard } from '@/lib/api-client';
+import { forwardBucket } from '@/lib/bucket';
 
 interface RouteParams {
   params: Promise<{ ticker: string }>;
@@ -16,15 +17,16 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const normalizedTicker = ticker.toUpperCase();
 
     const { searchParams } = new URL(request.url);
-    const refresh = searchParams.get('refresh') || 'false';
-    const agents = searchParams.get('agents') || '';
+    const qs = new URLSearchParams();
+    qs.set('refresh', searchParams.get('refresh') || 'false');
+    const agents = searchParams.get('agents');
+    if (agents) qs.set('agents', agents);
+    forwardBucket(request, qs);
 
-    let url = `/stocks/${normalizedTicker}/analysis?refresh=${refresh}`;
-    if (agents) url += `&agents=${agents}`;
-
-    const response = await backendFetch(url, {
-      next: { revalidate: 60 },
-    });
+    const response = await backendFetch(
+      `/stocks/${normalizedTicker}/analysis?${qs.toString()}`,
+      { next: { revalidate: 60 } },
+    );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));

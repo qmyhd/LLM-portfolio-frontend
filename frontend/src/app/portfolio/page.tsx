@@ -15,6 +15,7 @@ import { ReconPanel } from '@/components/dashboard/ReconPanel';
 import { ConnectionBanner } from '@/components/dashboard/ConnectionBanner';
 import { PortfolioRiskCard } from '@/components/dashboard/PortfolioRiskCard';
 import { BucketSwitcher } from '@/components/portfolio/BucketSwitcher';
+import { EquityCurveCard } from '@/components/portfolio/EquityCurveCard';
 
 export default function PortfolioLandingPage() {
   return (
@@ -42,6 +43,7 @@ export default function PortfolioLandingPage() {
 
             <RobinhoodHeader />
             <PortfolioSummary />
+            <EquityCurveCard />
             <TradeRecap />
             <DailyMoversTable />
 

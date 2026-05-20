@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { formatNumber } from '@/lib/format';
 import { riskLevelColor } from '@/lib/colors';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { useBucket, withBucket } from '@/contexts/BucketContext';
 
 interface RiskMetrics {
   beta: number | null;
@@ -26,14 +27,20 @@ interface RiskCardProps {
 export function RiskCard({ ticker }: RiskCardProps) {
   const [risk, setRisk] = useState<RiskMetrics | null>(null);
   const [loading, setLoading] = useState(true);
+  const bucket = useBucket();
 
   useEffect(() => {
     fetchRisk();
-  }, [ticker]);
+    // Re-fetch on bucket change so position-sizing % reflects the bucket-
+    // scoped portfolio denominator.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ticker, bucket]);
 
   const fetchRisk = async () => {
     try {
-      const res = await fetch(`/api/stocks/${ticker}/analysis/risk`);
+      const res = await fetch(
+        withBucket(`/api/stocks/${ticker}/analysis/risk`, bucket),
+      );
       if (!res.ok) throw new Error(`${res.status}`);
       const data = await res.json();
 

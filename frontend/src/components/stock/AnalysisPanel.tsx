@@ -9,6 +9,7 @@ import {
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { formatNumber } from '@/lib/format';
+import { useBucket, withBucket } from '@/contexts/BucketContext';
 import type { ConsensusReport, AgentSignal } from '@/types/api';
 
 interface AnalysisPanelProps {
@@ -76,6 +77,7 @@ export function AnalysisPanel({ ticker }: AnalysisPanelProps) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const bucket = useBucket();
 
   const fetchAnalysis = async (refresh = false) => {
     try {
@@ -83,9 +85,13 @@ export function AnalysisPanel({ ticker }: AnalysisPanelProps) {
       else setLoading(true);
       setError(null);
 
-      const res = await fetch(
-        `/api/stocks/${ticker}/analysis${refresh ? '?refresh=true' : ''}`
-      );
+      // Bucket scopes the position context and portfolio value the risk
+      // agent sees. When refresh=true, force a bypass of the bucket-keyed
+      // cache entry.
+      const base = `/api/stocks/${ticker}/analysis${refresh ? '?refresh=true' : ''}`;
+      const url = withBucket(base, bucket);
+
+      const res = await fetch(url);
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || `Error ${res.status}`);
@@ -102,7 +108,10 @@ export function AnalysisPanel({ ticker }: AnalysisPanelProps) {
 
   useEffect(() => {
     fetchAnalysis();
-  }, [ticker]);
+    // Re-fetch when ticker OR bucket changes so the analysis reflects
+    // the currently-active strategy filter.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ticker, bucket]);
 
   if (loading) {
     return (
