@@ -38,8 +38,10 @@ const researchNav = [
   { name: 'Ideas', href: '/ideas', icon: LightBulbIcon, activeIcon: LightBulbIconSolid },
 ];
 
+// "Overview" instead of "Portfolio" to avoid duplicating the section
+// header right above it — the section is already labeled "Portfolio".
 const portfolioNav = [
-  { name: 'Portfolio', href: '/portfolio', icon: BriefcaseIcon, activeIcon: BriefcaseIconSolid, exact: true },
+  { name: 'Overview', href: '/portfolio', icon: BriefcaseIcon, activeIcon: BriefcaseIconSolid, exact: true },
   { name: 'Positions', href: '/portfolio/positions', icon: ChartBarIcon, activeIcon: ChartBarIconSolid },
   { name: 'Orders', href: '/portfolio/orders', icon: ClipboardDocumentListIcon, activeIcon: ClipboardDocumentListIconSolid },
   { name: 'Activity', href: '/portfolio/activity', icon: ArrowsRightLeftIcon, activeIcon: ArrowsRightLeftIconSolid },

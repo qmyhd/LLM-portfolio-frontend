@@ -16,6 +16,11 @@ export async function GET(request: NextRequest) {
     params.set('limit', searchParams.get('limit') || '10');
     const days = searchParams.get('days');
     if (days) params.set('days', days);
+    // `types` lets the activity page request all activity types
+    // (BUY/SELL/DIVIDEND/FEE/SPLIT) — default is BUY/SELL only for the
+    // dashboard widget.
+    const types = searchParams.get('types');
+    if (types) params.set('types', types);
     forwardBucket(request, params);
 
     const response = await backendFetch(
