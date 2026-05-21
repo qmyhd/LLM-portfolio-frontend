@@ -3,8 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { ApiError } from '@/types/api';
 import { backendFetch, authGuard } from '@/lib/api-client';
 
-// GET /api/sentiment/feed?limit=30&days=30
-// Recent parsed-idea feed across all tickers — powers the home page.
+// GET /api/sentiment/feed?limit=30&days=30&channel_type=trading&source=parsed
+// Recent feed (parsed ideas + raw Discord messages) across all tickers —
+// powers the home research feed and the per-stock activity view.
 export async function GET(request: NextRequest) {
   try {
     await authGuard();
@@ -12,6 +13,14 @@ export async function GET(request: NextRequest) {
     const params = new URLSearchParams();
     params.set('limit', request.nextUrl.searchParams.get('limit') || '30');
     params.set('days', request.nextUrl.searchParams.get('days') || '30');
+    const channelType = request.nextUrl.searchParams.get('channel_type');
+    if (channelType && channelType !== 'all') {
+      params.set('channel_type', channelType);
+    }
+    const source = request.nextUrl.searchParams.get('source');
+    if (source && source !== 'all') {
+      params.set('source', source);
+    }
 
     const response = await backendFetch(
       `/sentiment/feed?${params.toString()}`,
