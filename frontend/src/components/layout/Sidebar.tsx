@@ -35,7 +35,6 @@ import { stockHref } from '@/lib/bucket';
 // under /portfolio and inherit the bucket switcher set by that layout.
 const researchNav = [
   { name: 'Research', href: '/', icon: HomeIcon, activeIcon: HomeIconSolid, exact: true },
-  { name: 'Watchlist', href: '/watchlist', icon: StarIcon, activeIcon: StarIconSolid },
   { name: 'Ideas', href: '/ideas', icon: LightBulbIcon, activeIcon: LightBulbIconSolid },
 ];
 

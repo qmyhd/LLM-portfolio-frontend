@@ -3,19 +3,11 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
 import { TickerBar } from '@/components/dashboard/TickerBar';
 import { RobinhoodHeader } from '@/components/dashboard/RobinhoodHeader';
-import { PortfolioSummary } from '@/components/dashboard/PortfolioSummary';
-import { HoldingsTable } from '@/components/dashboard/HoldingsTable';
-import { TradeRecap } from '@/components/dashboard/TradeRecap';
-import { DailyMoversTable } from '@/components/dashboard/DailyMoversTable';
-import { TopMovers } from '@/components/dashboard/TopMovers';
-import { SentimentOverview } from '@/components/dashboard/SentimentOverview';
-import { CryptoSection } from '@/components/dashboard/CryptoSection';
 import { DebugOverlay } from '@/components/dashboard/DebugOverlay';
 import { ReconPanel } from '@/components/dashboard/ReconPanel';
 import { ConnectionBanner } from '@/components/dashboard/ConnectionBanner';
-import { PortfolioRiskCard } from '@/components/dashboard/PortfolioRiskCard';
 import { BucketSwitcher } from '@/components/portfolio/BucketSwitcher';
-import { EquityCurveCard } from '@/components/portfolio/EquityCurveCard';
+import { PortfolioBody } from '@/components/portfolio/PortfolioBody';
 
 export default function PortfolioLandingPage() {
   return (
@@ -41,24 +33,16 @@ export default function PortfolioLandingPage() {
               <ReconPanel />
             </Suspense>
 
+            {/* RobinhoodHeader carries total value, range-aware change,
+                cash, buying power, and position count — the five separate
+                metric cards underneath it were redundant and have been
+                removed. */}
             <RobinhoodHeader />
-            <PortfolioSummary />
-            <EquityCurveCard />
-            <TradeRecap />
-            <DailyMoversTable />
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 space-y-6">
-                <HoldingsTable />
-                <CryptoSection />
-              </div>
-
-              <div className="space-y-6">
-                <TopMovers />
-                <PortfolioRiskCard />
-                <SentimentOverview />
-              </div>
-            </div>
+            {/* PortfolioBody decides between the full widget grid and a
+                single empty-bucket card based on positionsCount + bucket,
+                so empty buckets don't stack four "No data" widgets. */}
+            <PortfolioBody />
           </div>
         </main>
       </div>

@@ -2,15 +2,12 @@
 
 import useSWR from 'swr';
 import {
-  ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
   ChartBarIcon,
   BanknotesIcon,
   ChatBubbleLeftIcon,
 } from '@heroicons/react/24/outline';
-import { formatNumber, formatCompact, formatMoney, formatSignedMoney, formatSignedPct } from '@/lib/format';
+import { formatNumber, formatCompact, formatMoney, formatSignedPct } from '@/lib/format';
 import { pnlTextColor, trendDirection } from '@/lib/colors';
-import { COMPANY_NAMES } from '@/lib/mappers';
 import type { StockProfileCurrent } from '@/types/api';
 import { useBucket, withBucket } from '@/contexts/BucketContext';
 
@@ -87,11 +84,6 @@ export function StockMetrics({ ticker }: StockMetricsProps) {
     );
   }
 
-  const dailyChange = data.latestClosePrice && data.previousClosePrice
-    ? data.latestClosePrice - data.previousClosePrice
-    : 0;
-  const dailyTrend = trendDirection(dailyChange);
-
   function fmtReturn(val: number | null): { value: string; trend: 'up' | 'down' | 'neutral' | null } {
     if (val == null) return { value: '—', trend: null };
     return {
@@ -102,31 +94,9 @@ export function StockMetrics({ ticker }: StockMetricsProps) {
 
   return (
     <div className="h-full overflow-y-auto p-4 space-y-2">
-      {/* Header with price */}
-      <div className="pb-4 border-b border-border">
-        <h1 className="text-2xl font-bold">{data.ticker}</h1>
-        <p className="text-sm text-foreground-muted">
-          {data.companyName || COMPANY_NAMES[data.ticker] || data.ticker}
-        </p>
-
-        <div className="mt-4">
-          <div className="text-3xl font-bold font-mono">
-            {data.latestClosePrice != null ? formatMoney(data.latestClosePrice) : '—'}
-          </div>
-          {data.dailyChangePct != null && (
-            <div className={`flex items-center gap-1 mt-1 ${pnlTextColor(dailyChange)}`}>
-              {dailyTrend === 'down' ? (
-                <ArrowTrendingDownIcon className="w-4 h-4" />
-              ) : (
-                <ArrowTrendingUpIcon className="w-4 h-4" />
-              )}
-              <span className="font-mono font-medium">
-                {formatSignedMoney(dailyChange)} ({formatSignedPct(data.dailyChangePct)})
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
+      {/* Note: ticker/name/price header used to live here. Removed because
+          RobinhoodStockHeader above already shows that information — the
+          duplication was confusing on stock detail pages. */}
 
       {/* Price Metrics */}
       <div>
@@ -155,41 +125,24 @@ export function StockMetrics({ ticker }: StockMetricsProps) {
 
       {/* Position Metrics */}
       {data.currentPositionQty != null && data.currentPositionQty > 0 && (
-        <div>
-          <SectionHeader title="Your Position" icon={BanknotesIcon} />
-          <MetricRow label="Shares" value={formatNumber(data.currentPositionQty, data.currentPositionQty % 1 === 0 ? 0 : 4)} />
-          <MetricRow
-            label="Value"
-            value={data.currentPositionValue != null ? formatMoney(data.currentPositionValue) : '—'}
-          />
-          <MetricRow
-            label="Avg Cost"
-            value={data.avgBuyPrice != null ? formatMoney(data.avgBuyPrice) : '—'}
-          />
-          <MetricRow
-            label="Unrealized P/L"
-            value={data.unrealizedPnl != null ? formatSignedMoney(data.unrealizedPnl) : '—'}
-            trend={data.unrealizedPnl != null ? trendDirection(data.unrealizedPnl) : null}
-          />
-          <MetricRow
-            label="P/L %"
-            {...fmtReturn(data.unrealizedPnlPct)}
-          />
-          {data.totalOrdersCount > 0 && (
-            <>
-              <MetricRow
-                label="Total Orders"
-                value={`${data.totalOrdersCount} (${data.buyOrdersCount}B / ${data.sellOrdersCount}S)`}
-              />
-              {data.avgOrderSize != null && (
-                <MetricRow label="Avg Order" value={formatMoney(data.avgOrderSize)} />
-              )}
-              {data.firstTradeDate && (
-                <MetricRow label="First Trade" value={new Date(data.firstTradeDate).toLocaleDateString()} />
-              )}
-            </>
-          )}
-        </div>
+        // Shares / Value / Avg Cost / Unrealized P/L all live in the
+        // RobinhoodPositionCard above; this section is for the bits
+        // unique to the stats panel (order count breakdown + first trade).
+        data.totalOrdersCount > 0 && (
+          <div>
+            <SectionHeader title="Trade Activity" icon={BanknotesIcon} />
+            <MetricRow
+              label="Total Orders"
+              value={`${data.totalOrdersCount} (${data.buyOrdersCount}B / ${data.sellOrdersCount}S)`}
+            />
+            {data.avgOrderSize != null && (
+              <MetricRow label="Avg Order" value={formatMoney(data.avgOrderSize)} />
+            )}
+            {data.firstTradeDate && (
+              <MetricRow label="First Trade" value={new Date(data.firstTradeDate).toLocaleDateString()} />
+            )}
+          </div>
+        )
       )}
 
       {/* Sentiment Metrics */}
@@ -199,7 +152,8 @@ export function StockMetrics({ ticker }: StockMetricsProps) {
           <MetricRow label="Total Mentions" value={data.totalMentionCount.toString()} />
           <MetricRow label="Last 30 Days" value={data.mentionCount30d.toString()} />
 
-          {/* Sentiment bar */}
+          {/* Sentiment bar with neutral label so the bar's middle segment
+              isn't unlabeled ambiguity. */}
           {(data.bullishMentionPct != null || data.bearishMentionPct != null) && (
             <div className="mt-3">
               <div className="flex h-2 rounded-full overflow-hidden">
@@ -209,6 +163,11 @@ export function StockMetrics({ ticker }: StockMetricsProps) {
               </div>
               <div className="flex justify-between mt-1.5 text-2xs text-foreground-muted">
                 <span className="text-profit">{data.bullishMentionPct ?? 0}% Bull</span>
+                {(data.neutralMentionPct ?? 0) > 0 && (
+                  <span className="text-foreground-muted">
+                    {data.neutralMentionPct ?? 0}% Neutral
+                  </span>
+                )}
                 <span className="text-loss">{data.bearishMentionPct ?? 0}% Bear</span>
               </div>
             </div>

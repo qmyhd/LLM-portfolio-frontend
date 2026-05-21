@@ -248,40 +248,10 @@ export default function PositionsPage() {
         </div>
       )}
 
-      {/* Summary Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="card p-4">
-          <p className="text-sm text-foreground-muted">Total Value</p>
-          <p className="mt-1 text-2xl font-bold text-foreground">
-            {formatMoney(totalValue)}
-          </p>
-        </div>
-        <div className="card p-4">
-          <p className="text-sm text-foreground-muted">Total Cost</p>
-          <p className="mt-1 text-2xl font-bold text-foreground">
-            {formatMoney(totalCost)}
-          </p>
-        </div>
-        <div className="card p-4">
-          <p className="text-sm text-foreground-muted">Unrealized P/L</p>
-          <p className={`mt-1 text-2xl font-bold ${totalPL >= 0 ? 'text-profit' : 'text-loss'}`}>
-            {totalPL > 0 ? '+' : totalPL < 0 ? '-' : ''}{formatMoney(Math.abs(totalPL))}
-            <span className="ml-2 text-sm">
-              ({formatPercent(totalPLPercent, 2, { showSign: true })})
-            </span>
-          </p>
-        </div>
-        <div className="card p-4">
-          <p className="text-sm text-foreground-muted">Day Change</p>
-          <p className={`mt-1 text-2xl font-bold ${
-            totalDayChange === 0 ? 'text-foreground-muted' : totalDayChange > 0 ? 'text-profit' : 'text-loss'
-          }`}>
-            {totalDayChange === 0
-              ? '$0.00'
-              : `${totalDayChange >= 0 ? '+' : ''}${formatMoney(Math.abs(totalDayChange))}`}
-          </p>
-        </div>
-      </div>
+      {/* Summary cards removed — totals belong on the /portfolio landing's
+          headline, this page is the position-by-position drill-down. The
+          per-stock cost / unrealized columns inside the table below still
+          show that detail row-by-row. */}
 
       {/* Positions Table */}
       <div className="card overflow-hidden">
