@@ -168,15 +168,11 @@ export function BlossomTradeCard({ trade, showSymbol = true, compact = false }: 
         {buildActionText(trade)}
       </p>
 
-      {/* Realized P/L line for SELL trades */}
-      {isSell && trade.realizedPnl != null && (
-        <p className={clsx('text-sm font-medium font-mono mt-1', pnlTextColor(trade.realizedPnl))}>
-          {trade.realizedPnl >= 0 ? '+' : ''}{formatMoney(trade.realizedPnl)}
-          {trade.realizedPnlPct != null && (
-            <span className="text-xs ml-1">
-              ({trade.realizedPnlPct >= 0 ? '+' : ''}{formatPercent(trade.realizedPnlPct, 1)})
-            </span>
-          )}
+      {/* Realized P/L for SELL trades — percent only (no P/L $) */}
+      {isSell && trade.realizedPnlPct != null && (
+        <p className={clsx('text-sm font-medium font-mono mt-1', pnlTextColor(trade.realizedPnlPct))}>
+          {formatPercent(trade.realizedPnlPct, 2, { showSign: true })}
+          <span className="text-xs ml-1 text-foreground-muted">realized</span>
         </p>
       )}
 
@@ -192,17 +188,13 @@ export function BlossomTradeCard({ trade, showSymbol = true, compact = false }: 
                   {trade.portfolioPct != null ? formatPercent(trade.portfolioPct, 1) : '\u2014'}
                 </p>
               </div>
-              {/* Position P/L */}
+              {/* Position P/L \u2014 percent only (no P/L $) */}
               <div className="bg-background-tertiary/50 rounded-lg px-3 py-2">
                 <p className="text-2xs text-foreground-subtle">Position P/L</p>
-                <p className={clsx('text-sm font-mono font-medium', pnlTextColor(trade.unrealizedPnl))}>
-                  {trade.unrealizedPnl != null ? (
-                    <>
-                      {trade.unrealizedPnl >= 0 ? '+' : ''}{formatMoney(trade.unrealizedPnl)}
-                    </>
-                  ) : (
-                    '\u2014'
-                  )}
+                <p className={clsx('text-sm font-mono font-medium', pnlTextColor(trade.unrealizedPnlPct))}>
+                  {trade.unrealizedPnlPct != null
+                    ? formatPercent(trade.unrealizedPnlPct, 2, { showSign: true })
+                    : '\u2014'}
                 </p>
               </div>
             </>
