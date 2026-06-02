@@ -144,10 +144,6 @@ export default function PositionsPage() {
   });
 
   const totalValue = positions.reduce((sum, p) => sum + p.marketValue, 0);
-  const totalCost = positions.reduce((sum, p) => sum + p.totalCost, 0);
-  const totalPL = totalValue - totalCost;
-  const totalPLPercent = totalCost > 0 ? (totalPL / totalCost) * 100 : 0;
-  const totalDayChange = positions.reduce((sum, p) => sum + p.dayChange, 0);
 
   const toggleSort = (column: typeof sortBy) => {
     if (sortBy === column) {

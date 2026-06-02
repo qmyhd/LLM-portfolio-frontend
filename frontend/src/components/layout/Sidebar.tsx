@@ -10,7 +10,6 @@ import {
   ClipboardDocumentListIcon,
   ArrowsRightLeftIcon,
   Cog6ToothIcon,
-  StarIcon,
   LightBulbIcon,
   BriefcaseIcon,
   ChevronLeftIcon,
@@ -21,7 +20,6 @@ import {
   ChartBarIcon as ChartBarIconSolid,
   ClipboardDocumentListIcon as ClipboardDocumentListIconSolid,
   ArrowsRightLeftIcon as ArrowsRightLeftIconSolid,
-  StarIcon as StarIconSolid,
   LightBulbIcon as LightBulbIconSolid,
   BriefcaseIcon as BriefcaseIconSolid,
 } from '@heroicons/react/24/solid';
@@ -46,8 +44,6 @@ const portfolioNav = [
   { name: 'Orders', href: '/portfolio/orders', icon: ClipboardDocumentListIcon, activeIcon: ClipboardDocumentListIconSolid },
   { name: 'Activity', href: '/portfolio/activity', icon: ArrowsRightLeftIcon, activeIcon: ArrowsRightLeftIconSolid },
 ];
-
-const navigation = [...researchNav, ...portfolioNav];
 
 interface FavoriteStock {
   ticker: string;

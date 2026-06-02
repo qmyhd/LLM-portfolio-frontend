@@ -10,7 +10,6 @@ import {
 import { usePortfolio } from '@/hooks';
 import { useBucket } from '@/contexts/BucketContext';
 import { stockHref } from '@/lib/bucket';
-import type { Position } from '@/types/api';
 import { formatMoney, formatPercent, formatSignedMoney, formatQuantity } from '@/lib/format';
 import { pnlTextColor, pnlBgColor } from '@/lib/colors';
 import { CardSpotlight } from '@/components/ui/CardSpotlight';
