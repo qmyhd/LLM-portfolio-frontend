@@ -14,6 +14,7 @@ import { FundamentalsCard } from './FundamentalsCard';
 import { OpenBBInsightsPanel } from './OpenBBInsightsPanel';
 import { TradesPanel } from './TradesPanel';
 import { NotesPanel } from './NotesPanel';
+import { ProfilePanel } from './ProfilePanel';
 import { AnalysisPanel } from './AnalysisPanel';
 import {
   ArrowPathIcon,
@@ -26,10 +27,11 @@ import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'reac
 import { BucketBadge } from '@/components/portfolio/BucketBadge';
 
 type ChartProvider = 'lightweight' | 'tradingview';
-type TabKey = 'chat' | 'ideas' | 'analysis' | 'raw' | 'insights' | 'notes';
+type TabKey = 'chat' | 'profile' | 'ideas' | 'analysis' | 'raw' | 'insights' | 'notes';
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'chat', label: 'Chat' },
+  { key: 'profile', label: 'Profile' },
   { key: 'ideas', label: 'Ideas' },
   { key: 'analysis', label: 'Analysis' },
   { key: 'raw', label: 'Raw' },
@@ -265,6 +267,7 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
                 {activeTab === 'raw' && <RawMessagesPanel ticker={ticker} key={`raw-${refreshKey}`} />}
                 {activeTab === 'insights' && <OpenBBInsightsPanel ticker={ticker} key={`insights-${refreshKey}`} />}
                 {activeTab === 'notes' && <NotesPanel ticker={ticker} key={`notes-${refreshKey}`} />}
+                {activeTab === 'profile' && <ProfilePanel ticker={ticker} key={`profile-${refreshKey}`} />}
               </Suspense>
             </div>
           </div>
@@ -365,6 +368,7 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
                   {activeTab === 'raw' && <RawMessagesPanel ticker={ticker} key={`raw-${refreshKey}`} />}
                   {activeTab === 'insights' && <OpenBBInsightsPanel ticker={ticker} key={`insights-${refreshKey}`} />}
                   {activeTab === 'notes' && <NotesPanel ticker={ticker} key={`notes-${refreshKey}`} />}
+                  {activeTab === 'profile' && <ProfilePanel ticker={ticker} key={`profile-${refreshKey}`} />}
                 </Suspense>
               </div>
             </aside>
