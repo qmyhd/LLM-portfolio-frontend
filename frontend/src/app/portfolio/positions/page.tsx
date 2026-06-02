@@ -266,7 +266,7 @@ export default function PositionsPage() {
                   onClick={() => toggleSort('value')}
                 >
                   <span className="inline-flex items-center gap-1">
-                    Value
+                    Weight
                     {sortBy === 'value' && (sortOrder === 'desc'
                       ? <ChevronDownIcon className="h-3.5 w-3.5" />
                       : <ChevronUpIcon className="h-3.5 w-3.5" />)}
@@ -359,7 +359,7 @@ export default function PositionsPage() {
                       {formatMoney(pos.currentPrice)}
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-sm font-medium">
-                      {formatMoney(pos.marketValue)}
+                      {formatPercent(totalValue > 0 ? (pos.marketValue / totalValue) * 100 : 0, 1)}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <span className={`inline-flex items-center gap-1 font-mono text-sm font-medium ${
