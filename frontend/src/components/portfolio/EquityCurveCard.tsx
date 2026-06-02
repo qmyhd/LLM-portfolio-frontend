@@ -5,72 +5,50 @@ import useSWR from 'swr';
 import { clsx } from 'clsx';
 import { ArrowTrendingUpIcon, ArrowTrendingDownIcon } from '@heroicons/react/24/outline';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { formatMoney, formatSignedPct } from '@/lib/format';
+import { formatSignedPct } from '@/lib/format';
 import { useBucket, withBucket } from '@/contexts/BucketContext';
 import { BUCKET_LABELS } from '@/lib/bucket';
+import type { ReturnSeriesResponse } from '@/types/api';
 
-interface EquityPoint {
-  date: string;
-  equity: number;
-}
+type RangeOption = '1W' | '1M' | '3M' | 'YTD' | '1Y' | 'ALL';
 
-interface EquityCurveResponse {
-  points: EquityPoint[];
-  bucket: string;
-  days: number;
-}
-
-type RangeOption = '1M' | '3M' | '6M' | '1Y' | 'ALL';
-
-const RANGES: { key: RangeOption; days: number; label: string }[] = [
-  { key: '1M', days: 30, label: '1M' },
-  { key: '3M', days: 90, label: '3M' },
-  { key: '6M', days: 180, label: '6M' },
-  { key: '1Y', days: 365, label: '1Y' },
-  { key: 'ALL', days: 730, label: 'ALL' },
+const RANGES: { key: RangeOption; label: string }[] = [
+  { key: '1W', label: '1W' },
+  { key: '1M', label: '1M' },
+  { key: '3M', label: '3M' },
+  { key: 'YTD', label: 'YTD' },
+  { key: '1Y', label: '1Y' },
+  { key: 'ALL', label: 'ALL' },
 ];
 
-const fetcher = async (url: string): Promise<EquityCurveResponse> => {
+const CLARITY_NOTE =
+  'Performance of the stocks you currently hold, repriced over this period — not your actual account history.';
+
+const fetcher = async (url: string): Promise<ReturnSeriesResponse> => {
   const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`Equity curve fetch failed (${res.status})`);
-  }
+  if (!res.ok) throw new Error(`Return series fetch failed (${res.status})`);
   return res.json();
 };
 
 /**
- * Daily portfolio equity time-series chart, scoped to the active bucket.
- *
- * Powered by lightweight-charts (already a dep used by StockChart) so we
- * don't pull in a new charting library. Reads bucket from BucketContext
- * and re-fetches when the user switches buckets.
- *
- * Renders a header showing the latest equity value + period % change, a
- * time-range tab strip, and the area chart. Empty/sparse data → friendly
- * empty state with hint about the nightly snapshot pipeline.
+ * Flow-free % return curve for the active bucket's current holdings, normalized
+ * to 0% at the window start (baseline series: green above 0, red below).
  */
 export function EquityCurveCard() {
   const bucket = useBucket();
   const [range, setRange] = useState<RangeOption>('3M');
-  const days = RANGES.find((r) => r.key === range)?.days ?? 90;
   const chartContainerRef = useRef<HTMLDivElement>(null);
 
-  const url = withBucket(`/api/portfolio/equity-curve?days=${days}`, bucket);
-  const { data, error, isLoading } = useSWR<EquityCurveResponse>(url, fetcher, {
+  const url = withBucket(`/api/portfolio/return-series?period=${range}`, bucket);
+  const { data, error, isLoading } = useSWR<ReturnSeriesResponse>(url, fetcher, {
     revalidateOnFocus: false,
     dedupingInterval: 300_000,
   });
 
-  // Derived summary stats
   const points = data?.points ?? [];
-  const first = points[0];
-  const last = points[points.length - 1];
-  const periodChange = last && first && first.equity > 0
-    ? ((last.equity - first.equity) / first.equity) * 100
-    : null;
+  const periodChange = data?.periodReturnPct ?? null;
   const isPositive = (periodChange ?? 0) >= 0;
 
-  // Render chart whenever data or container size changes
   useEffect(() => {
     if (!chartContainerRef.current || points.length < 2) return;
 
@@ -102,28 +80,30 @@ export function EquityCurveCard() {
         handleScale: false,
       });
 
-      const series = chart.addAreaSeries({
-        lineColor: isPositive ? '#3ba55d' : '#ed4245',
-        topColor: isPositive ? 'rgba(59,165,93,0.4)' : 'rgba(237,66,69,0.4)',
-        bottomColor: isPositive ? 'rgba(59,165,93,0.05)' : 'rgba(237,66,69,0.05)',
+      // Baseline series anchored at 0% — green above, red below.
+      const series = chart.addBaselineSeries({
+        baseValue: { type: 'price', price: 0 },
+        topLineColor: '#3ba55d',
+        topFillColor1: 'rgba(59,165,93,0.4)',
+        topFillColor2: 'rgba(59,165,93,0.05)',
+        bottomLineColor: '#ed4245',
+        bottomFillColor1: 'rgba(237,66,69,0.05)',
+        bottomFillColor2: 'rgba(237,66,69,0.4)',
         lineWidth: 2,
-        priceFormat: { type: 'price', precision: 2, minMove: 0.01 },
+        priceFormat: { type: 'percent', precision: 2 },
       });
 
       series.setData(
         points.map((p) => ({
-          time: p.date as unknown as never, // lightweight-charts accepts YYYY-MM-DD strings
-          value: p.equity,
+          time: p.date as unknown as never, // lightweight-charts accepts YYYY-MM-DD
+          value: p.returnPct,
         })),
       );
       chart.timeScale().fitContent();
 
-      // Handle container resize
       const onResize = () => {
         if (chartContainerRef.current) {
-          chart.applyOptions({
-            width: chartContainerRef.current.clientWidth,
-          });
+          chart.applyOptions({ width: chartContainerRef.current.clientWidth });
         }
       };
       window.addEventListener('resize', onResize);
@@ -135,14 +115,14 @@ export function EquityCurveCard() {
     };
 
     init().catch((e) => {
-      console.error('Equity chart init failed:', e);
+      console.error('Return curve init failed:', e);
     });
 
     return () => {
       cancelled = true;
       cleanup?.();
     };
-  }, [points, isPositive]);
+  }, [points]);
 
   const bucketLabel = bucket ? BUCKET_LABELS[bucket] : 'All buckets';
 
@@ -152,30 +132,27 @@ export function EquityCurveCard() {
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="text-xs uppercase tracking-wider text-foreground-muted">
-            Equity curve · {bucketLabel}
+            Return · {bucketLabel}
           </p>
-          {last ? (
-            <p className="text-2xl font-semibold tabular-nums mt-0.5">
-              {formatMoney(last.equity)}
-            </p>
-          ) : (
-            <Skeleton.Line className="h-7 w-32 mt-1" />
-          )}
-          {periodChange != null && (
+          {periodChange != null ? (
             <p
               className={clsx(
-                'text-xs font-medium flex items-center gap-1 mt-0.5',
+                'text-2xl font-semibold tabular-nums mt-0.5 flex items-center gap-1',
                 isPositive ? 'text-profit' : 'text-loss',
               )}
             >
               {isPositive ? (
-                <ArrowTrendingUpIcon className="h-3 w-3" />
+                <ArrowTrendingUpIcon className="h-4 w-4" />
               ) : (
-                <ArrowTrendingDownIcon className="h-3 w-3" />
+                <ArrowTrendingDownIcon className="h-4 w-4" />
               )}
-              {formatSignedPct(periodChange)} over {range}
+              {formatSignedPct(periodChange)}
+              <span className="text-xs font-normal text-foreground-muted">over {range}</span>
             </p>
+          ) : (
+            <Skeleton.Line className="h-7 w-32 mt-1" />
           )}
+          <p className="text-[10px] text-foreground-subtle mt-0.5 max-w-xs">{CLARITY_NOTE}</p>
         </div>
 
         {/* Time-range tabs */}
@@ -206,17 +183,15 @@ export function EquityCurveCard() {
         )}
         {!isLoading && !error && points.length < 2 && (
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
-            <p className="text-sm text-foreground-muted">No equity history yet</p>
+            <p className="text-sm text-foreground-muted">Not enough price history yet</p>
             <p className="text-xs text-foreground-subtle mt-1">
-              {bucket
-                ? 'Switch buckets above, or wait for the next nightly snapshot to record the first data point.'
-                : 'Position snapshots are recorded nightly by the EC2 pipeline. The curve will populate over time.'}
+              The return curve needs at least two trading days of data for your current holdings.
             </p>
           </div>
         )}
         {error && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <p className="text-sm text-loss">Couldn&apos;t load the equity curve.</p>
+            <p className="text-sm text-loss">Couldn&apos;t load the return curve.</p>
           </div>
         )}
         <div ref={chartContainerRef} className="h-full w-full" />
