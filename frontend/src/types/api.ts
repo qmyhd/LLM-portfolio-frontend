@@ -557,6 +557,64 @@ export interface ReturnSeriesResponse {
   points: ReturnSeriesPoint[];
 }
 
+// === AI stock profiling (Project B) ===
+
+export interface TrackRecord {
+  symbol: string;
+  bucket: string;
+  tradeCount: number;
+  realizedPnlPct: number;
+  winRate: number;
+  avgHoldDays: number;
+  best: number;
+  worst: number;
+  currentQty: number;
+  currentWeightPct: number;
+  firstTradeDate: string | null;
+  lastTradeDate: string | null;
+}
+
+export interface ThesisProfile {
+  symbol: string;
+  bucket: string;
+  thesis: string | null;
+  conviction: number | null;
+  convictionRationale: string | null;
+  bullCase: string | null;
+  bearCase: string | null;
+  catalysts: Array<{ text?: string; title?: string; date?: string; source?: string; url?: string }>;
+  risks: Array<{ text?: string; source?: string }>;
+  levels: { entry?: number; target?: number; stop?: number };
+  horizon: string | null;
+  tags: string[];
+  status: string;
+  updatedAt: string | null;
+  reviewedAt: string | null;
+  trackRecord: TrackRecord | null;
+}
+
+export interface InterviewQuestion {
+  field: string;
+  question: string;
+}
+
+export interface ProfileAutofill {
+  symbol: string;
+  bucket: string;
+  trackRecord: TrackRecord | null;
+  catalysts: Array<{ title?: string; date?: string; source?: string; url?: string }>;
+  consensus: { overall_signal?: string; overall_confidence?: number; summary?: string } | null;
+  ideas: Array<{ direction?: string; labels?: string[]; text?: string; author?: string }>;
+  dataSources: string[];
+}
+
+export interface ProfileQueueItem {
+  symbol: string;
+  bucket: string;
+  hasProfile: boolean;
+  reason: string;
+}
+
 // =============================================================================
 // Sparklines (batch close prices for portfolio sparklines)
 // =============================================================================
