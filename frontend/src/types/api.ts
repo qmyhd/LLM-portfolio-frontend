@@ -534,6 +534,8 @@ export interface ConsensusReport {
 export interface PortfolioRiskReport {
   var_95_1d: number;
   var_95_5d: number;
+  var_95_1d_pct: number;
+  var_95_5d_pct: number;
   concentration_hhi: number;
   diversification_ratio: number;
   correlation_matrix: Record<string, Record<string, number>>;
@@ -541,6 +543,18 @@ export interface PortfolioRiskReport {
   sector_exposure: Record<string, number>;
   computed_at: string; // ISO datetime
   data_sources: string[];
+}
+
+export interface ReturnSeriesPoint {
+  date: string;      // ISO date
+  returnPct: number; // cumulative % return vs window start
+}
+
+export interface ReturnSeriesResponse {
+  period: string;
+  asOf: string;
+  periodReturnPct: number;
+  points: ReturnSeriesPoint[];
 }
 
 // =============================================================================

@@ -1,6 +1,5 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-import type { ApiError } from '@/types/api';
 import { backendFetch, authGuard } from '@/lib/api-client';
 
 // Watchlist item from backend

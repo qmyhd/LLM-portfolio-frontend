@@ -144,10 +144,6 @@ export default function PositionsPage() {
   });
 
   const totalValue = positions.reduce((sum, p) => sum + p.marketValue, 0);
-  const totalCost = positions.reduce((sum, p) => sum + p.totalCost, 0);
-  const totalPL = totalValue - totalCost;
-  const totalPLPercent = totalCost > 0 ? (totalPL / totalCost) * 100 : 0;
-  const totalDayChange = positions.reduce((sum, p) => sum + p.dayChange, 0);
 
   const toggleSort = (column: typeof sortBy) => {
     if (sortBy === column) {
@@ -270,7 +266,7 @@ export default function PositionsPage() {
                   onClick={() => toggleSort('value')}
                 >
                   <span className="inline-flex items-center gap-1">
-                    Value
+                    Weight
                     {sortBy === 'value' && (sortOrder === 'desc'
                       ? <ChevronDownIcon className="h-3.5 w-3.5" />
                       : <ChevronUpIcon className="h-3.5 w-3.5" />)}
@@ -363,7 +359,7 @@ export default function PositionsPage() {
                       {formatMoney(pos.currentPrice)}
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-sm font-medium">
-                      {formatMoney(pos.marketValue)}
+                      {formatPercent(totalValue > 0 ? (pos.marketValue / totalValue) * 100 : 0, 1)}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <span className={`inline-flex items-center gap-1 font-mono text-sm font-medium ${

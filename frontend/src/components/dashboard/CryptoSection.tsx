@@ -10,8 +10,7 @@ import {
 import { usePortfolio } from '@/hooks';
 import { useBucket } from '@/contexts/BucketContext';
 import { stockHref } from '@/lib/bucket';
-import type { Position } from '@/types/api';
-import { formatMoney, formatPercent, formatSignedMoney, formatQuantity } from '@/lib/format';
+import { formatMoney, formatPercent, formatQuantity } from '@/lib/format';
 import { pnlTextColor, pnlBgColor } from '@/lib/colors';
 import { CardSpotlight } from '@/components/ui/CardSpotlight';
 
@@ -52,6 +51,14 @@ export function CryptoSection() {
     [cryptoPositions],
   );
 
+  const totalCost = useMemo(() =>
+    cryptoPositions.reduce((s, p) => s + p.quantity * p.averageBuyPrice, 0),
+    [cryptoPositions],
+  );
+  const totalPnlPct = totalCost > 0 ? (totalPnl / totalCost) * 100 : 0;
+  const portfolioEquity = data?.summary?.totalEquity ?? 0;
+  const cryptoWeight = portfolioEquity > 0 ? (totalValue / portfolioEquity) * 100 : null;
+
   // Don't render if no crypto positions
   if (cryptoPositions.length === 0) return null;
 
@@ -69,9 +76,13 @@ export function CryptoSection() {
               ({cryptoPositions.length})
             </span>
           </h2>
-          <span className="text-sm font-mono">{formatMoney(totalValue)}</span>
-          <span className={clsx('text-xs font-mono', pnlTextColor(totalPnl))}>
-            {formatSignedMoney(totalPnl)}
+          {cryptoWeight != null && (
+            <span className="text-sm font-mono text-foreground-muted">
+              {formatPercent(cryptoWeight, 1)} of portfolio
+            </span>
+          )}
+          <span className={clsx('text-xs font-mono', pnlTextColor(totalPnlPct))}>
+            {formatPercent(totalPnlPct, 2, { showSign: true })}
           </span>
         </div>
         {isOpen ? (
@@ -97,7 +108,7 @@ export function CryptoSection() {
                   Price
                 </th>
                 <th className="px-3 py-2 text-[11px] font-medium uppercase tracking-wider text-foreground-muted text-right">
-                  Value
+                  Weight
                 </th>
                 <th className="px-3 py-2 text-[11px] font-medium uppercase tracking-wider text-foreground-muted text-right">
                   P/L %
@@ -125,7 +136,7 @@ export function CryptoSection() {
                     {formatMoney(position.currentPrice)}
                   </td>
                   <td className="px-3 py-2.5 text-right font-mono text-sm">
-                    {formatMoney(position.equity)}
+                    {formatPercent(position.portfolioDiversity, 1)}
                   </td>
                   <td className="px-3 py-2.5 text-right">
                     <span

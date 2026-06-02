@@ -25,7 +25,6 @@ function TradingViewChartInner({
   height = 500,
   autosize = true,
   showToolbar = true,
-  showDrawingToolsPanel = false,
   showRangeSelector = true,
   allowSymbolChange = true,
   className = '',

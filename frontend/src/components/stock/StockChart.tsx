@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { clsx } from 'clsx';
 import { formatNumber } from '@/lib/format';
 import useSWR from 'swr';
