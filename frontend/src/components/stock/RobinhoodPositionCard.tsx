@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { BanknotesIcon } from '@heroicons/react/24/outline';
 import type { Position } from '@/types/api';
-import { formatMoney, formatSignedMoney, formatPercent, formatQuantity } from '@/lib/format';
+import { formatMoney, formatPercent, formatQuantity } from '@/lib/format';
 import { pnlTextColor } from '@/lib/colors';
 import { useBucket, withBucket } from '@/contexts/BucketContext';
 
@@ -116,26 +116,25 @@ export function RobinhoodPositionCard({ ticker }: RobinhoodPositionCardProps) {
         <span className="text-xs font-semibold uppercase tracking-wider">Your Position</span>
       </div>
 
-      {/* Hero: Total Return */}
+      {/* Hero: Total Return % */}
       <div className="text-center mb-4 py-2">
         <p className={`text-2xl font-bold font-mono tabular-nums ${pnlTextColor(agg.unrealizedPL)}`}>
-          {formatSignedMoney(agg.unrealizedPL)}
-        </p>
-        <p className={`text-sm font-semibold font-mono tabular-nums ${pnlTextColor(agg.unrealizedPL)}`}>
-          {agg.unrealizedPL >= 0 ? '▲' : '▼'} {formatPercent(agg.unrealizedPLPct, 2)}
+          {agg.unrealizedPL >= 0 ? '▲' : '▼'} {formatPercent(agg.unrealizedPLPct, 2, { showSign: true })}
         </p>
         <p className="text-xs text-foreground-muted mt-0.5">Total return</p>
       </div>
 
-      {/* 2×2 Stats grid */}
+      {/* 2×2 Stats grid (no $ totals; avg cost kept as a factual price) */}
       <div className="grid grid-cols-2 gap-px bg-border rounded-lg overflow-hidden mb-3">
         <div className="bg-background p-3">
           <p className="text-lg font-bold font-mono tabular-nums">{formatQuantity(agg.totalShares)}</p>
           <p className="text-xs text-foreground-muted mt-0.5">Shares</p>
         </div>
         <div className="bg-background p-3">
-          <p className="text-lg font-bold font-mono tabular-nums">{formatMoney(agg.totalValue)}</p>
-          <p className="text-xs text-foreground-muted mt-0.5">Market Value</p>
+          <p className={`text-lg font-bold font-mono tabular-nums ${pnlTextColor(agg.dayChangePct ?? 0)}`}>
+            {agg.dayChangePct != null ? formatPercent(agg.dayChangePct, 2, { showSign: true }) : '—'}
+          </p>
+          <p className="text-xs text-foreground-muted mt-0.5">Today</p>
         </div>
         <div className="bg-background p-3">
           <p className="text-lg font-bold font-mono tabular-nums">{formatMoney(agg.weightedAvgCost)}</p>
@@ -156,20 +155,7 @@ export function RobinhoodPositionCard({ ticker }: RobinhoodPositionCardProps) {
         </div>
       </div>
 
-      {/* Footer: Today's return */}
-      <div className="flex items-center justify-between text-xs">
-        <span className="text-foreground-muted">Today&apos;s return</span>
-        <span className={`font-semibold font-mono tabular-nums ${pnlTextColor(agg.dayChange)}`}>
-          {formatSignedMoney(agg.dayChange)}
-          {agg.dayChangePct != null && (
-            <span className="ml-1 text-foreground-muted font-normal">
-              ({formatPercent(agg.dayChangePct, 2, { showSign: true })})
-            </span>
-          )}
-        </span>
-      </div>
-
-      {/* Per-account breakdown (only if multiple accounts) */}
+      {/* Per-account breakdown (only if multiple accounts) — shares only, no $ */}
       {agg.accounts.length > 1 && (
         <div className="pt-3 mt-3 border-t border-border">
           <p className="text-xs text-foreground-muted mb-2">Accounts</p>
@@ -179,10 +165,9 @@ export function RobinhoodPositionCard({ ticker }: RobinhoodPositionCardProps) {
                 <span className="text-foreground-muted truncate max-w-[120px]" title={acct.name}>
                   {acct.name.length > 8 ? `${acct.name.slice(0, 8)}…` : acct.name}
                 </span>
-                <div className="flex items-center gap-3 font-mono tabular-nums">
-                  <span className="text-foreground-muted">{formatQuantity(acct.shares)} sh</span>
-                  <span className="text-foreground">{formatMoney(acct.value)}</span>
-                </div>
+                <span className="font-mono tabular-nums text-foreground-muted">
+                  {formatQuantity(acct.shares)} sh
+                </span>
               </div>
             ))}
           </div>
