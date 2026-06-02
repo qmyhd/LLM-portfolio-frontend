@@ -13,7 +13,7 @@ import { useBucket } from '@/contexts/BucketContext';
 import { stockHref } from '@/lib/bucket';
 import { AssetBadge } from '@/components/ui/AssetBadge';
 import type { Position } from '@/types/api';
-import { formatMoney, formatPercent, formatSignedMoney, formatQuantity } from '@/lib/format';
+import { formatMoney, formatPercent, formatQuantity } from '@/lib/format';
 import { pnlTextColor, pnlBgColor } from '@/lib/colors';
 import { COMPANY_NAMES } from '@/lib/mappers';
 import { CardSpotlight } from '@/components/ui/CardSpotlight';
@@ -48,12 +48,12 @@ interface ColumnDef {
 
 const COLUMNS: ColumnDef[] = [
   { key: 'symbol', label: 'Symbol', align: 'left', sortable: true },
-  { key: 'equity', label: 'Market Value', shortLabel: 'Value', align: 'right', sortable: true },
+  { key: 'equity', label: 'Weight', shortLabel: 'Weight', align: 'right', sortable: true },
   { key: 'openPnlPercent', label: 'Total P/L %', shortLabel: 'P/L %', align: 'right', sortable: true },
   { key: 'quantity', label: 'Shares', align: 'right', hideClass: 'hidden sm:table-cell', sortable: true },
   { key: 'averageBuyPrice', label: 'Avg Cost', align: 'right', hideClass: 'hidden md:table-cell', sortable: true },
   { key: 'currentPrice', label: 'Price', align: 'right', hideClass: 'hidden md:table-cell', sortable: true },
-  { key: 'dayChange', label: "Today", align: 'right', hideClass: 'hidden lg:table-cell', sortable: true },
+  { key: 'dayChange', label: 'Today %', shortLabel: 'Today', align: 'right', hideClass: 'hidden lg:table-cell', sortable: true },
 ];
 
 // ---------------------------------------------------------------------------
@@ -327,10 +327,10 @@ export function HoldingsTable() {
                     </Link>
                   </td>
 
-                  {/* Market Value + shares on mobile */}
+                  {/* Weight (% of portfolio) + shares on mobile */}
                   <td className="px-3 py-2.5 text-right">
                     <div className="font-mono text-sm tabular-nums">
-                      {formatMoney(position.equity)}
+                      {formatPercent(position.portfolioDiversity, 1)}
                     </div>
                     <div className="sm:hidden text-[10px] text-foreground-muted font-mono tabular-nums mt-0.5">
                       {formatQuantity(position.quantity)} shares
@@ -372,12 +372,12 @@ export function HoldingsTable() {
                     {formatMoney(position.currentPrice)}
                   </td>
 
-                  {/* Today's Change */}
+                  {/* Today's Change % */}
                   <td className={clsx(
                     'hidden lg:table-cell px-3 py-2.5 text-right font-mono text-sm tabular-nums',
-                    pnlTextColor(position.dayChange),
+                    pnlTextColor(position.dayChangePercent),
                   )}>
-                    {formatSignedMoney(position.dayChange)}
+                    {formatPercent(position.dayChangePercent, 2, { showSign: true })}
                   </td>
                 </tr>
               );
