@@ -6,7 +6,7 @@ import {
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { formatNumber } from '@/lib/format';
+import { formatNumber, formatPercent } from '@/lib/format';
 import { useBucket, withBucket } from '@/contexts/BucketContext';
 import type { PortfolioRiskReport } from '@/types/api';
 
@@ -71,7 +71,7 @@ export function PortfolioRiskCard() {
         <div className="flex justify-between text-sm">
           <span className="text-foreground-muted">VaR 95% (1D)</span>
           <span className="font-mono text-loss">
-            -${formatNumber(risk.var_95_1d, 0)}
+            -{formatPercent(risk.var_95_1d_pct, 1)}
           </span>
         </div>
 
@@ -79,7 +79,7 @@ export function PortfolioRiskCard() {
         <div className="flex justify-between text-sm">
           <span className="text-foreground-muted">VaR 95% (5D)</span>
           <span className="font-mono text-loss">
-            -${formatNumber(risk.var_95_5d, 0)}
+            -{formatPercent(risk.var_95_5d_pct, 1)}
           </span>
         </div>
 
