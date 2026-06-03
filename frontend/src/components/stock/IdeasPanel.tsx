@@ -335,7 +335,7 @@ function IdeaCard({ idea, ticker, onAuthorClick }: IdeaCardProps) {
 
       {/* Labels */}
       <div className="flex flex-wrap gap-1 mb-2">
-        {idea.labels.map((label) => (
+        {(idea.labels ?? []).map((label) => (
           <span
             key={label}
             className={clsx(
