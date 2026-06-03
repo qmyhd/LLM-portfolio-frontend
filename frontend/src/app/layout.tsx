@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Analytics } from '@vercel/analytics/next';
 import { PageTransition } from '@/components/layout/PageTransition';
 import { SplashGate } from '@/components/ui/SplashGate';
+import { SWRProvider } from '@/components/providers/SWRProvider';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -18,10 +19,12 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className="min-h-screen bg-background">
-        <SplashGate>
-          <PageTransition>{children}</PageTransition>
-          <Analytics />
-        </SplashGate>
+        <SWRProvider>
+          <SplashGate>
+            <PageTransition>{children}</PageTransition>
+            <Analytics />
+          </SplashGate>
+        </SWRProvider>
       </body>
     </html>
   );
