@@ -10,7 +10,10 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { formatNumber } from '@/lib/format';
 import { useBucket, withBucket } from '@/contexts/BucketContext';
+import { CredibilityDelta } from '@/components/stock/CredibilityDelta';
+import { StockTopicTagsEditor } from '@/components/stock/StockTopicTagsEditor';
 import type { ConsensusReport, AgentSignal } from '@/types/api';
+import type { CredibilityBreakdown } from '@/types/credibility';
 
 interface AnalysisPanelProps {
   ticker: string;
@@ -151,6 +154,9 @@ export function AnalysisPanel({ ticker }: AnalysisPanelProps) {
   const signalColor = SIGNAL_COLORS[report.overall_signal] || SIGNAL_COLORS.hold;
   const signalLabel = SIGNAL_LABELS[report.overall_signal] || report.overall_signal;
 
+  const sentiment = report?.agent_signals?.find((s) => s.agent_id === 'sentiment');
+  const credibility = (sentiment?.metrics?.credibility ?? null) as CredibilityBreakdown | null;
+
   return (
     <div className="p-4 space-y-4 overflow-y-auto h-full">
       {/* Overall Signal */}
@@ -214,6 +220,19 @@ export function AnalysisPanel({ ticker }: AnalysisPanelProps) {
           <AgentSignalCard key={signal.agent_id} signal={signal} />
         ))}
       </div>
+
+      {/* Credibility weighting delta (sentiment agent) */}
+      <CredibilityDelta breakdown={credibility} />
+
+      {/* Topic tags (credibility routing) */}
+      <details className="card p-3">
+        <summary className="cursor-pointer text-xs uppercase tracking-wider text-foreground-muted hover:text-foreground">
+          Topic tags (credibility routing)
+        </summary>
+        <div className="mt-3">
+          <StockTopicTagsEditor ticker={ticker} />
+        </div>
+      </details>
 
       {/* Metadata */}
       <div className="text-[10px] text-foreground-subtle space-y-0.5 pt-2 border-t border-border">

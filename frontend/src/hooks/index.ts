@@ -19,3 +19,7 @@ export {
   useTranscript, useManagement, useFundamentals,
   useFilings, useNews, useNotes,
 } from './useOpenBB';
+export {
+  usePeople, usePerson, usePersonRevisions, useUnmatchedIdentities,
+  useCredibilityCategories, useTierMultipliers, useTopicTags,
+} from './useCredibility';
