@@ -23,3 +23,4 @@ export {
   usePeople, usePerson, usePersonRevisions, useUnmatchedIdentities,
   useCredibilityCategories, useTierMultipliers, useTopicTags,
 } from './useCredibility';
+export { useResolveVideo, useQuotes } from './useResearch';
