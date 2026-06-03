@@ -12,6 +12,7 @@ import { useBucket, withBucket } from '@/contexts/BucketContext';
 import { formatPercent } from '@/lib/format';
 import { pnlTextColor, trendDirection } from '@/lib/colors';
 import { TimeRangeTabs } from '@/components/ui/TimeRangeTabs';
+import { RefreshingIndicator } from '@/components/ui/RefreshingIndicator';
 import type { ReturnSeriesResponse } from '@/types/api';
 
 const RANGES: TimeRange[] = ['1W', '1M', '3M', 'YTD', '1Y', 'ALL'];
@@ -35,7 +36,7 @@ const returnFetcher = async (url: string): Promise<ReturnSeriesResponse> => {
 };
 
 export function RobinhoodHeader() {
-  const { data, error, isLoading } = usePortfolio();
+  const { data, error, isLoading, isValidating } = usePortfolio();
   const { range, setRange } = useTimeRange();
   const bucket = useBucket();
 
@@ -97,6 +98,8 @@ export function RobinhoodHeader() {
         </span>
         <span className="text-border">|</span>
         <span className="text-xs text-foreground-muted">{summary.positionsCount} positions</span>
+        <span className="text-border">|</span>
+        <RefreshingIndicator updating={isValidating} asOf={data.lastUpdated ?? summary.lastSync} />
       </div>
 
       {/* Clarity caption */}
