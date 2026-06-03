@@ -7,16 +7,23 @@ import { usePeople, useCredibilityCategories } from '@/hooks/useCredibility';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { TierBoard } from '@/components/credibility/TierBoard';
 import { PersonDetailView } from '@/components/credibility/PersonDetailView';
+import { PersonProfileEditor } from '@/components/credibility/PersonProfileEditor';
 import type { PersonDetail } from '@/types/credibility';
 
+// `editor` describes the right-hand panel mode: closed (read-only detail),
+// creating a new person, or editing an existing one.
+type EditorMode = { kind: 'closed' } | { kind: 'create' } | { kind: 'edit'; id: number };
+
 export default function CredibilityWorkspacePage() {
-  const { people, error: peopleError, isLoading: peopleLoading } = usePeople();
+  const { people, error: peopleError, isLoading: peopleLoading, refresh: refreshPeople } = usePeople();
   const { categories, isLoading: catsLoading } = useCredibilityCategories();
 
   const [category, setCategory] = useState<string>('');
   const [details, setDetails] = useState<PersonDetail[]>([]);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [editor, setEditor] = useState<EditorMode>({ kind: 'closed' });
 
   // Default the category to the first one once categories load.
   useEffect(() => {
@@ -47,7 +54,7 @@ export default function CredibilityWorkspacePage() {
     return () => {
       cancelled = true;
     };
-  }, [people]);
+  }, [people, reloadKey]);
 
   const attentionIds = useMemo(
     () => new Set(people.filter((p) => p.needsAttention).map((p) => p.id)),
@@ -55,6 +62,14 @@ export default function CredibilityWorkspacePage() {
   );
 
   const isLoading = peopleLoading || catsLoading;
+
+  // After a create/edit save: close the editor, refresh the people list, and
+  // bump reloadKey so the per-person detail fetch re-runs.
+  const handleSaved = () => {
+    setEditor({ kind: 'closed' });
+    refreshPeople();
+    setReloadKey((k) => k + 1);
+  };
 
   return (
     <div className="flex h-screen">
@@ -86,9 +101,11 @@ export default function CredibilityWorkspacePage() {
                 </select>
                 <button
                   type="button"
-                  disabled
-                  title="(coming in editor)"
-                  className="btn-primary opacity-50 cursor-not-allowed"
+                  onClick={() => {
+                    setSelectedId(null);
+                    setEditor({ kind: 'create' });
+                  }}
+                  className="btn-primary"
                 >
                   Add person
                 </button>
@@ -120,17 +137,33 @@ export default function CredibilityWorkspacePage() {
                     category={category}
                     attentionIds={attentionIds}
                     selectedId={selectedId}
-                    onSelect={setSelectedId}
+                    onSelect={(id) => {
+                      setEditor({ kind: 'closed' });
+                      setSelectedId(id);
+                    }}
                   />
                 )}
               </div>
 
-              {/* Detail panel */}
+              {/* Detail / editor panel */}
               <div className="card overflow-hidden">
-                <PersonDetailView
-                  personId={selectedId}
-                  onClose={() => setSelectedId(null)}
-                />
+                {editor.kind === 'closed' ? (
+                  <PersonDetailView
+                    personId={selectedId}
+                    onEdit={
+                      selectedId != null
+                        ? () => setEditor({ kind: 'edit', id: selectedId })
+                        : undefined
+                    }
+                    onClose={() => setSelectedId(null)}
+                  />
+                ) : (
+                  <PersonProfileEditor
+                    personId={editor.kind === 'edit' ? editor.id : null}
+                    onSaved={handleSaved}
+                    onCancel={() => setEditor({ kind: 'closed' })}
+                  />
+                )}
               </div>
             </div>
           </div>
