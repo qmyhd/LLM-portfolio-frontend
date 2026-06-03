@@ -91,7 +91,10 @@ function getSortValue(position: Position, key: SortKey): number | string {
     case 'quantity': return position.quantity;
     case 'averageBuyPrice': return position.averageBuyPrice ?? 0;
     case 'openPnlPercent': return position.openPnlPercent;
-    case 'dayChange': return position.dayChange ?? 0;
+    // The "Today %" column displays dayChangePercent, so sort by the same
+    // metric (sorting by the dollar dayChange scrambled the visible order:
+    // a tiny position can show a big % with a small $ change, and vice-versa).
+    case 'dayChange': return position.dayChangePercent ?? 0;
   }
 }
 
