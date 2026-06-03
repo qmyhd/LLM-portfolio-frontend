@@ -13,11 +13,19 @@ function fmt(seconds: number): string {
 interface TranscriptViewerProps {
   segments: TranscriptSegment[];
   activeIndex: number;
+  selectedRange: [number, number] | null;
   onSeek: (start: number) => void;
+  onToggleSelect: (index: number) => void;
 }
 
-export function TranscriptViewer({ segments, activeIndex, onSeek }: TranscriptViewerProps) {
-  const activeRef = useRef<HTMLButtonElement>(null);
+export function TranscriptViewer({
+  segments,
+  activeIndex,
+  selectedRange,
+  onSeek,
+  onToggleSelect,
+}: TranscriptViewerProps) {
+  const activeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     activeRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -27,23 +35,41 @@ export function TranscriptViewer({ segments, activeIndex, onSeek }: TranscriptVi
     return <p className="text-sm text-foreground-muted p-4">No transcript segments.</p>;
   }
 
+  const inSel = (i: number) =>
+    selectedRange != null && i >= selectedRange[0] && i <= selectedRange[1];
+
   return (
     <div className="space-y-0.5 overflow-y-auto max-h-[70vh] pr-1">
       {segments.map((seg, i) => (
-        <button
+        <div
           key={`${seg.start}-${i}`}
           ref={i === activeIndex ? activeRef : undefined}
-          onClick={() => onSeek(seg.start)}
           className={clsx(
-            'w-full text-left flex gap-2 px-2 py-1 rounded text-sm transition-colors',
-            i === activeIndex
-              ? 'bg-primary/15 text-foreground'
-              : 'text-foreground-muted hover:bg-background-hover',
+            'flex gap-2 px-1 py-1 rounded items-start',
+            inSel(i) && 'bg-primary/10 border-l-2 border-primary',
+            i === activeIndex && !inSel(i) && 'bg-background-hover',
           )}
         >
-          <span className="font-mono text-xs text-foreground-subtle shrink-0 tabular-nums">{fmt(seg.start)}</span>
-          <span>{seg.text}</span>
-        </button>
+          <button
+            type="button"
+            aria-label={inSel(i) ? 'Deselect line' : 'Select line'}
+            onClick={() => onToggleSelect(i)}
+            className={clsx(
+              'mt-1 h-4 w-4 shrink-0 rounded-sm border transition-colors',
+              inSel(i) ? 'bg-primary border-primary' : 'border-border hover:border-primary',
+            )}
+          />
+          <button
+            type="button"
+            onClick={() => onSeek(seg.start)}
+            className="text-left flex gap-2 text-sm text-foreground-muted hover:text-foreground"
+          >
+            <span className="font-mono text-xs text-foreground-subtle shrink-0 tabular-nums">
+              {fmt(seg.start)}
+            </span>
+            <span>{seg.text}</span>
+          </button>
+        </div>
       ))}
     </div>
   );

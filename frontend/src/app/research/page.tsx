@@ -6,6 +6,7 @@ import { TopBar } from '@/components/layout/TopBar';
 import { useResolveVideo } from '@/hooks/useResearch';
 import { VideoPlayer } from '@/components/research/VideoPlayer';
 import { TranscriptViewer } from '@/components/research/TranscriptViewer';
+import { CaptureDrawer, type QuoteDraft } from '@/components/research/CaptureDrawer';
 import type { ResolvedVideo } from '@/types/research';
 
 export default function ResearchWorkspacePage() {
@@ -15,11 +16,19 @@ export default function ResearchWorkspacePage() {
   const [activeIndex, setActiveIndex] = useState(-1);
   const seekRef = useRef<((s: number) => void) | null>(null);
 
+  const [anchor, setAnchor] = useState<number | null>(null);
+  const [range, setRange] = useState<[number, number] | null>(null);
+  const [draft, setDraft] = useState<QuoteDraft | null>(null);
+  const [savedMsg, setSavedMsg] = useState(false);
+
   const load = async () => {
     const trimmed = url.trim();
     if (!trimmed) return;
     setActiveIndex(-1);
     seekRef.current = null;
+    setAnchor(null);
+    setRange(null);
+    setDraft(null);
     const v = await resolve(trimmed);
     if (v) setVideo(v);
   };
@@ -28,21 +37,53 @@ export default function ResearchWorkspacePage() {
     seekRef.current = fn;
   }, []);
 
-  const onTime = useCallback(
-    (t: number) => {
-      setVideo((cur) => {
-        if (!cur) return cur;
-        let idx = -1;
-        for (let i = 0; i < cur.segments.length; i++) {
-          if (cur.segments[i].start <= t) idx = i;
-          else break;
-        }
-        setActiveIndex(idx);
-        return cur;
-      });
-    },
-    [],
-  );
+  const onTime = useCallback((t: number) => {
+    setVideo((cur) => {
+      if (!cur) return cur;
+      let idx = -1;
+      for (let i = 0; i < cur.segments.length; i++) {
+        if (cur.segments[i].start <= t) idx = i;
+        else break;
+      }
+      setActiveIndex(idx);
+      return cur;
+    });
+  }, []);
+
+  const toggleSelect = (i: number) => {
+    if (anchor === null) {
+      setAnchor(i);
+      setRange([i, i]);
+    } else {
+      setRange([Math.min(anchor, i), Math.max(anchor, i)]);
+    }
+  };
+
+  const clearSel = () => {
+    setAnchor(null);
+    setRange(null);
+  };
+
+  const openDrawer = () => {
+    if (!video || !range) return;
+    const segs = video.segments.slice(range[0], range[1] + 1);
+    if (segs.length === 0) return;
+    const last = segs[segs.length - 1];
+    setDraft({
+      quoteText: segs.map((s) => s.text).join(' '),
+      startSeconds: segs[0].start,
+      endSeconds: last.start + last.duration,
+    });
+  };
+
+  const onSaved = () => {
+    setDraft(null);
+    clearSel();
+    setSavedMsg(true);
+    window.setTimeout(() => setSavedMsg(false), 2500);
+  };
+
+  const selCount = range ? range[1] - range[0] + 1 : 0;
 
   return (
     <div className="flex h-screen">
@@ -54,7 +95,7 @@ export default function ResearchWorkspacePage() {
             <div>
               <h1 className="text-2xl font-bold text-foreground">Video Research</h1>
               <p className="text-foreground-muted">
-                Paste a YouTube URL to watch alongside its transcript.
+                Paste a YouTube URL, then select transcript lines to save as quotes.
               </p>
             </div>
 
@@ -80,12 +121,11 @@ export default function ResearchWorkspacePage() {
             </div>
 
             {error && <p className="text-sm text-loss">{error.message}</p>}
+            {savedMsg && <p className="text-sm text-primary">Quote saved.</p>}
 
             {!video && !isResolving && (
               <div className="card p-8 text-center">
-                <p className="text-sm text-foreground-muted">
-                  Paste a YouTube URL above to begin.
-                </p>
+                <p className="text-sm text-foreground-muted">Paste a YouTube URL above to begin.</p>
               </div>
             )}
 
@@ -98,12 +138,27 @@ export default function ResearchWorkspacePage() {
                     <p className="text-xs text-foreground-muted">{video.channelName}</p>
                   )}
                 </div>
-                <div className="card p-3">
+                <div className="card p-3 flex flex-col">
+                  {selCount > 0 && (
+                    <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-border">
+                      <span className="text-xs text-foreground-muted">{selCount} line(s) selected</span>
+                      <div className="flex gap-2">
+                        <button type="button" onClick={openDrawer} className="btn-primary text-xs">
+                          Save quote
+                        </button>
+                        <button type="button" onClick={clearSel} className="btn-ghost text-xs">
+                          Clear
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   {video.transcriptAvailable ? (
                     <TranscriptViewer
                       segments={video.segments}
                       activeIndex={activeIndex}
+                      selectedRange={range}
                       onSeek={(s) => seekRef.current?.(s)}
+                      onToggleSelect={toggleSelect}
                     />
                   ) : (
                     <div className="p-4 text-center">
@@ -119,6 +174,15 @@ export default function ResearchWorkspacePage() {
           </div>
         </main>
       </div>
+
+      {draft && video && (
+        <CaptureDrawer
+          video={video}
+          draft={draft}
+          onClose={() => setDraft(null)}
+          onSaved={onSaved}
+        />
+      )}
     </div>
   );
 }
