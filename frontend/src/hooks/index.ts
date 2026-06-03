@@ -9,6 +9,7 @@ export { useMovers } from './useMovers';
 export { useActivities } from './useActivities';
 export { useSparklines } from './useSparklines';
 export { useStockProfile } from './useStockProfile';
+export { useThesisProfile } from './useThesisProfile';
 export { useOrders } from './useOrders';
 export { useSentiment } from './useSentiment';
 export { useStockActivities } from './useStockActivities';

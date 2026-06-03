@@ -34,6 +34,7 @@ import { stockHref } from '@/lib/bucket';
 const researchNav = [
   { name: 'Research', href: '/', icon: HomeIcon, activeIcon: HomeIconSolid, exact: true },
   { name: 'Ideas', href: '/ideas', icon: LightBulbIcon, activeIcon: LightBulbIconSolid },
+  { name: 'Profiles', href: '/profiles', icon: ClipboardDocumentListIcon, activeIcon: ClipboardDocumentListIconSolid },
 ];
 
 // "Overview" instead of "Portfolio" to avoid duplicating the section
