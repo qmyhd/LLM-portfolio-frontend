@@ -12,6 +12,7 @@ import {
   Cog6ToothIcon,
   LightBulbIcon,
   BriefcaseIcon,
+  ShieldCheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
 } from '@heroicons/react/24/outline';
@@ -22,6 +23,7 @@ import {
   ArrowsRightLeftIcon as ArrowsRightLeftIconSolid,
   LightBulbIcon as LightBulbIconSolid,
   BriefcaseIcon as BriefcaseIconSolid,
+  ShieldCheckIcon as ShieldCheckIconSolid,
 } from '@heroicons/react/24/solid';
 import { formatNumber } from '@/lib/format';
 import { useBucket } from '@/contexts/BucketContext';
@@ -35,6 +37,7 @@ const researchNav = [
   { name: 'Research', href: '/', icon: HomeIcon, activeIcon: HomeIconSolid, exact: true },
   { name: 'Ideas', href: '/ideas', icon: LightBulbIcon, activeIcon: LightBulbIconSolid },
   { name: 'Profiles', href: '/profiles', icon: ClipboardDocumentListIcon, activeIcon: ClipboardDocumentListIconSolid },
+  { name: 'Credibility', href: '/credibility', icon: ShieldCheckIcon, activeIcon: ShieldCheckIconSolid },
 ];
 
 // "Overview" instead of "Portfolio" to avoid duplicating the section
