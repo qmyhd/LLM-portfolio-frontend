@@ -3,11 +3,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
-import { usePeople, useCredibilityCategories } from '@/hooks/useCredibility';
+import { usePeople, useCredibilityCategories, useUnmatchedIdentities } from '@/hooks/useCredibility';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { TierBoard } from '@/components/credibility/TierBoard';
 import { PersonDetailView } from '@/components/credibility/PersonDetailView';
 import { PersonProfileEditor } from '@/components/credibility/PersonProfileEditor';
+import { ReviewQueue } from '@/components/credibility/ReviewQueue';
 import type { PersonDetail } from '@/types/credibility';
 
 // `editor` describes the right-hand panel mode: closed (read-only detail),
@@ -17,8 +18,10 @@ type EditorMode = { kind: 'closed' } | { kind: 'create' } | { kind: 'edit'; id: 
 export default function CredibilityWorkspacePage() {
   const { people, error: peopleError, isLoading: peopleLoading, refresh: refreshPeople } = usePeople();
   const { categories, isLoading: catsLoading } = useCredibilityCategories();
+  const { unmatched } = useUnmatchedIdentities();
 
   const [category, setCategory] = useState<string>('');
+  const [showQueue, setShowQueue] = useState(false);
   const [details, setDetails] = useState<PersonDetail[]>([]);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -101,6 +104,13 @@ export default function CredibilityWorkspacePage() {
                 </select>
                 <button
                   type="button"
+                  onClick={() => setShowQueue((s) => !s)}
+                  className="btn-ghost text-sm"
+                >
+                  Review queue ({unmatched.length})
+                </button>
+                <button
+                  type="button"
                   onClick={() => {
                     setSelectedId(null);
                     setEditor({ kind: 'create' });
@@ -114,6 +124,16 @@ export default function CredibilityWorkspacePage() {
 
             {peopleError && (
               <p className="text-sm text-loss">{peopleError.message}</p>
+            )}
+
+            {showQueue && (
+              <ReviewQueue
+                people={people}
+                onLinked={() => {
+                  refreshPeople();
+                  setReloadKey((k) => k + 1);
+                }}
+              />
             )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
