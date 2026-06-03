@@ -88,9 +88,9 @@ export function TranscriptSummary({ ticker }: TranscriptSummaryProps) {
             </div>
             <div className="bg-background-tertiary rounded-lg p-3 max-h-96 overflow-y-auto">
               <p className="text-xs text-foreground-muted whitespace-pre-wrap leading-relaxed">
-                {transcript.content.length > 5000
-                  ? transcript.content.slice(0, 5000) + '...'
-                  : transcript.content}
+                {(transcript.content ?? '').length > 5000
+                  ? (transcript.content ?? '').slice(0, 5000) + '...'
+                  : (transcript.content ?? '')}
               </p>
             </div>
           </div>

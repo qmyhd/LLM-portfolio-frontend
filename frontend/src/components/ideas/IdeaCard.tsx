@@ -48,14 +48,14 @@ export function IdeaCard({ idea, onClick }: IdeaCardProps) {
       <p className="text-sm text-foreground line-clamp-3 mb-2">{idea.content}</p>
 
       {/* Symbol badges */}
-      {(idea.symbols.length > 0 || idea.symbol) && (
+      {((idea.symbols ?? []).length > 0 || idea.symbol) && (
         <div className="flex flex-wrap gap-1 mb-2">
-          {idea.symbol && !idea.symbols.includes(idea.symbol) && (
+          {idea.symbol && !(idea.symbols ?? []).includes(idea.symbol) && (
             <span className="font-mono text-xs px-1.5 py-0.5 bg-primary/10 text-primary rounded">
               {idea.symbol}
             </span>
           )}
-          {idea.symbols.map((s) => (
+          {(idea.symbols ?? []).map((s) => (
             <span
               key={s}
               className="font-mono text-xs px-1.5 py-0.5 bg-primary/10 text-primary rounded"
@@ -67,9 +67,9 @@ export function IdeaCard({ idea, onClick }: IdeaCardProps) {
       )}
 
       {/* Tags */}
-      {idea.tags.length > 0 && (
+      {(idea.tags ?? []).length > 0 && (
         <div className="flex flex-wrap gap-1">
-          {idea.tags.map((t) => (
+          {(idea.tags ?? []).map((t) => (
             <span
               key={t}
               className="text-[10px] px-1.5 py-0.5 bg-background-hover text-foreground-muted rounded"
