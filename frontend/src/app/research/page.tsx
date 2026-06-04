@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
@@ -9,28 +9,49 @@ import { VideoPlayer } from '@/components/research/VideoPlayer';
 import { TranscriptViewer } from '@/components/research/TranscriptViewer';
 import { CaptureDrawer, type QuoteDraft } from '@/components/research/CaptureDrawer';
 import { QuoteLibrary } from '@/components/research/QuoteLibrary';
+import { groupSegments } from '@/lib/transcript';
 import type { ResolvedVideo } from '@/types/research';
+
+function fmt(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
 
 export default function ResearchWorkspacePage() {
   const { resolve, isResolving, error } = useResolveVideo();
   const [tab, setTab] = useState<'watch' | 'library'>('watch');
   const [url, setUrl] = useState('');
   const [video, setVideo] = useState<ResolvedVideo | null>(null);
-  const [activeIndex, setActiveIndex] = useState(-1);
+  const [activeIndex, setActiveIndex] = useState(-1); // original segment index
   const seekRef = useRef<((s: number) => void) | null>(null);
 
+  // Selection is over DISPLAY ROWS (grouped); anchor/range are row indexes.
   const [anchor, setAnchor] = useState<number | null>(null);
   const [range, setRange] = useState<[number, number] | null>(null);
   const [draft, setDraft] = useState<QuoteDraft | null>(null);
   const [savedMsg, setSavedMsg] = useState(false);
+
+  // Grouped, readable rows derived from the raw caption segments.
+  const rows = useMemo(() => (video ? groupSegments(video.segments) : []), [video]);
+
+  // Map the active original-segment index to its display row.
+  const activeRowIndex = useMemo(() => {
+    if (activeIndex < 0) return -1;
+    return rows.findIndex((r) => activeIndex >= r.startIdx && activeIndex <= r.endIdx);
+  }, [rows, activeIndex]);
+
+  const clearSel = useCallback(() => {
+    setAnchor(null);
+    setRange(null);
+  }, []);
 
   const load = async () => {
     const trimmed = url.trim();
     if (!trimmed) return;
     setActiveIndex(-1);
     seekRef.current = null;
-    setAnchor(null);
-    setRange(null);
+    clearSel();
     setDraft(null);
     const v = await resolve(trimmed);
     if (v) setVideo(v);
@@ -53,29 +74,41 @@ export default function ResearchWorkspacePage() {
     });
   }, []);
 
-  const toggleSelect = (i: number) => {
-    if (anchor === null) {
-      setAnchor(i);
-      setRange([i, i]);
-    } else {
+  // Click a row: plain click selects (or toggles off a sole selection);
+  // shift-click extends the range from the anchor.
+  const onRowClick = (i: number, shiftKey: boolean) => {
+    if (shiftKey && anchor !== null) {
       setRange([Math.min(anchor, i), Math.max(anchor, i)]);
+      return;
     }
+    if (range && range[0] === i && range[1] === i) {
+      clearSel();
+      return;
+    }
+    setAnchor(i);
+    setRange([i, i]);
   };
 
-  const clearSel = () => {
-    setAnchor(null);
-    setRange(null);
-  };
+  // Escape clears the current selection.
+  useEffect(() => {
+    if (!range) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') clearSel();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [range, clearSel]);
 
   const openDrawer = () => {
-    if (!video || !range) return;
-    const segs = video.segments.slice(range[0], range[1] + 1);
-    if (segs.length === 0) return;
-    const last = segs[segs.length - 1];
+    if (!range) return;
+    const selectedRows = rows.slice(range[0], range[1] + 1);
+    if (selectedRows.length === 0) return;
+    const first = selectedRows[0];
+    const last = selectedRows[selectedRows.length - 1];
     setDraft({
-      quoteText: segs.map((s) => s.text).join(' '),
-      startSeconds: segs[0].start,
-      endSeconds: last.start + last.duration,
+      quoteText: selectedRows.map((r) => r.text).join(' '),
+      startSeconds: first.start, // = video.segments[first.startIdx].start
+      endSeconds: last.end, // = video.segments[last.endIdx].start + duration
     });
   };
 
@@ -87,6 +120,8 @@ export default function ResearchWorkspacePage() {
   };
 
   const selCount = range ? range[1] - range[0] + 1 : 0;
+  const selStart = range ? rows[range[0]]?.start : undefined;
+  const selEnd = range ? rows[range[1]]?.end : undefined;
   const tabClass = (t: 'watch' | 'library') =>
     clsx('px-3 py-2 text-sm', tab === t ? 'border-b-2 border-primary text-foreground' : 'text-foreground-muted');
 
@@ -100,7 +135,7 @@ export default function ResearchWorkspacePage() {
             <div>
               <h1 className="text-2xl font-bold text-foreground">Video Research</h1>
               <p className="text-foreground-muted">
-                Paste a YouTube URL, then select transcript lines to save as quotes.
+                Paste a YouTube URL, then highlight transcript passages to save as quotes.
               </p>
             </div>
 
@@ -148,28 +183,42 @@ export default function ResearchWorkspacePage() {
                       {video.title && <p className="text-sm font-medium text-foreground">{video.title}</p>}
                       {video.channelName && <p className="text-xs text-foreground-muted">{video.channelName}</p>}
                     </div>
-                    <div className="card p-3 flex flex-col">
-                      {selCount > 0 && (
-                        <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-border">
-                          <span className="text-xs text-foreground-muted">{selCount} line(s) selected</span>
-                          <div className="flex gap-2">
-                            <button type="button" onClick={openDrawer} className="btn-primary text-xs">Save quote</button>
-                            <button type="button" onClick={clearSel} className="btn-ghost text-xs">Clear</button>
+
+                    {/* Transcript reader + floating selection toolbar */}
+                    <div className="card p-0 flex flex-col relative overflow-hidden">
+                      <div className="p-3">
+                        {video.transcriptAvailable ? (
+                          <TranscriptViewer
+                            rows={rows}
+                            activeRowIndex={activeRowIndex}
+                            selectedRange={range}
+                            onSeek={(s) => seekRef.current?.(s)}
+                            onRowClick={onRowClick}
+                          />
+                        ) : (
+                          <div className="p-4 text-center">
+                            <p className="text-sm font-medium text-foreground-muted">No transcript available.</p>
+                            {video.reason && (
+                              <p className="text-xs text-foreground-subtle mt-1">({video.reason})</p>
+                            )}
                           </div>
-                        </div>
-                      )}
-                      {video.transcriptAvailable ? (
-                        <TranscriptViewer
-                          segments={video.segments}
-                          activeIndex={activeIndex}
-                          selectedRange={range}
-                          onSeek={(s) => seekRef.current?.(s)}
-                          onToggleSelect={toggleSelect}
-                        />
-                      ) : (
-                        <div className="p-4 text-center">
-                          <p className="text-sm font-medium text-foreground-muted">No transcript available.</p>
-                          {video.reason && <p className="text-xs text-foreground-subtle mt-1">({video.reason})</p>}
+                        )}
+                      </div>
+
+                      {selCount > 0 && (
+                        <div className="sticky bottom-0 left-0 right-0 flex items-center justify-between gap-2 px-3 py-2 border-t border-border bg-background/95 backdrop-blur">
+                          <span className="text-xs text-foreground-muted tabular-nums">
+                            {selStart != null && selEnd != null ? `${fmt(selStart)}–${fmt(selEnd)}` : ''}
+                            <span className="text-foreground-subtle"> · {selCount} line{selCount > 1 ? 's' : ''}</span>
+                          </span>
+                          <div className="flex gap-2">
+                            <button type="button" onClick={openDrawer} className="btn-primary text-xs">
+                              Save quote
+                            </button>
+                            <button type="button" onClick={clearSel} className="btn-ghost text-xs">
+                              Clear
+                            </button>
+                          </div>
                         </div>
                       )}
                     </div>

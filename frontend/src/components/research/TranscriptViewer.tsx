@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import clsx from 'clsx';
-import type { TranscriptSegment } from '@/types/research';
+import type { DisplayRow } from '@/lib/transcript';
 
 function fmt(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -11,27 +11,27 @@ function fmt(seconds: number): string {
 }
 
 interface TranscriptViewerProps {
-  segments: TranscriptSegment[];
-  activeIndex: number;
+  rows: DisplayRow[];
+  activeRowIndex: number;
   selectedRange: [number, number] | null;
   onSeek: (start: number) => void;
-  onToggleSelect: (index: number) => void;
+  onRowClick: (index: number, shiftKey: boolean) => void;
 }
 
 export function TranscriptViewer({
-  segments,
-  activeIndex,
+  rows,
+  activeRowIndex,
   selectedRange,
   onSeek,
-  onToggleSelect,
+  onRowClick,
 }: TranscriptViewerProps) {
   const activeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     activeRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  }, [activeIndex]);
+  }, [activeRowIndex]);
 
-  if (segments.length === 0) {
+  if (rows.length === 0) {
     return <p className="text-sm text-foreground-muted p-4">No transcript segments.</p>;
   }
 
@@ -39,38 +39,46 @@ export function TranscriptViewer({
     selectedRange != null && i >= selectedRange[0] && i <= selectedRange[1];
 
   return (
-    <div className="space-y-0.5 overflow-y-auto max-h-[70vh] pr-1">
-      {segments.map((seg, i) => (
-        <div
-          key={`${seg.start}-${i}`}
-          ref={i === activeIndex ? activeRef : undefined}
-          className={clsx(
-            'flex gap-2 px-1 py-1 rounded items-start',
-            inSel(i) && 'bg-primary/10 border-l-2 border-primary',
-            i === activeIndex && !inSel(i) && 'bg-background-hover',
-          )}
-        >
-          <button
-            type="button"
-            aria-label={inSel(i) ? 'Deselect line' : 'Select line'}
-            onClick={() => onToggleSelect(i)}
+    <div className="overflow-y-auto max-h-[68vh] pr-1 space-y-0.5">
+      {rows.map((row, i) => {
+        const selected = inSel(i);
+        const active = i === activeRowIndex;
+        return (
+          <div
+            key={`${row.start}-${i}`}
+            ref={active ? activeRef : undefined}
             className={clsx(
-              'mt-1 h-4 w-4 shrink-0 rounded-sm border transition-colors',
-              inSel(i) ? 'bg-primary border-primary' : 'border-border hover:border-primary',
+              'group flex gap-2 rounded-md px-2 py-1.5 border-l-2 transition-colors',
+              selected
+                ? 'bg-primary/10 border-primary'
+                : active
+                  ? 'bg-background-hover/60 border-foreground-subtle/40'
+                  : 'border-transparent hover:bg-background-hover',
             )}
-          />
-          <button
-            type="button"
-            onClick={() => onSeek(seg.start)}
-            className="text-left flex gap-2 text-sm text-foreground-muted hover:text-foreground"
           >
-            <span className="font-mono text-xs text-foreground-subtle shrink-0 tabular-nums">
-              {fmt(seg.start)}
-            </span>
-            <span>{seg.text}</span>
-          </button>
-        </div>
-      ))}
+            <button
+              type="button"
+              onClick={() => onSeek(row.start)}
+              title="Jump to this moment"
+              className="shrink-0 self-start font-mono text-[11px] tabular-nums px-1.5 py-0.5 rounded bg-background-secondary text-foreground-subtle hover:text-primary hover:bg-primary/10"
+            >
+              {active ? '▶ ' : ''}
+              {fmt(row.start)}
+            </button>
+            <button
+              type="button"
+              onClick={(e) => onRowClick(i, e.shiftKey)}
+              title="Click to select; shift-click to extend"
+              className={clsx(
+                'text-left text-sm leading-relaxed flex-1 cursor-text',
+                selected ? 'text-foreground' : 'text-foreground-muted group-hover:text-foreground',
+              )}
+            >
+              {row.text}
+            </button>
+          </div>
+        );
+      })}
     </div>
   );
 }
