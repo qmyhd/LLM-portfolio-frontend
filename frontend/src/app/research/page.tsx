@@ -1,16 +1,19 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
+import clsx from 'clsx';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
 import { useResolveVideo } from '@/hooks/useResearch';
 import { VideoPlayer } from '@/components/research/VideoPlayer';
 import { TranscriptViewer } from '@/components/research/TranscriptViewer';
 import { CaptureDrawer, type QuoteDraft } from '@/components/research/CaptureDrawer';
+import { QuoteLibrary } from '@/components/research/QuoteLibrary';
 import type { ResolvedVideo } from '@/types/research';
 
 export default function ResearchWorkspacePage() {
   const { resolve, isResolving, error } = useResolveVideo();
+  const [tab, setTab] = useState<'watch' | 'library'>('watch');
   const [url, setUrl] = useState('');
   const [video, setVideo] = useState<ResolvedVideo | null>(null);
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -84,6 +87,8 @@ export default function ResearchWorkspacePage() {
   };
 
   const selCount = range ? range[1] - range[0] + 1 : 0;
+  const tabClass = (t: 'watch' | 'library') =>
+    clsx('px-3 py-2 text-sm', tab === t ? 'border-b-2 border-primary text-foreground' : 'text-foreground-muted');
 
   return (
     <div className="flex h-screen">
@@ -99,89 +104,87 @@ export default function ResearchWorkspacePage() {
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') load();
-                }}
-                placeholder="https://www.youtube.com/watch?v=..."
-                className="flex-1 bg-background-secondary border border-border rounded-md px-3 py-2 text-sm"
-              />
-              <button
-                type="button"
-                onClick={load}
-                disabled={isResolving || !url.trim()}
-                className="btn-primary disabled:opacity-50"
-              >
-                {isResolving ? 'Loading…' : 'Load'}
-              </button>
+            <div className="flex gap-2 border-b border-border">
+              <button type="button" onClick={() => setTab('watch')} className={tabClass('watch')}>Watch</button>
+              <button type="button" onClick={() => setTab('library')} className={tabClass('library')}>Library</button>
             </div>
 
-            {error && <p className="text-sm text-loss">{error.message}</p>}
-            {savedMsg && <p className="text-sm text-primary">Quote saved.</p>}
-
-            {!video && !isResolving && (
-              <div className="card p-8 text-center">
-                <p className="text-sm text-foreground-muted">Paste a YouTube URL above to begin.</p>
-              </div>
-            )}
-
-            {video && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <VideoPlayer videoId={video.videoId} onTime={onTime} registerSeek={registerSeek} />
-                  {video.title && <p className="text-sm font-medium text-foreground">{video.title}</p>}
-                  {video.channelName && (
-                    <p className="text-xs text-foreground-muted">{video.channelName}</p>
-                  )}
+            {tab === 'watch' && (
+              <>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') load();
+                    }}
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    className="flex-1 bg-background-secondary border border-border rounded-md px-3 py-2 text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={load}
+                    disabled={isResolving || !url.trim()}
+                    className="btn-primary disabled:opacity-50"
+                  >
+                    {isResolving ? 'Loading…' : 'Load'}
+                  </button>
                 </div>
-                <div className="card p-3 flex flex-col">
-                  {selCount > 0 && (
-                    <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-border">
-                      <span className="text-xs text-foreground-muted">{selCount} line(s) selected</span>
-                      <div className="flex gap-2">
-                        <button type="button" onClick={openDrawer} className="btn-primary text-xs">
-                          Save quote
-                        </button>
-                        <button type="button" onClick={clearSel} className="btn-ghost text-xs">
-                          Clear
-                        </button>
-                      </div>
+
+                {error && <p className="text-sm text-loss">{error.message}</p>}
+                {savedMsg && <p className="text-sm text-primary">Quote saved.</p>}
+
+                {!video && !isResolving && (
+                  <div className="card p-8 text-center">
+                    <p className="text-sm text-foreground-muted">Paste a YouTube URL above to begin.</p>
+                  </div>
+                )}
+
+                {video && (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <VideoPlayer videoId={video.videoId} onTime={onTime} registerSeek={registerSeek} />
+                      {video.title && <p className="text-sm font-medium text-foreground">{video.title}</p>}
+                      {video.channelName && <p className="text-xs text-foreground-muted">{video.channelName}</p>}
                     </div>
-                  )}
-                  {video.transcriptAvailable ? (
-                    <TranscriptViewer
-                      segments={video.segments}
-                      activeIndex={activeIndex}
-                      selectedRange={range}
-                      onSeek={(s) => seekRef.current?.(s)}
-                      onToggleSelect={toggleSelect}
-                    />
-                  ) : (
-                    <div className="p-4 text-center">
-                      <p className="text-sm font-medium text-foreground-muted">No transcript available.</p>
-                      {video.reason && (
-                        <p className="text-xs text-foreground-subtle mt-1">({video.reason})</p>
+                    <div className="card p-3 flex flex-col">
+                      {selCount > 0 && (
+                        <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-border">
+                          <span className="text-xs text-foreground-muted">{selCount} line(s) selected</span>
+                          <div className="flex gap-2">
+                            <button type="button" onClick={openDrawer} className="btn-primary text-xs">Save quote</button>
+                            <button type="button" onClick={clearSel} className="btn-ghost text-xs">Clear</button>
+                          </div>
+                        </div>
+                      )}
+                      {video.transcriptAvailable ? (
+                        <TranscriptViewer
+                          segments={video.segments}
+                          activeIndex={activeIndex}
+                          selectedRange={range}
+                          onSeek={(s) => seekRef.current?.(s)}
+                          onToggleSelect={toggleSelect}
+                        />
+                      ) : (
+                        <div className="p-4 text-center">
+                          <p className="text-sm font-medium text-foreground-muted">No transcript available.</p>
+                          {video.reason && <p className="text-xs text-foreground-subtle mt-1">({video.reason})</p>}
+                        </div>
                       )}
                     </div>
-                  )}
-                </div>
-              </div>
+                  </div>
+                )}
+              </>
             )}
+
+            {tab === 'library' && <QuoteLibrary />}
           </div>
         </main>
       </div>
 
       {draft && video && (
-        <CaptureDrawer
-          video={video}
-          draft={draft}
-          onClose={() => setDraft(null)}
-          onSaved={onSaved}
-        />
+        <CaptureDrawer video={video} draft={draft} onClose={() => setDraft(null)} onSaved={onSaved} />
       )}
     </div>
   );
