@@ -1,5 +1,5 @@
 /**
- * Next.js Middleware for Authentication
+ * Next.js Middleware for Authentication + Role Enforcement
  *
  * Protects all routes except:
  * - /login (auth page)
@@ -7,11 +7,20 @@
  * - /_next/* (Next.js internals)
  * - /favicon.ico, /robots.txt, etc.
  *
- * Unauthenticated users are redirected to /login
+ * Unauthenticated users are redirected to /login.
+ *
+ * Role enforcement (role comes from the session JWT, set at sign-in):
+ * - viewer: read-only — mutating /api requests return 403
+ * - editor: all writes except connection/account management
+ * - owner:  everything, including /api/connections mutations
+ * Sessions created before roles existed carry no role and are treated as
+ * viewer — sign out and back in to pick up a role.
  */
 
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
+
+const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
 // Routes that don't require authentication
 const publicRoutes = ["/login"];
@@ -49,6 +58,28 @@ export default auth((req) => {
     const loginUrl = new URL("/login", req.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
+  }
+
+  // Role enforcement for mutating API calls (NextAuth's own /api/auth/*
+  // endpoints were already excluded above).
+  if (pathname.startsWith("/api/") && MUTATING_METHODS.has(req.method)) {
+    const role = req.auth.user?.role ?? "viewer";
+
+    if (role === "viewer") {
+      return NextResponse.json(
+        { error: "Read-only account - ask the owner for editor access" },
+        { status: 403 }
+      );
+    }
+
+    // Brokerage connection management (SnapTrade portal, bucket
+    // reassignment) is owner-only.
+    if (pathname.startsWith("/api/connections") && role !== "owner") {
+      return NextResponse.json(
+        { error: "Connection management requires the owner role" },
+        { status: 403 }
+      );
+    }
   }
 
   return NextResponse.next();
