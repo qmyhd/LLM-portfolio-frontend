@@ -42,6 +42,9 @@ export function useUserIdeas(filters: IdeasFilters = {}, options: UseUserIdeasOp
     if (filters.tag) params.set('tag', filters.tag);
     if (filters.source) params.set('source', filters.source);
     if (filters.status) params.set('status', filters.status);
+    if (filters.review_status) params.set('review_status', filters.review_status);
+    if (filters.thread_key) params.set('thread_key', filters.thread_key);
+    if (filters.attribution_kind) params.set('attribution_kind', filters.attribution_kind);
     if (filters.q) params.set('q', filters.q);
     if (filters.limit) params.set('limit', String(filters.limit));
     if (filters.offset !== undefined) params.set('offset', String(filters.offset));

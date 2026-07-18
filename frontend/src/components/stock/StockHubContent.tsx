@@ -23,6 +23,7 @@ import {
   ChevronUpIcon,
 } from '@heroicons/react/24/outline';
 import { useStockProfile } from '@/hooks/useStockProfile';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
 import { BucketBadge } from '@/components/portfolio/BucketBadge';
 
@@ -65,12 +66,132 @@ function ChartSkeleton() {
 
 const LS_MORE_STATS = 'stock-more-stats';
 
+// ---------------------------------------------------------------------------
+// Shared sections — rendered exactly once by whichever layout is active,
+// so panels (TradingView embeds, chat, SWR subscriptions) never mount twice.
+// ---------------------------------------------------------------------------
+
+interface ChartControlsProps {
+  chartProvider: ChartProvider;
+  onToggleProvider: () => void;
+  onRefresh: () => void;
+}
+
+function ChartControls({ chartProvider, onToggleProvider, onRefresh }: ChartControlsProps) {
+  return (
+    <div className="flex items-center justify-end gap-1 px-3 py-1.5 border-b border-border/40 bg-background-secondary/30">
+      <button
+        onClick={onToggleProvider}
+        className={clsx(
+          'p-1.5 rounded-md transition-colors',
+          chartProvider === 'tradingview'
+            ? 'bg-primary/20 text-primary'
+            : 'text-foreground-muted hover:text-foreground hover:bg-background-tertiary',
+        )}
+        title={`Switch to ${chartProvider === 'lightweight' ? 'TradingView' : 'Lightweight'} chart`}
+      >
+        <ChartBarIcon className="h-3.5 w-3.5" />
+      </button>
+      <button
+        onClick={onRefresh}
+        className="p-1.5 rounded-md hover:bg-background-tertiary text-foreground-muted hover:text-foreground transition-colors"
+        title="Refresh data"
+      >
+        <ArrowPathIcon className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  );
+}
+
+interface ChartAreaProps {
+  ticker: string;
+  chartProvider: ChartProvider;
+  refreshKey: number;
+  height: number;
+}
+
+function ChartArea({ ticker, chartProvider, refreshKey, height }: ChartAreaProps) {
+  return (
+    <Suspense fallback={<ChartSkeleton />}>
+      {chartProvider === 'tradingview' ? (
+        <TradingViewChart symbol={ticker} key={`tv-chart-${refreshKey}`} theme="dark" height={height} autosize={true} />
+      ) : (
+        <StockChart ticker={ticker} key={`chart-${refreshKey}`} />
+      )}
+    </Suspense>
+  );
+}
+
+function TradesSection({ ticker, refreshKey }: { ticker: string; refreshKey: number }) {
+  return (
+    <>
+      <div className="px-3 py-2 border-b border-border/40 bg-background-secondary/30 sticky top-0 z-10">
+        <span className="text-xs font-medium uppercase tracking-wider text-foreground-muted">Recent Trades</span>
+      </div>
+      <TradesPanel ticker={ticker} key={`trades-${refreshKey}`} />
+    </>
+  );
+}
+
+interface TabsSectionProps {
+  ticker: string;
+  refreshKey: number;
+  activeTab: TabKey;
+  onTabChange: (tab: TabKey) => void;
+}
+
+function TabsSection({ ticker, refreshKey, activeTab, onTabChange }: TabsSectionProps) {
+  return (
+    <>
+      <div className="flex border-b border-border/60 bg-background-secondary/30 overflow-x-auto">
+        {TABS.map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => onTabChange(tab.key)}
+            className={clsx(
+              'flex-1 px-3 py-2.5 text-sm font-medium transition-colors whitespace-nowrap',
+              activeTab === tab.key
+                ? 'text-primary border-b-2 border-primary bg-primary/5'
+                : 'text-foreground-muted hover:text-foreground hover:bg-background-tertiary',
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+      <div className="flex-1 overflow-hidden">
+        <Suspense
+          fallback={
+            <div className="p-4 space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="skeleton h-16 rounded-lg" />
+              ))}
+            </div>
+          }
+        >
+          {activeTab === 'chat' && <ChatWidget ticker={ticker} key={`chat-${refreshKey}`} />}
+          {activeTab === 'ideas' && <IdeasPanel ticker={ticker} key={`ideas-${refreshKey}`} />}
+          {activeTab === 'analysis' && <AnalysisPanel ticker={ticker} key={`analysis-${refreshKey}`} />}
+          {activeTab === 'raw' && <RawMessagesPanel ticker={ticker} key={`raw-${refreshKey}`} />}
+          {activeTab === 'insights' && <OpenBBInsightsPanel ticker={ticker} key={`insights-${refreshKey}`} />}
+          {activeTab === 'notes' && <NotesPanel ticker={ticker} key={`notes-${refreshKey}`} />}
+          {activeTab === 'profile' && <ProfilePanel ticker={ticker} key={`profile-${refreshKey}`} />}
+        </Suspense>
+      </div>
+    </>
+  );
+}
+
 export function StockHubContent({ ticker }: StockHubContentProps) {
   const [activeTab, setActiveTab] = useState<TabKey>('ideas');
   const [isFavorite, setIsFavorite] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [chartProvider, setChartProvider] = useState<ChartProvider>('tradingview');
   const [moreStatsOpen, setMoreStatsOpen] = useState(false);
+
+  // null until the breakpoint is known (SSR / first paint) — we render a
+  // skeleton then, so only ONE layout ever mounts its data components.
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
 
   const { data: profile } = useStockProfile(ticker);
 
@@ -187,194 +308,77 @@ export function StockHubContent({ ticker }: StockHubContentProps) {
         </div>
       </div>
 
-      {/* ── Bottom section: Chart + Trades | Tabs (resizable) ── */}
+      {/* ── Bottom section: Chart + Trades | Tabs ── */}
       <div className="flex-1 min-h-0 lg:h-[calc(100vh-320px)]">
-        {/* Mobile: stacked layout */}
-        <div className="flex flex-col lg:hidden">
-          {/* Chart */}
-          <div className="border-b border-border/60">
-            <div className="flex items-center justify-end gap-1 px-3 py-1.5 border-b border-border/40 bg-background-secondary/30">
-              <button
-                onClick={toggleChartProvider}
-                className={clsx(
-                  'p-1.5 rounded-md transition-colors',
-                  chartProvider === 'tradingview'
-                    ? 'bg-primary/20 text-primary'
-                    : 'text-foreground-muted hover:text-foreground hover:bg-background-tertiary',
-                )}
-                title={`Switch to ${chartProvider === 'lightweight' ? 'TradingView' : 'Lightweight'} chart`}
-              >
-                <ChartBarIcon className="h-3.5 w-3.5" />
-              </button>
-              <button
-                onClick={handleRefresh}
-                className="p-1.5 rounded-md hover:bg-background-tertiary text-foreground-muted hover:text-foreground transition-colors"
-                title="Refresh data"
-              >
-                <ArrowPathIcon className="h-3.5 w-3.5" />
-              </button>
-            </div>
-            <div className="min-h-[300px]">
-              <Suspense fallback={<ChartSkeleton />}>
-                {chartProvider === 'tradingview' ? (
-                  <TradingViewChart symbol={ticker} key={`tv-chart-${refreshKey}`} theme="dark" height={300} autosize={true} />
-                ) : (
-                  <StockChart ticker={ticker} key={`chart-${refreshKey}`} />
-                )}
-              </Suspense>
-            </div>
+        {isDesktop === null ? (
+          // Breakpoint unknown for one frame — neutral skeleton, no data mounts.
+          <div className="min-h-[300px]">
+            <ChartSkeleton />
           </div>
-
-          {/* Trades (mobile) */}
-          <div className="border-b border-border/60 max-h-[250px] overflow-y-auto">
-            <div className="px-3 py-2 border-b border-border/40 bg-background-secondary/30 sticky top-0 z-10">
-              <span className="text-xs font-medium uppercase tracking-wider text-foreground-muted">Recent Trades</span>
-            </div>
-            <TradesPanel ticker={ticker} key={`trades-mobile-${refreshKey}`} />
-          </div>
-
-          {/* Tabs (mobile) */}
-          <div className="min-h-[300px] flex flex-col">
-            <div className="flex border-b border-border/60 bg-background-secondary/30 overflow-x-auto">
-              {TABS.map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={clsx(
-                    'flex-1 px-3 py-2.5 text-sm font-medium transition-colors whitespace-nowrap',
-                    activeTab === tab.key
-                      ? 'text-primary border-b-2 border-primary bg-primary/5'
-                      : 'text-foreground-muted hover:text-foreground hover:bg-background-tertiary',
-                  )}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-            <div className="flex-1 overflow-hidden">
-              <Suspense
-                fallback={
-                  <div className="p-4 space-y-3">
-                    {[...Array(5)].map((_, i) => (
-                      <div key={i} className="skeleton h-16 rounded-lg" />
-                    ))}
+        ) : isDesktop ? (
+          /* Desktop: resizable panels.
+             NOTE: react-resizable-panels v4.7.0 (bvaughn) uses `orientation`,
+             not `direction` — verified against the packaged .d.ts. */
+          <div className="flex h-full">
+            <PanelGroup orientation="horizontal" className="h-full">
+              <Panel defaultSize={60} minSize={30}>
+                <div className="flex flex-col h-full">
+                  <ChartControls
+                    chartProvider={chartProvider}
+                    onToggleProvider={toggleChartProvider}
+                    onRefresh={handleRefresh}
+                  />
+                  <div className="flex-1 min-h-[300px]">
+                    <ChartArea ticker={ticker} chartProvider={chartProvider} refreshKey={refreshKey} height={400} />
                   </div>
-                }
-              >
-                {activeTab === 'chat' && <ChatWidget ticker={ticker} key={`chat-${refreshKey}`} />}
-                {activeTab === 'ideas' && <IdeasPanel ticker={ticker} key={`ideas-${refreshKey}`} />}
-                {activeTab === 'analysis' && <AnalysisPanel ticker={ticker} key={`analysis-${refreshKey}`} />}
-                {activeTab === 'raw' && <RawMessagesPanel ticker={ticker} key={`raw-${refreshKey}`} />}
-                {activeTab === 'insights' && <OpenBBInsightsPanel ticker={ticker} key={`insights-${refreshKey}`} />}
-                {activeTab === 'notes' && <NotesPanel ticker={ticker} key={`notes-${refreshKey}`} />}
-                {activeTab === 'profile' && <ProfilePanel ticker={ticker} key={`profile-${refreshKey}`} />}
-              </Suspense>
+                  <div className="border-t border-border/40 max-h-[250px] overflow-y-auto flex-shrink-0">
+                    <TradesSection ticker={ticker} refreshKey={refreshKey} />
+                  </div>
+                </div>
+              </Panel>
+
+              <PanelResizeHandle className="w-1.5 bg-border/50 hover:bg-primary/50 transition-colors cursor-col-resize" />
+
+              <Panel defaultSize={40} minSize={25}>
+                <aside className="h-full flex flex-col">
+                  <TabsSection
+                    ticker={ticker}
+                    refreshKey={refreshKey}
+                    activeTab={activeTab}
+                    onTabChange={setActiveTab}
+                  />
+                </aside>
+              </Panel>
+            </PanelGroup>
+          </div>
+        ) : (
+          /* Mobile: stacked layout */
+          <div className="flex flex-col">
+            <div className="border-b border-border/60">
+              <ChartControls
+                chartProvider={chartProvider}
+                onToggleProvider={toggleChartProvider}
+                onRefresh={handleRefresh}
+              />
+              <div className="min-h-[300px]">
+                <ChartArea ticker={ticker} chartProvider={chartProvider} refreshKey={refreshKey} height={300} />
+              </div>
+            </div>
+
+            <div className="border-b border-border/60 max-h-[250px] overflow-y-auto">
+              <TradesSection ticker={ticker} refreshKey={refreshKey} />
+            </div>
+
+            <div className="min-h-[300px] flex flex-col">
+              <TabsSection
+                ticker={ticker}
+                refreshKey={refreshKey}
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+              />
             </div>
           </div>
-        </div>
-
-        {/* Desktop: resizable panels */}
-        <div className="hidden lg:flex h-full">
-          {/* NOTE: react-resizable-panels v4.7.0 (bvaughn) uses `orientation`,
-              not `direction`. Earlier audit pushed for `direction` based on
-              older versions of the lib — that was wrong for this version.
-              Verified against node_modules/.../react-resizable-panels.d.ts. */}
-          <PanelGroup orientation="horizontal" className="h-full">
-          {/* Left panel: Chart + Trades */}
-          <Panel defaultSize={60} minSize={30}>
-            <div className="flex flex-col h-full">
-              {/* Chart controls */}
-              <div className="flex items-center justify-end gap-1 px-3 py-1.5 border-b border-border/40 bg-background-secondary/30">
-                <button
-                  onClick={toggleChartProvider}
-                  className={clsx(
-                    'p-1.5 rounded-md transition-colors',
-                    chartProvider === 'tradingview'
-                      ? 'bg-primary/20 text-primary'
-                      : 'text-foreground-muted hover:text-foreground hover:bg-background-tertiary',
-                  )}
-                  title={`Switch to ${chartProvider === 'lightweight' ? 'TradingView' : 'Lightweight'} chart`}
-                >
-                  <ChartBarIcon className="h-3.5 w-3.5" />
-                </button>
-                <button
-                  onClick={handleRefresh}
-                  className="p-1.5 rounded-md hover:bg-background-tertiary text-foreground-muted hover:text-foreground transition-colors"
-                  title="Refresh data"
-                >
-                  <ArrowPathIcon className="h-3.5 w-3.5" />
-                </button>
-              </div>
-
-              {/* Chart */}
-              <div className="flex-1 min-h-[300px]">
-                <Suspense fallback={<ChartSkeleton />}>
-                  {chartProvider === 'tradingview' ? (
-                    <TradingViewChart symbol={ticker} key={`tv-chart-${refreshKey}`} theme="dark" height={400} autosize={true} />
-                  ) : (
-                    <StockChart ticker={ticker} key={`chart-${refreshKey}`} />
-                  )}
-                </Suspense>
-              </div>
-
-              {/* Trades pinned below chart */}
-              <div className="border-t border-border/40 max-h-[250px] overflow-y-auto flex-shrink-0">
-                <div className="px-3 py-2 border-b border-border/40 bg-background-secondary/30 sticky top-0 z-10">
-                  <span className="text-xs font-medium uppercase tracking-wider text-foreground-muted">Recent Trades</span>
-                </div>
-                <TradesPanel ticker={ticker} key={`trades-${refreshKey}`} />
-              </div>
-            </div>
-          </Panel>
-
-          {/* Resize handle */}
-          <PanelResizeHandle className="w-1.5 bg-border/50 hover:bg-primary/50 transition-colors cursor-col-resize" />
-
-          {/* Right panel: Tabs */}
-          <Panel defaultSize={40} minSize={25}>
-            <aside className="h-full flex flex-col">
-              {/* Tab switcher */}
-              <div className="flex border-b border-border/60 bg-background-secondary/30 overflow-x-auto">
-                {TABS.map((tab) => (
-                  <button
-                    key={tab.key}
-                    onClick={() => setActiveTab(tab.key)}
-                    className={clsx(
-                      'flex-1 px-3 py-2.5 text-sm font-medium transition-colors whitespace-nowrap',
-                      activeTab === tab.key
-                        ? 'text-primary border-b-2 border-primary bg-primary/5'
-                        : 'text-foreground-muted hover:text-foreground hover:bg-background-tertiary',
-                    )}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Tab content */}
-              <div className="flex-1 overflow-hidden">
-                <Suspense
-                  fallback={
-                    <div className="p-4 space-y-3">
-                      {[...Array(5)].map((_, i) => (
-                        <div key={i} className="skeleton h-16 rounded-lg" />
-                      ))}
-                    </div>
-                  }
-                >
-                  {activeTab === 'chat' && <ChatWidget ticker={ticker} key={`chat-${refreshKey}`} />}
-                  {activeTab === 'ideas' && <IdeasPanel ticker={ticker} key={`ideas-${refreshKey}`} />}
-                  {activeTab === 'analysis' && <AnalysisPanel ticker={ticker} key={`analysis-${refreshKey}`} />}
-                  {activeTab === 'raw' && <RawMessagesPanel ticker={ticker} key={`raw-${refreshKey}`} />}
-                  {activeTab === 'insights' && <OpenBBInsightsPanel ticker={ticker} key={`insights-${refreshKey}`} />}
-                  {activeTab === 'notes' && <NotesPanel ticker={ticker} key={`notes-${refreshKey}`} />}
-                  {activeTab === 'profile' && <ProfilePanel ticker={ticker} key={`profile-${refreshKey}`} />}
-                </Suspense>
-              </div>
-            </aside>
-          </Panel>
-          </PanelGroup>
-        </div>
+        )}
       </div>
     </main>
   );
