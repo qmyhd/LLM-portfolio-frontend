@@ -14,6 +14,7 @@ import {
   BriefcaseIcon,
   ShieldCheckIcon,
   VideoCameraIcon,
+  ClockIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
 } from '@heroicons/react/24/outline';
@@ -26,6 +27,7 @@ import {
   BriefcaseIcon as BriefcaseIconSolid,
   ShieldCheckIcon as ShieldCheckIconSolid,
   VideoCameraIcon as VideoCameraIconSolid,
+  ClockIcon as ClockIconSolid,
 } from '@heroicons/react/24/solid';
 import { formatNumber } from '@/lib/format';
 import { useBucket } from '@/contexts/BucketContext';
@@ -38,6 +40,7 @@ import { stockHref } from '@/lib/bucket';
 const researchNav = [
   { name: 'Research', href: '/', icon: HomeIcon, activeIcon: HomeIconSolid, exact: true },
   { name: 'Ideas', href: '/ideas', icon: LightBulbIcon, activeIcon: LightBulbIconSolid },
+  { name: 'Timeline', href: '/timeline', icon: ClockIcon, activeIcon: ClockIconSolid },
   { name: 'Profiles', href: '/profiles', icon: ClipboardDocumentListIcon, activeIcon: ClipboardDocumentListIconSolid },
   { name: 'Credibility', href: '/credibility', icon: ShieldCheckIcon, activeIcon: ShieldCheckIconSolid },
   { name: 'Videos', href: '/research', icon: VideoCameraIcon, activeIcon: VideoCameraIconSolid },

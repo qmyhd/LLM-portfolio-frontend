@@ -557,6 +557,20 @@ export interface ReturnSeriesResponse {
   points: ReturnSeriesPoint[];
 }
 
+// Daily account-value series from nightly position_snapshots
+// (GET /api/portfolio/equity-curve). Unlike ReturnSeries, this is the
+// portfolio's actual dollar value over time, including flows.
+export interface EquityPoint {
+  date: string;   // ISO date
+  equity: number; // total equity at close, USD
+}
+
+export interface EquityCurveResponse {
+  points: EquityPoint[];
+  bucket: string;
+  days: number;
+}
+
 // === AI stock profiling (Project B) ===
 
 export interface TrackRecord {
