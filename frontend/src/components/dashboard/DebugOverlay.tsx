@@ -1,12 +1,16 @@
 'use client';
 
 import { usePortfolio } from '@/hooks';
+import { usePrivacy } from '@/hooks/usePrivacy';
 import { formatMoney, formatSignedMoney, formatSignedPct } from '@/lib/format';
 
 export function DebugOverlay() {
   const { data, isLoading } = usePortfolio();
+  const { hideSizes } = usePrivacy();
 
   if (process.env.NEXT_PUBLIC_DEBUG_UI !== '1') return null;
+  // Never expose the raw dollar debug dump to viewers.
+  if (hideSizes) return null;
   if (isLoading || !data) return null;
 
   const { summary } = data;

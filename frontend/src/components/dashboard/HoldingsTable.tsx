@@ -9,6 +9,7 @@ import {
   ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 import { usePortfolio, useSparklines } from '@/hooks';
+import { usePrivacy } from '@/hooks/usePrivacy';
 import { useBucket } from '@/contexts/BucketContext';
 import { stockHref } from '@/lib/bucket';
 import { AssetBadge } from '@/components/ui/AssetBadge';
@@ -105,7 +106,12 @@ function getSortValue(position: Position, key: SortKey): number | string {
 export function HoldingsTable() {
   const { data, error, isLoading, refresh } = usePortfolio();
   const bucket = useBucket();
+  const { hideSizes } = usePrivacy();
   const { sparklinesMap } = useSparklines('1M');
+
+  // Viewers see a size-free view: the Shares column is dropped (share count
+  // reveals position size). Weight %, P/L %, price, and avg cost remain.
+  const columns = hideSizes ? COLUMNS.filter((c) => c.key !== 'quantity') : COLUMNS;
 
   // Persisted sort state
   const [sortKey, setSortKey] = useState<SortKey>('equity');
@@ -269,7 +275,7 @@ export function HoldingsTable() {
             <tr className="border-b border-border">
               {/* Sparkline column header — hidden on mobile */}
               <th className="hidden sm:table-cell w-[72px]" />
-              {COLUMNS.map(col => (
+              {columns.map(col => (
                 <th
                   key={col.key}
                   scope="col"
@@ -335,9 +341,11 @@ export function HoldingsTable() {
                     <div className="font-mono text-sm tabular-nums">
                       {formatPercent(position.portfolioDiversity, 1)}
                     </div>
-                    <div className="sm:hidden text-[10px] text-foreground-muted font-mono tabular-nums mt-0.5">
-                      {formatQuantity(position.quantity)} shares
-                    </div>
+                    {!hideSizes && (
+                      <div className="sm:hidden text-[10px] text-foreground-muted font-mono tabular-nums mt-0.5">
+                        {formatQuantity(position.quantity)} shares
+                      </div>
+                    )}
                   </td>
 
                   {/* P/L % + avg cost */}
@@ -358,10 +366,12 @@ export function HoldingsTable() {
                     )}
                   </td>
 
-                  {/* Quantity */}
-                  <td className="hidden sm:table-cell px-3 py-2.5 text-right font-mono text-sm tabular-nums text-foreground-muted">
-                    {formatQuantity(position.quantity)}
-                  </td>
+                  {/* Quantity (hidden from viewers — reveals position size) */}
+                  {!hideSizes && (
+                    <td className="hidden sm:table-cell px-3 py-2.5 text-right font-mono text-sm tabular-nums text-foreground-muted">
+                      {formatQuantity(position.quantity)}
+                    </td>
+                  )}
 
                   {/* Avg Cost */}
                   <td className="hidden md:table-cell px-3 py-2.5 text-right font-mono text-sm tabular-nums text-foreground-muted">
@@ -389,7 +399,7 @@ export function HoldingsTable() {
             {/* Empty filter state */}
             {visiblePositions.length === 0 && (
               <tr>
-                <td colSpan={COLUMNS.length + 1} className="px-4 py-8 text-center text-sm text-foreground-muted">
+                <td colSpan={columns.length + 1} className="px-4 py-8 text-center text-sm text-foreground-muted">
                   No {filter === 'etf' ? 'ETF' : filter} positions
                 </td>
               </tr>
