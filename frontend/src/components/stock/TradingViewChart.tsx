@@ -33,10 +33,11 @@ function TradingViewChartInner({
   const scriptId = `tradingview-widget-${symbol}-${Date.now()}`;
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    const container = containerRef.current;
+    if (!container) return;
 
     // Clean up any existing widget
-    containerRef.current.innerHTML = '';
+    container.replaceChildren();
 
     // Create widget container
     const widgetContainer = document.createElement('div');
@@ -50,7 +51,7 @@ function TradingViewChartInner({
     widgetDiv.style.height = '100%';
     widgetContainer.appendChild(widgetDiv);
 
-    containerRef.current.appendChild(widgetContainer);
+    container.appendChild(widgetContainer);
 
     // Create and load TradingView widget script
     const script = document.createElement('script');
@@ -95,11 +96,10 @@ function TradingViewChartInner({
     script.innerHTML = JSON.stringify(config);
     widgetContainer.appendChild(script);
 
-    // Cleanup function
+    // Cleanup function — use the captured container, not the (possibly
+    // changed) ref, per react-hooks guidance.
     return () => {
-      if (containerRef.current) {
-        containerRef.current.innerHTML = '';
-      }
+      container.replaceChildren();
     };
   }, [symbol, theme, interval, autosize, showToolbar, showRangeSelector, allowSymbolChange, scriptId]);
 
@@ -154,9 +154,10 @@ export function TradingViewMiniChart({
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    const container = containerRef.current;
+    if (!container) return;
 
-    containerRef.current.innerHTML = '';
+    container.replaceChildren();
 
     const widgetContainer = document.createElement('div');
     widgetContainer.className = 'tradingview-widget-container';
@@ -165,7 +166,7 @@ export function TradingViewMiniChart({
     widgetDiv.className = 'tradingview-widget-container__widget';
     widgetContainer.appendChild(widgetDiv);
 
-    containerRef.current.appendChild(widgetContainer);
+    container.appendChild(widgetContainer);
 
     const script = document.createElement('script');
     script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js';
@@ -188,9 +189,7 @@ export function TradingViewMiniChart({
     widgetContainer.appendChild(script);
 
     return () => {
-      if (containerRef.current) {
-        containerRef.current.innerHTML = '';
-      }
+      container.replaceChildren();
     };
   }, [symbol, theme, height]);
 
@@ -219,9 +218,10 @@ export function TradingViewSymbolInfo({
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    const container = containerRef.current;
+    if (!container) return;
 
-    containerRef.current.innerHTML = '';
+    container.replaceChildren();
 
     const widgetContainer = document.createElement('div');
     widgetContainer.className = 'tradingview-widget-container';
@@ -230,7 +230,7 @@ export function TradingViewSymbolInfo({
     widgetDiv.className = 'tradingview-widget-container__widget';
     widgetContainer.appendChild(widgetDiv);
 
-    containerRef.current.appendChild(widgetContainer);
+    container.appendChild(widgetContainer);
 
     const script = document.createElement('script');
     script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-symbol-info.js';
@@ -249,9 +249,7 @@ export function TradingViewSymbolInfo({
     widgetContainer.appendChild(script);
 
     return () => {
-      if (containerRef.current) {
-        containerRef.current.innerHTML = '';
-      }
+      container.replaceChildren();
     };
   }, [symbol, theme]);
 
