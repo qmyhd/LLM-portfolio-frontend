@@ -17,9 +17,11 @@
  * Optional (for Google OAuth):
  * - GOOGLE_CLIENT_ID: Google OAuth client ID
  * - GOOGLE_CLIENT_SECRET: Google OAuth client secret
- * - ALLOWED_EMAILS: Comma-separated list of allowed Google email addresses
- * - OWNER_EMAILS: Fallback owner grants when the backend is unreachable
- *   during sign-in (mirror the backend's OWNER_EMAILS value)
+ * - OWNER_EMAILS: Emails promoted to 'owner'. Also the fallback owner grant
+ *   when the backend is unreachable during sign-in (mirror the backend value).
+ *
+ * Signup is OPEN: any Google account with a verified email may sign in and is
+ * created as a 'viewer'. There is no ALLOWED_EMAILS gate anymore.
  */
 
 import NextAuth, { type NextAuthConfig } from "next-auth";
@@ -69,8 +71,6 @@ const parseEmailList = (raw: string | undefined): string[] =>
     .split(",")
     .map((email) => email.trim().toLowerCase())
     .filter((email) => email.length > 0);
-
-const getAllowedEmails = (): string[] => parseEmailList(process.env.ALLOWED_EMAILS);
 
 /**
  * Report the Google sign-in to the FastAPI backend, which verifies the ID
@@ -153,26 +153,28 @@ const authConfig: NextAuthConfig = {
   providers,
 
   callbacks: {
-    async signIn({ user }) {
+    async signIn({ user, account, profile }) {
       const email = user.email?.toLowerCase() || "";
 
       // Credentials users are already validated in authorize()
       if (email.endsWith("@local")) return true;
 
-      // Google OAuth users: check email allowlist
-      const allowedEmails = getAllowedEmails();
-
-      if (allowedEmails.length === 0) {
-        console.error("ALLOWED_EMAILS not configured - denying Google sign in");
-        return false;
+      // Open Google signup: any Google account with a verified email may
+      // sign in. New users are created in app_users as 'viewer' by the
+      // backend /auth/google sync — never elevated automatically. Owner
+      // promotion is gated solely by OWNER_EMAILS on the backend.
+      if (account?.provider === "google") {
+        const emailVerified = (profile as { email_verified?: boolean } | undefined)
+          ?.email_verified;
+        // Google always sends email_verified for real accounts; deny only
+        // when it is explicitly false (unverified) or the email is missing.
+        if (!email || emailVerified === false) {
+          console.warn(`Google sign-in denied for '${email}': email not verified`);
+          return false;
+        }
+        return true;
       }
 
-      if (!allowedEmails.includes(email)) {
-        console.warn(`Sign-in denied for ${email} - not in allowlist`);
-        return false;
-      }
-
-      console.log(`Sign-in allowed for ${email}`);
       return true;
     },
 

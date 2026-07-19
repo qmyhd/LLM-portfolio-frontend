@@ -6,6 +6,7 @@ import type { Position } from '@/types/api';
 import { formatMoney, formatPercent, formatQuantity } from '@/lib/format';
 import { pnlTextColor } from '@/lib/colors';
 import { useBucket, withBucket } from '@/contexts/BucketContext';
+import { usePrivacy } from '@/hooks/usePrivacy';
 
 interface RobinhoodPositionCardProps {
   ticker: string;
@@ -57,6 +58,7 @@ export function RobinhoodPositionCard({ ticker }: RobinhoodPositionCardProps) {
   const [agg, setAgg] = useState<AggregatedPosition | null>(null);
   const [loading, setLoading] = useState(true);
   const bucket = useBucket();
+  const { hideSizes } = usePrivacy();
 
   useEffect(() => {
     let cancelled = false;
@@ -124,12 +126,15 @@ export function RobinhoodPositionCard({ ticker }: RobinhoodPositionCardProps) {
         <p className="text-xs text-foreground-muted mt-0.5">Total return</p>
       </div>
 
-      {/* 2×2 Stats grid (no $ totals; avg cost kept as a factual price) */}
+      {/* Stats grid (no $ totals; avg cost kept as a factual price).
+          Viewers don't see the share count — it reveals position size. */}
       <div className="grid grid-cols-2 gap-px bg-border rounded-lg overflow-hidden mb-3">
-        <div className="bg-background p-3">
-          <p className="text-lg font-bold font-mono tabular-nums">{formatQuantity(agg.totalShares)}</p>
-          <p className="text-xs text-foreground-muted mt-0.5">Shares</p>
-        </div>
+        {!hideSizes && (
+          <div className="bg-background p-3">
+            <p className="text-lg font-bold font-mono tabular-nums">{formatQuantity(agg.totalShares)}</p>
+            <p className="text-xs text-foreground-muted mt-0.5">Shares</p>
+          </div>
+        )}
         <div className="bg-background p-3">
           <p className={`text-lg font-bold font-mono tabular-nums ${pnlTextColor(agg.dayChangePct ?? 0)}`}>
             {agg.dayChangePct != null ? formatPercent(agg.dayChangePct, 2, { showSign: true }) : '—'}
@@ -155,8 +160,9 @@ export function RobinhoodPositionCard({ ticker }: RobinhoodPositionCardProps) {
         </div>
       </div>
 
-      {/* Per-account breakdown (only if multiple accounts) — shares only, no $ */}
-      {agg.accounts.length > 1 && (
+      {/* Per-account breakdown (only if multiple accounts) — shares only, no $.
+          Hidden from viewers since share counts reveal size. */}
+      {!hideSizes && agg.accounts.length > 1 && (
         <div className="pt-3 mt-3 border-t border-border">
           <p className="text-xs text-foreground-muted mb-2">Accounts</p>
           <div className="space-y-1.5">

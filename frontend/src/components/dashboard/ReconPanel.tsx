@@ -8,6 +8,7 @@ import type { ReconMeta, ReconPositionMeta, PortfolioResponse } from '@/types/ap
 import { formatMoney } from '@/lib/format';
 import { RECON_SOURCE_COLORS } from '@/lib/colors';
 import { useBucket, withBucket } from '@/contexts/BucketContext';
+import { usePrivacy } from '@/hooks/usePrivacy';
 
 const RECON_ENABLED =
   process.env.NODE_ENV !== 'production' ||
@@ -54,6 +55,7 @@ export function ReconPanel() {
   const [copied, setCopied] = useState(false);
 
   const bucket = useBucket();
+  const { hideSizes } = usePrivacy();
 
   useEffect(() => {
     if (!isRecon || !RECON_ENABLED) {
@@ -89,6 +91,8 @@ export function ReconPanel() {
   }, [recon]);
 
   if (!isRecon || !RECON_ENABLED) return null;
+  // Reconciliation exposes raw cash/equity dollars — owner/editor only.
+  if (hideSizes) return null;
 
   return (
     <div className="card border-2 border-status-warning/30 bg-status-warning/5 p-4">

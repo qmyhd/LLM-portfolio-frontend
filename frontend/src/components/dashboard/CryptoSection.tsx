@@ -11,6 +11,7 @@ import { usePortfolio } from '@/hooks';
 import { useBucket } from '@/contexts/BucketContext';
 import { stockHref } from '@/lib/bucket';
 import { formatMoney, formatPercent, formatQuantity } from '@/lib/format';
+import { usePrivacy } from '@/hooks/usePrivacy';
 import { pnlTextColor, pnlBgColor } from '@/lib/colors';
 import { CardSpotlight } from '@/components/ui/CardSpotlight';
 
@@ -20,6 +21,7 @@ export function CryptoSection() {
   const { data } = usePortfolio();
   const [isOpen, setIsOpen] = useState(true);
   const bucket = useBucket();
+  const { hideSizes } = usePrivacy();
 
   useEffect(() => {
     try {
@@ -101,9 +103,11 @@ export function CryptoSection() {
                 <th className="px-3 py-2 text-[11px] font-medium uppercase tracking-wider text-foreground-muted text-left">
                   Symbol
                 </th>
-                <th className="px-3 py-2 text-[11px] font-medium uppercase tracking-wider text-foreground-muted text-right">
-                  Qty
-                </th>
+                {!hideSizes && (
+                  <th className="px-3 py-2 text-[11px] font-medium uppercase tracking-wider text-foreground-muted text-right">
+                    Qty
+                  </th>
+                )}
                 <th className="px-3 py-2 text-[11px] font-medium uppercase tracking-wider text-foreground-muted text-right">
                   Price
                 </th>
@@ -129,9 +133,11 @@ export function CryptoSection() {
                       {position.symbol}
                     </Link>
                   </td>
-                  <td className="px-3 py-2.5 text-right font-mono text-sm text-foreground-muted">
-                    {formatQuantity(position.quantity)}
-                  </td>
+                  {!hideSizes && (
+                    <td className="px-3 py-2.5 text-right font-mono text-sm text-foreground-muted">
+                      {formatQuantity(position.quantity)}
+                    </td>
+                  )}
                   <td className="px-3 py-2.5 text-right font-mono text-sm">
                     {formatMoney(position.currentPrice)}
                   </td>

@@ -25,6 +25,7 @@ import type { Position as ApiPosition } from '@/types/api';
 import type { SyncResponse } from '@/types/ideas';
 import { toUiPosition, type UiPosition } from '@/lib/mappers';
 import { formatMoney, formatPercent, formatNumber, formatQuantity } from '@/lib/format';
+import { usePrivacy } from '@/hooks/usePrivacy';
 
 type SyncStatus = 'idle' | 'syncing' | 'success' | 'partial' | 'error';
 
@@ -42,6 +43,7 @@ export default function PositionsPage() {
   const [sortBy, setSortBy] = useState<'value' | 'pl' | 'dayChange'>('value');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const bucket = useBucket();
+  const { hideSizes } = usePrivacy();
 
   const fetchPositions = useCallback(async () => {
     try {
@@ -257,7 +259,7 @@ export default function PositionsPage() {
               <tr className="border-b border-border text-left text-sm text-foreground-muted">
                 <th scope="col" className="px-4 py-3 font-medium">Symbol</th>
                 <th scope="col" className="px-4 py-3 font-medium">Company</th>
-                <th scope="col" className="px-4 py-3 font-medium text-right">Qty</th>
+                {!hideSizes && <th scope="col" className="px-4 py-3 font-medium text-right">Qty</th>}
                 <th scope="col" className="px-4 py-3 font-medium text-right">Avg Cost</th>
                 <th scope="col" className="px-4 py-3 font-medium text-right">Price</th>
                 <th
@@ -312,7 +314,7 @@ export default function PositionsPage() {
                 ))
               ) : sortedPositions.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-12 text-center">
+                  <td colSpan={hideSizes ? 8 : 9} className="px-4 py-12 text-center">
                     <BriefcaseIcon className="mx-auto h-10 w-10 text-foreground-muted/50 mb-2" />
                     {bucket ? (
                       <>
@@ -349,9 +351,11 @@ export default function PositionsPage() {
                     <td className="px-4 py-3 text-sm text-foreground-muted max-w-[200px] truncate" title={pos.companyName}>
                       {pos.companyName}
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-sm">
-                      {formatQuantity(pos.quantity)}
-                    </td>
+                    {!hideSizes && (
+                      <td className="px-4 py-3 text-right font-mono text-sm">
+                        {formatQuantity(pos.quantity)}
+                      </td>
+                    )}
                     <td className="px-4 py-3 text-right font-mono text-sm text-foreground-muted">
                       {formatMoney(pos.averageCost)}
                     </td>

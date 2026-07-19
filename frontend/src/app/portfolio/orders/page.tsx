@@ -17,12 +17,14 @@ import { toUiOrder } from '@/lib/mappers';
 import { formatMoney } from '@/lib/format';
 import { useOrders } from '@/hooks/useOrders';
 import { useBucket } from '@/contexts/BucketContext';
+import { usePrivacy } from '@/hooks/usePrivacy';
 import { stockHref } from '@/lib/bucket';
 
 export default function OrdersPage() {
   const [filter, setFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
   const bucket = useBucket();
+  const { hideSizes } = usePrivacy();
 
   const { data: ordersData, isLoading: loading } = useOrders({
     status: filter !== 'all' ? filter : undefined,
@@ -103,9 +105,9 @@ export default function OrdersPage() {
                 <th scope="col" className="px-4 py-3 font-medium">Symbol</th>
                 <th scope="col" className="px-4 py-3 font-medium">Side</th>
                 <th scope="col" className="px-4 py-3 font-medium">Type</th>
-                <th scope="col" className="px-4 py-3 font-medium text-right">Qty</th>
+                {!hideSizes && <th scope="col" className="px-4 py-3 font-medium text-right">Qty</th>}
                 <th scope="col" className="px-4 py-3 font-medium text-right">Price</th>
-                <th scope="col" className="px-4 py-3 font-medium text-right">Total</th>
+                {!hideSizes && <th scope="col" className="px-4 py-3 font-medium text-right">Total</th>}
                 <th scope="col" className="px-4 py-3 font-medium">Status</th>
               </tr>
             </thead>
@@ -123,7 +125,7 @@ export default function OrdersPage() {
                 ))
               ) : filteredOrders.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center">
+                  <td colSpan={hideSizes ? 6 : 8} className="px-4 py-12 text-center">
                     <ClipboardDocumentListIcon className="mx-auto h-10 w-10 text-foreground-muted/50 mb-2" />
                     {bucket ? (
                       <>
@@ -171,15 +173,19 @@ export default function OrdersPage() {
                     <td className="px-4 py-3 text-sm capitalize text-foreground-muted">
                       {order.type.replace('_', ' ')}
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-sm">
-                      {order.status === 'filled' ? order.quantity : `${order.filledQuantity}/${order.quantity}`}
-                    </td>
+                    {!hideSizes && (
+                      <td className="px-4 py-3 text-right font-mono text-sm">
+                        {order.status === 'filled' ? order.quantity : `${order.filledQuantity}/${order.quantity}`}
+                      </td>
+                    )}
                     <td className="px-4 py-3 text-right font-mono text-sm">
                       {formatMoney(order.price)}
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-sm font-medium">
-                      {formatMoney(order.totalValue)}
-                    </td>
+                    {!hideSizes && (
+                      <td className="px-4 py-3 text-right font-mono text-sm font-medium">
+                        {formatMoney(order.totalValue)}
+                      </td>
+                    )}
                     <td className="px-4 py-3">
                       <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
                         order.status === 'filled'

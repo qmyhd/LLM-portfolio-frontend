@@ -3,13 +3,14 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSWRConfig } from 'swr';
+import { useSession, signOut } from 'next-auth/react';
 import { clsx } from 'clsx';
 import {
   MagnifyingGlassIcon,
   Bars3Icon,
-  BellIcon,
   ArrowPathIcon,
   StarIcon,
+  ArrowRightOnRectangleIcon,
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import { FAVORITE_COLOR } from '@/lib/colors';
@@ -31,6 +32,9 @@ interface TopBarProps {
 export function TopBar({ currentTicker }: TopBarProps) {
   const router = useRouter();
   const { mutate } = useSWRConfig();
+  const { data: session } = useSession();
+  const [accountOpen, setAccountOpen] = useState(false);
+  const accountRef = useRef<HTMLDivElement>(null);
   // useBucket returns null when no BucketProvider is in scope (Research side)
   // — stockHref(symbol, null) gracefully renders /stock/<symbol> in that case.
   const bucket = useBucket();
@@ -165,10 +169,26 @@ export function TopBar({ currentTicker }: TopBarProps) {
         searchRef.current?.focus();
       }
     };
-    
+
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // Close the account menu on outside click
+  useEffect(() => {
+    if (!accountOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (accountRef.current && !accountRef.current.contains(e.target as Node)) {
+        setAccountOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, [accountOpen]);
+
+  const userEmail = session?.user?.email ?? '';
+  const userRole = session?.user?.role ?? 'viewer';
+  const avatarInitial = (userEmail.trim()[0] || 'U').toUpperCase();
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -321,23 +341,58 @@ export function TopBar({ currentTicker }: TopBarProps) {
             <ArrowPathIcon className={clsx('w-5 h-5', isRefreshing && 'animate-spin')} />
           </button>
 
-          {/* Notifications */}
-          <button
-            className="p-2 rounded-lg hover:bg-background-hover relative text-foreground-muted hover:text-foreground transition-colors"
-            aria-label="Notifications"
-            title="Notifications"
-          >
-            <BellIcon className="w-5 h-5" />
-          </button>
+          {/* Account menu */}
+          <div className="relative ml-2" ref={accountRef}>
+            <button
+              onClick={() => setAccountOpen((o) => !o)}
+              className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-sm font-medium text-white hover:bg-primary/90 transition-colors focus-visible:ring-2 focus-visible:ring-primary"
+              aria-label="Account menu"
+              aria-haspopup="menu"
+              aria-expanded={accountOpen}
+              title={userEmail || 'Account'}
+            >
+              {avatarInitial}
+            </button>
 
-          {/* Profile */}
-          <button
-            className="ml-2 w-8 h-8 bg-primary rounded-full flex items-center justify-center text-sm font-medium text-white"
-            aria-label="User profile"
-            title="Profile"
-          >
-            Q
-          </button>
+            {accountOpen && (
+              <div
+                role="menu"
+                className="absolute right-0 mt-2 w-60 bg-background-secondary border border-border rounded-lg shadow-xl z-50 overflow-hidden"
+              >
+                <div className="px-4 py-3 border-b border-border">
+                  <p className="text-sm font-medium text-foreground truncate" title={userEmail}>
+                    {userEmail || 'Signed in'}
+                  </p>
+                  <span
+                    className={clsx(
+                      'mt-1 inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-medium capitalize',
+                      userRole === 'owner'
+                        ? 'bg-primary/15 text-primary'
+                        : userRole === 'editor'
+                        ? 'bg-sky-500/15 text-sky-400'
+                        : 'bg-foreground-muted/15 text-foreground-muted',
+                    )}
+                  >
+                    {userRole}
+                  </span>
+                  {userRole === 'viewer' && (
+                    <p className="mt-1.5 text-2xs text-foreground-subtle leading-snug">
+                      Read-only access — portfolio sizes are hidden; you&apos;re
+                      seeing research, timing, and percentage performance.
+                    </p>
+                  )}
+                </div>
+                <button
+                  role="menuitem"
+                  onClick={() => signOut({ callbackUrl: '/login' })}
+                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground-muted hover:text-foreground hover:bg-background-hover transition-colors"
+                >
+                  <ArrowRightOnRectangleIcon className="w-4 h-4" />
+                  Sign out
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
