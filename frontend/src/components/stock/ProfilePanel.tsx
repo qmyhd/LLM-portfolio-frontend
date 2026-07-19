@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useBucket } from '@/contexts/BucketContext';
 import { useThesisProfile } from '@/hooks';
+import { usePrivacy } from '@/hooks/usePrivacy';
+import { ReadOnlyNotice } from '@/components/ui/ReadOnlyNotice';
 import { BUCKET_NAMES, BUCKET_LABELS, type BucketName } from '@/lib/bucket';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { pnlTextColor } from '@/lib/colors';
@@ -126,6 +128,7 @@ function SavedView({ profile, ticker, bucket, onRefresh }: {
 }
 
 export function ProfilePanel({ ticker, onSaved }: ProfilePanelProps) {
+  const { canWrite } = usePrivacy();
   const ctxBucket = useBucket();
   const [pickedBucket, setPickedBucket] = useState<BucketName | null>(null);
   const bucket = ctxBucket ?? pickedBucket;
@@ -163,9 +166,18 @@ export function ProfilePanel({ ticker, onSaved }: ProfilePanelProps) {
     return <div className="p-4 space-y-3"><Skeleton.Line className="h-4 w-32" /><Skeleton.Line className="h-3 w-full" /></div>;
   }
 
-  // Saved profile exists -> show it.
+  // Saved profile exists -> show it (read-only for everyone).
   if (profile && step === 'idle') {
     return <SavedView profile={profile} ticker={ticker} bucket={bucket} onRefresh={refresh} />;
+  }
+
+  // Viewers can't run the (paid, write) build flow — show a read-only state.
+  if (!canWrite) {
+    return (
+      <div className="p-4">
+        <ReadOnlyNotice hint="No thesis profile has been built for this stock yet. Editors can generate one." />
+      </div>
+    );
   }
 
   const runAutofill = async () => {

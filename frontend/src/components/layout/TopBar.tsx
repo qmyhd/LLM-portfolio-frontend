@@ -266,13 +266,17 @@ export function TopBar({ currentTicker }: TopBarProps) {
                 <div className="py-1">
                   {searchResults.map((result, index) => {
                     const isFavorite = favorites.includes(result.symbol);
+                    // Row is a div (not a button) so the favorite control can be
+                    // a real nested button without invalid-HTML / a11y issues.
                     return (
-                      <button
+                      <div
                         key={result.symbol}
-                        type="button"
+                        role="option"
+                        aria-selected={index === selectedIndex}
+                        tabIndex={-1}
                         onClick={() => navigateToStock(result.symbol)}
                         className={clsx(
-                          'w-full flex items-center justify-between px-3 py-2 text-left transition-colors',
+                          'w-full flex items-center justify-between px-3 py-2 text-left transition-colors cursor-pointer',
                           index === selectedIndex
                             ? 'bg-primary/10 text-primary'
                             : 'hover:bg-background-tertiary'
@@ -292,6 +296,8 @@ export function TopBar({ currentTicker }: TopBarProps) {
                           )}
                         </div>
                         <button
+                          type="button"
+                          aria-label={isFavorite ? `Unfavorite ${result.symbol}` : `Favorite ${result.symbol}`}
                           onClick={(e) => toggleFavorite(result.symbol, e)}
                           className="p-1 hover:bg-background-tertiary rounded"
                         >
@@ -301,7 +307,7 @@ export function TopBar({ currentTicker }: TopBarProps) {
                             <StarIcon className="w-4 h-4 text-foreground-muted" />
                           )}
                         </button>
-                      </button>
+                      </div>
                     );
                   })}
                 </div>

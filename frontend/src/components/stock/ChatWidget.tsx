@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from 'react';
 import { clsx } from 'clsx';
 import { PaperAirplaneIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import { useBucket, withBucket } from '@/contexts/BucketContext';
+import { usePrivacy } from '@/hooks/usePrivacy';
+import { ReadOnlyNotice } from '@/components/ui/ReadOnlyNotice';
 
 interface ChatWidgetProps {
   ticker: string;
@@ -34,6 +36,7 @@ export function ChatWidget({ ticker }: ChatWidgetProps) {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const { canWrite } = usePrivacy();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const bucket = useBucket();
@@ -173,30 +176,36 @@ export function ChatWidget({ ticker }: ChatWidgetProps) {
         </div>
       )}
 
-      {/* Input area */}
-      <form onSubmit={handleSubmit} className="p-4 border-t border-border">
-        <div className="flex gap-2">
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder={`Ask about ${ticker}...`}
-            disabled={isLoading}
-            className="input flex-1"
-          />
-          <button
-            type="submit"
-            disabled={!input.trim() || isLoading}
-            className={clsx(
-              'btn-primary px-3',
-              (!input.trim() || isLoading) && 'opacity-50 cursor-not-allowed'
-            )}
-          >
-            <PaperAirplaneIcon className="w-5 h-5" />
-          </button>
+      {/* Input area — read-only accounts can't run the (paid) chat model */}
+      {canWrite ? (
+        <form onSubmit={handleSubmit} className="p-4 border-t border-border">
+          <div className="flex gap-2">
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={`Ask about ${ticker}...`}
+              disabled={isLoading}
+              className="input flex-1"
+            />
+            <button
+              type="submit"
+              disabled={!input.trim() || isLoading}
+              className={clsx(
+                'btn-primary px-3',
+                (!input.trim() || isLoading) && 'opacity-50 cursor-not-allowed'
+              )}
+            >
+              <PaperAirplaneIcon className="w-5 h-5" />
+            </button>
+          </div>
+        </form>
+      ) : (
+        <div className="p-4 border-t border-border">
+          <ReadOnlyNotice hint="Sign in with editor access to ask questions about this stock." />
         </div>
-      </form>
+      )}
     </div>
   );
 }
