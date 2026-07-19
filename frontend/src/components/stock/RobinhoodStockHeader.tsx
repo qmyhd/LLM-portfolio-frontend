@@ -72,6 +72,13 @@ export function RobinhoodStockHeader({
           {/* Big company name */}
           <h1 className="text-2xl font-bold mt-0.5">{companyName}</h1>
 
+          {/* Sector · industry (from yfinance company metadata) */}
+          {(profile.sector || profile.industry) && (
+            <p className="text-xs text-foreground-muted mt-0.5">
+              {[profile.sector, profile.industry].filter(Boolean).join(' · ')}
+            </p>
+          )}
+
           {/* Big price */}
           <p className="text-4xl font-bold font-mono tracking-tight mt-1">
             {formatMoney(price)}
