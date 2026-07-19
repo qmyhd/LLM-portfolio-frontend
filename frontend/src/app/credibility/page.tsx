@@ -9,6 +9,7 @@ import { TierBoard } from '@/components/credibility/TierBoard';
 import { PersonDetailView } from '@/components/credibility/PersonDetailView';
 import { PersonProfileEditor } from '@/components/credibility/PersonProfileEditor';
 import { ReviewQueue } from '@/components/credibility/ReviewQueue';
+import { usePrivacy } from '@/hooks/usePrivacy';
 import type { PersonDetail } from '@/types/credibility';
 
 // `editor` describes the right-hand panel mode: closed (read-only detail),
@@ -16,6 +17,7 @@ import type { PersonDetail } from '@/types/credibility';
 type EditorMode = { kind: 'closed' } | { kind: 'create' } | { kind: 'edit'; id: number };
 
 export default function CredibilityWorkspacePage() {
+  const { canWrite } = usePrivacy();
   const { people, error: peopleError, isLoading: peopleLoading, refresh: refreshPeople } = usePeople();
   const { categories, isLoading: catsLoading } = useCredibilityCategories();
   const { unmatched } = useUnmatchedIdentities();
@@ -102,6 +104,7 @@ export default function CredibilityWorkspacePage() {
                     </option>
                   ))}
                 </select>
+                {canWrite && (
                 <button
                   type="button"
                   onClick={() => setShowQueue((s) => !s)}
@@ -109,6 +112,8 @@ export default function CredibilityWorkspacePage() {
                 >
                   Review queue ({unmatched.length})
                 </button>
+                )}
+                {canWrite && (
                 <button
                   type="button"
                   onClick={() => {
@@ -119,6 +124,7 @@ export default function CredibilityWorkspacePage() {
                 >
                   Add person
                 </button>
+                )}
               </div>
             </div>
 
@@ -171,7 +177,7 @@ export default function CredibilityWorkspacePage() {
                   <PersonDetailView
                     personId={selectedId}
                     onEdit={
-                      selectedId != null
+                      canWrite && selectedId != null
                         ? () => setEditor({ kind: 'edit', id: selectedId })
                         : undefined
                     }

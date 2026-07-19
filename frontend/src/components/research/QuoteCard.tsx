@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useCredibilityCategories } from '@/hooks/useCredibility';
+import { usePrivacy } from '@/hooks/usePrivacy';
 import type { Quote, QuoteBodyInput } from '@/types/research';
 
 function fmt(seconds: number): string {
@@ -18,6 +19,7 @@ interface QuoteCardProps {
 }
 
 export function QuoteCard({ quote, onChanged }: QuoteCardProps) {
+  const { canWrite } = usePrivacy();
   const { categories } = useCredibilityCategories();
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -107,10 +109,12 @@ export function QuoteCard({ quote, onChanged }: QuoteCardProps) {
         <a href={deepLink} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate">
           {quote.videoTitle || quote.videoId} · {fmt(quote.startSeconds)}
         </a>
-        <div className="flex gap-2 shrink-0">
-          <button type="button" onClick={() => setEditing((v) => !v)} className="hover:text-foreground">Edit</button>
-          <button type="button" onClick={archive} disabled={busy} className="hover:text-loss disabled:opacity-50">Archive</button>
-        </div>
+        {canWrite && (
+          <div className="flex gap-2 shrink-0">
+            <button type="button" onClick={() => setEditing((v) => !v)} className="hover:text-foreground">Edit</button>
+            <button type="button" onClick={archive} disabled={busy} className="hover:text-loss disabled:opacity-50">Archive</button>
+          </div>
+        )}
       </div>
       {editing && (
         <div className="space-y-2 pt-2 border-t border-border">

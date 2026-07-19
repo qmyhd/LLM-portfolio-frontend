@@ -139,3 +139,5 @@ htmlcov/
 .mypy_cache/
 .pyright/
 ruff_cache/
+# Codex local scratch
+.codex/

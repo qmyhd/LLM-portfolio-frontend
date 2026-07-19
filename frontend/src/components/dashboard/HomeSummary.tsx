@@ -29,7 +29,7 @@ const fetcher = async <T,>(url: string): Promise<T> => {
  * review"), which is hidden from read-only viewers who can't act on it.
  */
 export function HomeSummary() {
-  const { hideSizes, isViewer } = usePrivacy();
+  const { hideSizes, isViewer, canWrite } = usePrivacy();
 
   const { data: series } = useSWR<ReturnSeriesResponse>(
     '/api/portfolio/return-series?period=ALL',
@@ -125,9 +125,15 @@ export function HomeSummary() {
         href="/ideas"
         className="card p-3 hover:border-primary/30 transition-colors flex flex-col justify-center"
       >
-        <span className="text-[11px] uppercase tracking-wider text-foreground-muted">Capture</span>
-        <p className="text-sm font-semibold text-foreground mt-0.5">Log a new thesis</p>
-        <p className="text-[11px] text-foreground-subtle mt-0.5">Add research to the journal</p>
+        <span className="text-[11px] uppercase tracking-wider text-foreground-muted">
+          {canWrite ? 'Capture' : 'Ideas'}
+        </span>
+        <p className="text-sm font-semibold text-foreground mt-0.5">
+          {canWrite ? 'Log a new thesis' : 'Browse research ideas'}
+        </p>
+        <p className="text-[11px] text-foreground-subtle mt-0.5">
+          {canWrite ? 'Add research to the journal' : 'Parsed ideas from Discord & imports'}
+        </p>
       </Link>
     </section>
   );

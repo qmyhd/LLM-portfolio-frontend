@@ -8,6 +8,8 @@ import { TagsInput } from './TagsInput';
 import { RefineDiffPreview } from './RefineDiffPreview';
 import type { UserIdea, UpdateIdeaRequest, RefineResponse, IdeaStatus, IdeaContextResponse } from '@/types/ideas';
 import { Select } from '@/components/ui/Select';
+import { usePrivacy } from '@/hooks/usePrivacy';
+import { ReadOnlyNotice } from '@/components/ui/ReadOnlyNotice';
 
 interface IdeaDetailDrawerProps {
   idea: UserIdea | null;
@@ -30,6 +32,7 @@ export function IdeaDetailDrawer({
   onApplyRefine,
   onDismissRefine,
 }: IdeaDetailDrawerProps) {
+  const { canWrite } = usePrivacy();
   const [editContent, setEditContent] = useState('');
   const [editSymbols, setEditSymbols] = useState<string[]>([]);
   const [editTags, setEditTags] = useState<string[]>([]);
@@ -148,7 +151,7 @@ export function IdeaDetailDrawer({
       <div className="fixed inset-y-0 right-0 w-full sm:w-[480px] bg-background-secondary z-50 flex flex-col border-l border-border drawer-enter">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-          <h2 className="text-lg font-semibold">Edit Idea</h2>
+          <h2 className="text-lg font-semibold">{canWrite ? 'Edit Idea' : 'Idea'}</h2>
           <button
             onClick={onClose}
             className="p-1.5 rounded-lg hover:bg-background-hover text-foreground-muted hover:text-foreground transition-colors"
@@ -166,9 +169,10 @@ export function IdeaDetailDrawer({
               Content
             </label>
             <textarea
-              className="input min-h-[120px] resize-y text-sm"
+              className="input min-h-[120px] resize-y text-sm disabled:opacity-100 disabled:cursor-default"
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
+              readOnly={!canWrite}
             />
           </div>
 
@@ -177,11 +181,19 @@ export function IdeaDetailDrawer({
             <label className="text-xs text-foreground-muted uppercase tracking-wider mb-1.5 block">
               Symbols
             </label>
-            <TickerAutocomplete
-              selectedSymbols={editSymbols}
-              onAdd={(s) => setEditSymbols((prev) => [...prev, s])}
-              onRemove={(s) => setEditSymbols((prev) => prev.filter((t) => t !== s))}
-            />
+            {canWrite ? (
+              <TickerAutocomplete
+                selectedSymbols={editSymbols}
+                onAdd={(s) => setEditSymbols((prev) => [...prev, s])}
+                onRemove={(s) => setEditSymbols((prev) => prev.filter((t) => t !== s))}
+              />
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                {editSymbols.length ? editSymbols.map((s) => (
+                  <span key={s} className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-xs font-mono">${s}</span>
+                )) : <span className="text-xs text-foreground-subtle">None</span>}
+              </div>
+            )}
           </div>
 
           {/* Tags */}
@@ -189,15 +201,23 @@ export function IdeaDetailDrawer({
             <label className="text-xs text-foreground-muted uppercase tracking-wider mb-1.5 block">
               Tags
             </label>
-            <TagsInput
-              tags={editTags}
-              onAdd={(t) => setEditTags((prev) => [...prev, t])}
-              onRemove={(t) => setEditTags((prev) => prev.filter((x) => x !== t))}
-            />
+            {canWrite ? (
+              <TagsInput
+                tags={editTags}
+                onAdd={(t) => setEditTags((prev) => [...prev, t])}
+                onRemove={(t) => setEditTags((prev) => prev.filter((x) => x !== t))}
+              />
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                {editTags.length ? editTags.map((t) => (
+                  <span key={t} className="px-1.5 py-0.5 rounded bg-foreground-muted/10 text-foreground-muted text-xs">{t}</span>
+                )) : <span className="text-xs text-foreground-subtle">None</span>}
+              </div>
+            )}
           </div>
 
           {/* Status */}
-          <div>
+          <div className={canWrite ? '' : 'hidden'}>
             <label className="text-xs text-foreground-muted uppercase tracking-wider mb-1.5 block">
               Status
             </label>
@@ -284,7 +304,12 @@ export function IdeaDetailDrawer({
           )}
         </div>
 
-        {/* Footer actions */}
+        {/* Footer actions — read-only accounts can view but not edit */}
+        {!canWrite ? (
+          <div className="px-6 py-4 border-t border-border">
+            <ReadOnlyNotice hint="Editors can edit, refine, or delete this idea." />
+          </div>
+        ) : (
         <div className="px-6 py-4 border-t border-border flex items-center justify-between">
           <div>
             {!showDeleteConfirm ? (
@@ -330,6 +355,7 @@ export function IdeaDetailDrawer({
             </button>
           </div>
         </div>
+        )}
       </div>
     </>
   );
