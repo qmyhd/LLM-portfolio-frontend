@@ -5,6 +5,7 @@ import { clsx } from 'clsx';
 import type { Activity } from '@/types/api';
 import { formatMoney, formatNumber, formatDate } from '@/lib/format';
 import { useBucket } from '@/contexts/BucketContext';
+import { usePrivacy } from '@/hooks/usePrivacy';
 import { stockHref } from '@/lib/bucket';
 
 const TYPE_CONFIG: Record<string, { label: string; color: string; border: string }> = {
@@ -24,6 +25,7 @@ export function TradeCard({ activity }: TradeCardProps) {
   const symbol = activity.symbol;
   const hasSymbol = symbol && symbol.trim() !== '';
   const bucket = useBucket();
+  const { hideSizes } = usePrivacy();
 
   const content = (
     <div
@@ -48,27 +50,33 @@ export function TradeCard({ activity }: TradeCardProps) {
         </span>
       </div>
 
-      {/* Details row */}
+      {/* Details row. Viewers see the execution price and timing, but not the
+          share count or trade $ amount (those reveal position size). */}
       <div className="flex items-center justify-between">
         <div className="text-sm text-foreground-muted">
-          {activity.units != null && activity.price != null ? (
+          {activity.price != null ? (
             <>
-              {formatNumber(activity.units, 4)} shares @ {formatMoney(activity.price)}
+              {!hideSizes && activity.units != null && (
+                <>{formatNumber(activity.units, 4)} shares </>
+              )}
+              @ {formatMoney(activity.price)}
             </>
           ) : activity.description ? (
             <span className="truncate max-w-[300px] inline-block">{activity.description}</span>
           ) : null}
         </div>
-        <div className="text-right">
-          <span className="font-mono font-semibold text-sm text-foreground">
-            {formatMoney(Math.abs(activity.amount))}
-          </span>
-          {activity.fee != null && activity.fee > 0 && (
-            <div className="text-xs text-foreground-muted">
-              Fee: {formatMoney(activity.fee)}
-            </div>
-          )}
-        </div>
+        {!hideSizes && (
+          <div className="text-right">
+            <span className="font-mono font-semibold text-sm text-foreground">
+              {formatMoney(Math.abs(activity.amount))}
+            </span>
+            {activity.fee != null && activity.fee > 0 && (
+              <div className="text-xs text-foreground-muted">
+                Fee: {formatMoney(activity.fee)}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
