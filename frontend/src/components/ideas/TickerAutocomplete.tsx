@@ -140,6 +140,8 @@ export function TickerAutocomplete({
           onKeyDown={handleKeyDown}
           role="combobox"
           aria-expanded={showDropdown}
+          aria-controls="ticker-autocomplete-listbox"
+          aria-autocomplete="list"
           aria-activedescendant={
             selectedIndex >= 0 ? `ticker-option-${selectedIndex}` : undefined
           }
@@ -155,6 +157,7 @@ export function TickerAutocomplete({
       {showDropdown && (
         <div
           ref={dropdownRef}
+          id="ticker-autocomplete-listbox"
           className="absolute z-50 mt-1 w-full bg-background-secondary border border-border rounded-md shadow-lg max-h-48 overflow-y-auto"
           role="listbox"
         >
