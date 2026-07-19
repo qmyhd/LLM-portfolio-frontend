@@ -7,6 +7,8 @@ import { IdeaCard } from './IdeaCard';
 import { IdeaDetailDrawer } from './IdeaDetailDrawer';
 import { CarRideMode } from './CarRideMode';
 import { useUserIdeas } from '@/hooks/useUserIdeas';
+import { usePrivacy } from '@/hooks/usePrivacy';
+import { ReadOnlyNotice } from '@/components/ui/ReadOnlyNotice';
 import type {
   UserIdea,
   CreateIdeaRequest,
@@ -16,6 +18,7 @@ import type {
 } from '@/types/ideas';
 
 export function IdeasPageContent() {
+  const { canWrite } = usePrivacy();
   // Car ride mode
   const [isCarRideMode, setIsCarRideMode] = useState(false);
   useEffect(() => {
@@ -138,34 +141,43 @@ export function IdeasPageContent() {
 
   return (
     <div className="space-y-6">
-      {/* Header with car ride mode toggle */}
+      {/* Header with car ride mode toggle (owners/editors only) */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Ideas</h1>
-        <label className="flex items-center gap-2 cursor-pointer">
-          <span className="text-sm text-foreground-muted">Dictation Mode</span>
-          <div className="relative">
-            <input
-              type="checkbox"
-              className="sr-only"
-              checked={isCarRideMode}
-              onChange={toggleCarRideMode}
-            />
-            <div
-              className={`w-10 h-5 rounded-full transition-colors ${
-                isCarRideMode ? 'bg-primary' : 'bg-background-hover'
-              }`}
-            />
-            <div
-              className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
-                isCarRideMode ? 'translate-x-5' : ''
-              }`}
-            />
-          </div>
-        </label>
+        {canWrite && (
+          <label className="flex items-center gap-2 cursor-pointer">
+            <span className="text-sm text-foreground-muted">Dictation Mode</span>
+            <div className="relative">
+              <input
+                type="checkbox"
+                className="sr-only"
+                checked={isCarRideMode}
+                onChange={toggleCarRideMode}
+              />
+              <div
+                className={`w-10 h-5 rounded-full transition-colors ${
+                  isCarRideMode ? 'bg-primary' : 'bg-background-hover'
+                }`}
+              />
+              <div
+                className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
+                  isCarRideMode ? 'translate-x-5' : ''
+                }`}
+              />
+            </div>
+          </label>
+        )}
       </div>
 
-      {/* Capture form */}
-      <IdeaCaptureForm onSubmit={handleCreate} />
+      {/* Capture form — read-only accounts browse ideas but can't add them */}
+      {canWrite ? (
+        <IdeaCaptureForm onSubmit={handleCreate} />
+      ) : (
+        <ReadOnlyNotice
+          label="Read-only"
+          hint="You can browse the research ideas below, but capturing new ones needs editor access."
+        />
+      )}
 
       {/* Filter bar */}
       <IdeasFilterBar filters={filters} onFiltersChange={setFilters} />

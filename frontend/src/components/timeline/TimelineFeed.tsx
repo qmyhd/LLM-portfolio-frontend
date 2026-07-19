@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useTimeline } from '@/hooks/useTimeline';
+import { usePrivacy } from '@/hooks/usePrivacy';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { AttributionBadge, ReviewStatusChip, SourceBadge } from './badges';
 import { CurationDrawer, type CurationTarget } from './CurationDrawer';
@@ -38,6 +39,7 @@ function timeOf(idea: UserIdea): string {
  * grouped by day. Every card opens the curation drawer for corrections.
  */
 export function TimelineFeed() {
+  const { canWrite } = usePrivacy();
   const [source, setSource] = useState<IdeaSource | ''>('');
   const [threadKey, setThreadKey] = useState('');
   const [author, setAuthor] = useState('');
@@ -125,13 +127,15 @@ export function TimelineFeed() {
                   <span className="text-2xs text-foreground-subtle ml-auto tabular-nums">
                     {timeOf(idea)}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => setTarget({ kind: 'idea', item: idea })}
-                    className="text-2xs text-primary hover:underline"
-                  >
-                    Curate
-                  </button>
+                  {canWrite && (
+                    <button
+                      type="button"
+                      onClick={() => setTarget({ kind: 'idea', item: idea })}
+                      className="text-2xs text-primary hover:underline"
+                    >
+                      Curate
+                    </button>
+                  )}
                 </div>
                 {idea.title && (
                   <p className="text-sm font-medium text-foreground mt-1.5">{idea.title}</p>

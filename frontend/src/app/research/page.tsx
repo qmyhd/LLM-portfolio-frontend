@@ -10,6 +10,7 @@ import { TranscriptViewer } from '@/components/research/TranscriptViewer';
 import { CaptureDrawer, type QuoteDraft } from '@/components/research/CaptureDrawer';
 import { QuoteLibrary } from '@/components/research/QuoteLibrary';
 import { groupSegments } from '@/lib/transcript';
+import { usePrivacy } from '@/hooks/usePrivacy';
 import type { ResolvedVideo } from '@/types/research';
 
 function fmt(seconds: number): string {
@@ -19,6 +20,7 @@ function fmt(seconds: number): string {
 }
 
 export default function ResearchWorkspacePage() {
+  const { canWrite } = usePrivacy();
   const { resolve, isResolving, error } = useResolveVideo();
   const [tab, setTab] = useState<'watch' | 'library'>('watch');
   const [url, setUrl] = useState('');
@@ -212,9 +214,11 @@ export default function ResearchWorkspacePage() {
                             <span className="text-foreground-subtle"> · {selCount} line{selCount > 1 ? 's' : ''}</span>
                           </span>
                           <div className="flex gap-2">
-                            <button type="button" onClick={openDrawer} className="btn-primary text-xs">
-                              Save quote
-                            </button>
+                            {canWrite && (
+                              <button type="button" onClick={openDrawer} className="btn-primary text-xs">
+                                Save quote
+                              </button>
+                            )}
                             <button type="button" onClick={clearSel} className="btn-ghost text-xs">
                               Clear
                             </button>

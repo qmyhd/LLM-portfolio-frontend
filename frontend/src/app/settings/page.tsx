@@ -13,6 +13,8 @@ import {
 import useSWR from 'swr';
 import type { ConnectionsResponse } from '@/types/api';
 import { BUCKET_NAMES, BUCKET_LABELS, type BucketName } from '@/lib/bucket';
+import { usePrivacy } from '@/hooks/usePrivacy';
+import { ReadOnlyNotice } from '@/components/ui/ReadOnlyNotice';
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -40,6 +42,7 @@ const STATUS_CONFIG = {
 } as const;
 
 export default function SettingsPage() {
+  const { isOwner } = usePrivacy();
   const { data, error, isLoading, mutate } = useSWR<ConnectionsResponse>(
     '/api/connections',
     fetcher,
@@ -166,26 +169,32 @@ export default function SettingsPage() {
                     <div className="flex flex-wrap items-center gap-3 sm:ml-4 sm:flex-shrink-0">
                       <label className="flex items-center gap-2 text-xs text-foreground-muted">
                         Bucket
-                        <select
-                          // Default to 'other' if the backend returns a
-                          // null/missing bucket (shouldn't happen with the
-                          // server-side COALESCE, but be defensive).
-                          value={conn.bucket ?? 'other'}
-                          disabled={isUpdating}
-                          onChange={(e) =>
-                            handleBucketChange(
-                              conn.accountId,
-                              e.target.value as BucketName,
-                            )
-                          }
-                          className="bg-background-secondary border border-border rounded-md px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-60"
-                        >
-                          {BUCKET_NAMES.map((b) => (
-                            <option key={b} value={b}>
-                              {BUCKET_LABELS[b]}
-                            </option>
-                          ))}
-                        </select>
+                        {isOwner ? (
+                          <select
+                            // Default to 'other' if the backend returns a
+                            // null/missing bucket (shouldn't happen with the
+                            // server-side COALESCE, but be defensive).
+                            value={conn.bucket ?? 'other'}
+                            disabled={isUpdating}
+                            onChange={(e) =>
+                              handleBucketChange(
+                                conn.accountId,
+                                e.target.value as BucketName,
+                              )
+                            }
+                            className="bg-background-secondary border border-border rounded-md px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-60"
+                          >
+                            {BUCKET_NAMES.map((b) => (
+                              <option key={b} value={b}>
+                                {BUCKET_LABELS[b]}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <span className="text-foreground">
+                            {BUCKET_LABELS[(conn.bucket ?? 'other') as BucketName]}
+                          </span>
+                        )}
                       </label>
                       <span
                         className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${config.color}`}
@@ -193,7 +202,7 @@ export default function SettingsPage() {
                         <StatusIcon className="h-3 w-3" />
                         {config.label}
                       </span>
-                      {conn.connectionStatus !== 'connected' && (
+                      {isOwner && conn.connectionStatus !== 'connected' && (
                         <button
                           onClick={handleReconnect}
                           className="text-xs text-primary hover:underline flex items-center gap-1"
@@ -213,13 +222,20 @@ export default function SettingsPage() {
                 retroactive — past data immediately re-labels to the new bucket.
               </p>
 
-              {!isLoading && !data?.connections?.length && !error && (
+              {!isLoading && !data?.connections?.length && !error && isOwner && (
                 <button
                   onClick={handleReconnect}
                   className="w-full p-4 border border-dashed border-border rounded-lg text-foreground-muted hover:border-primary hover:text-primary transition"
                 >
                   + Connect a Brokerage
                 </button>
+              )}
+
+              {!isOwner && (
+                <ReadOnlyNotice
+                  className="mt-3"
+                  hint="Only the account owner can connect brokerages or change buckets."
+                />
               )}
             </section>
           </div>

@@ -16,6 +16,13 @@ export interface Privacy {
    * shown — they're public/intrinsic and reveal nothing about size.
    */
   hideSizes: boolean;
+  /**
+   * Whether this session may perform writes (capture ideas, chat, notes,
+   * curate, edit profiles, manage connections). Owners/editors only. Viewers
+   * get read-only affordances instead of buttons that would 403 server-side.
+   * Defaults to false while the session is loading.
+   */
+  canWrite: boolean;
 }
 
 /**
@@ -40,5 +47,6 @@ export function usePrivacy(): Privacy {
     isEditor,
     isViewer,
     hideSizes: status === 'loading' ? true : isViewer,
+    canWrite: status === 'loading' ? false : (isOwner || isEditor),
   };
 }

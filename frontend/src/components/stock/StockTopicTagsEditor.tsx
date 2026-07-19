@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTopicTags, useCredibilityCategories } from '@/hooks/useCredibility';
+import { usePrivacy } from '@/hooks/usePrivacy';
 import type { TopicTag } from '@/types/credibility';
 
 interface StockTopicTagsEditorProps {
@@ -9,6 +10,7 @@ interface StockTopicTagsEditorProps {
 }
 
 export function StockTopicTagsEditor({ ticker }: StockTopicTagsEditorProps) {
+  const { canWrite } = usePrivacy();
   const { tags, refresh } = useTopicTags(ticker);
   const { categories } = useCredibilityCategories();
 
@@ -62,6 +64,9 @@ export function StockTopicTagsEditor({ ticker }: StockTopicTagsEditorProps) {
 
   const selectCls =
     'bg-background-secondary border border-border rounded-md px-2 py-1 text-sm';
+
+  // Topic tags are an internal credibility-routing control — hidden from viewers.
+  if (!canWrite) return null;
 
   return (
     <div className="card p-3 space-y-2">

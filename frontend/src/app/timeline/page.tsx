@@ -6,6 +6,7 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
 import { TimelineFeed } from '@/components/timeline/TimelineFeed';
 import { ReviewQueue } from '@/components/timeline/ReviewQueue';
+import { usePrivacy } from '@/hooks/usePrivacy';
 
 type Tab = 'timeline' | 'review';
 
@@ -19,12 +20,15 @@ type Tab = 'timeline' | 'review';
  *   status. Reviewed items are frozen against NLP reparses.
  */
 export default function TimelinePage() {
+  const { canWrite } = usePrivacy();
   const [tab, setTab] = useState<Tab>('timeline');
+  // Viewers can read the story timeline but not the curation queue.
+  const activeTab: Tab = canWrite ? tab : 'timeline';
 
   const tabClass = (t: Tab) =>
     clsx(
       'px-3 py-2 text-sm',
-      tab === t ? 'border-b-2 border-primary text-foreground' : 'text-foreground-muted',
+      activeTab === t ? 'border-b-2 border-primary text-foreground' : 'text-foreground-muted',
     );
 
   return (
@@ -46,12 +50,14 @@ export default function TimelinePage() {
               <button type="button" onClick={() => setTab('timeline')} className={tabClass('timeline')}>
                 Timeline
               </button>
-              <button type="button" onClick={() => setTab('review')} className={tabClass('review')}>
-                Review queue
-              </button>
+              {canWrite && (
+                <button type="button" onClick={() => setTab('review')} className={tabClass('review')}>
+                  Review queue
+                </button>
+              )}
             </div>
 
-            {tab === 'timeline' ? <TimelineFeed /> : <ReviewQueue />}
+            {activeTab === 'timeline' ? <TimelineFeed /> : <ReviewQueue />}
           </div>
         </main>
       </div>

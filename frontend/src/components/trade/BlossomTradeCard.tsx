@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { formatMoney, formatNumber, formatDate, formatPercent } from '@/lib/format';
 import { pnlTextColor } from '@/lib/colors';
 import { useBucket } from '@/contexts/BucketContext';
+import { usePrivacy } from '@/hooks/usePrivacy';
 import { stockHref } from '@/lib/bucket';
 import type { EnrichedTrade } from '@/types/api';
 
@@ -89,18 +90,22 @@ function getTradeStyle(trade: EnrichedTrade): TradeStyle {
   };
 }
 
-/** Build the action description, e.g. "Bought 10 shares @ $150.25" */
-function buildActionText(trade: EnrichedTrade): string {
+/**
+ * Build the action description, e.g. "Bought 10 shares @ $150.25".
+ * When `hideSizes` is set (viewers), the share count and dividend $ amount
+ * are dropped — only the direction and execution price remain.
+ */
+function buildActionText(trade: EnrichedTrade, hideSizes: boolean): string {
   const type = trade.type.toUpperCase();
 
   if (type === 'DIVIDEND') {
-    return `${formatMoney(Math.abs(trade.amount))} dividend received`;
+    return hideSizes ? 'Dividend received' : `${formatMoney(Math.abs(trade.amount))} dividend received`;
   }
 
   const verb = type === 'BUY' ? 'Bought' : type === 'SELL' ? 'Sold' : type;
   const parts: string[] = [verb];
 
-  if (trade.units != null && trade.units !== 0) {
+  if (!hideSizes && trade.units != null && trade.units !== 0) {
     const qty = Math.abs(trade.units);
     const formatted = qty % 1 === 0 ? formatNumber(qty, 0) : formatNumber(qty, 4);
     parts.push(`${formatted} shares`);
@@ -118,6 +123,7 @@ function buildActionText(trade: EnrichedTrade): string {
 // ---------------------------------------------------------------------------
 
 export function BlossomTradeCard({ trade, showSymbol = true, compact = false }: BlossomTradeCardProps) {
+  const { hideSizes } = usePrivacy();
   const style = getTradeStyle(trade);
   const type = trade.type.toUpperCase();
   const isSell = type === 'SELL';
@@ -165,7 +171,7 @@ export function BlossomTradeCard({ trade, showSymbol = true, compact = false }: 
 
       {/* Action text: "Bought 10 shares @ $150.25" */}
       <p className="text-sm text-foreground-muted mt-1.5">
-        {buildActionText(trade)}
+        {buildActionText(trade, hideSizes)}
       </p>
 
       {/* Realized P/L for SELL trades — percent only (no P/L $) */}
