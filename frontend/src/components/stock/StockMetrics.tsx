@@ -7,6 +7,7 @@ import {
   ChatBubbleLeftIcon,
 } from '@heroicons/react/24/outline';
 import { formatNumber, formatCompact, formatMoney, formatSignedPct } from '@/lib/format';
+import { usePrivacy } from '@/hooks/usePrivacy';
 import { pnlTextColor, trendDirection } from '@/lib/colors';
 import type { StockProfileCurrent } from '@/types/api';
 import { useBucket, withBucket } from '@/contexts/BucketContext';
@@ -66,6 +67,7 @@ export function StockMetrics({ ticker }: StockMetricsProps) {
   // Bucket scopes the position metrics + order counts. Other fields
   // (sentiment, label counts, company metadata) are stock-wide.
   const bucket = useBucket();
+  const { hideSizes } = usePrivacy();
   const { data, isLoading, error } = useSWR<StockProfileCurrent>(
     withBucket(`/api/stocks/${ticker}`, bucket),
     fetcher,
@@ -135,7 +137,7 @@ export function StockMetrics({ ticker }: StockMetricsProps) {
               label="Total Orders"
               value={`${data.totalOrdersCount} (${data.buyOrdersCount}B / ${data.sellOrdersCount}S)`}
             />
-            {data.avgOrderSize != null && (
+            {!hideSizes && data.avgOrderSize != null && (
               <MetricRow label="Avg Order" value={formatMoney(data.avgOrderSize)} />
             )}
             {data.firstTradeDate && (
