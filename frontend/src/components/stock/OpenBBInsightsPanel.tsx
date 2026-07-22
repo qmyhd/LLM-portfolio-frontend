@@ -5,9 +5,8 @@ import { TranscriptSummary } from './insights/TranscriptSummary';
 import { ManagementTeam } from './insights/ManagementTeam';
 import { FilingsPanel } from './insights/FilingsPanel';
 import { NewsPanel } from './insights/NewsPanel';
-import { NotesPanel } from './insights/NotesPanel';
 
-type InsightTab = 'news' | 'filings' | 'transcript' | 'management' | 'notes';
+type InsightTab = 'news' | 'filings' | 'transcript' | 'management';
 
 interface OpenBBInsightsPanelProps {
   ticker: string;
@@ -18,7 +17,6 @@ const TABS: { key: InsightTab; label: string }[] = [
   { key: 'filings', label: 'Filings' },
   { key: 'transcript', label: 'Transcript' },
   { key: 'management', label: 'Mgmt' },
-  { key: 'notes', label: 'Notes' },
 ];
 
 export function OpenBBInsightsPanel({ ticker }: OpenBBInsightsPanelProps) {
@@ -49,7 +47,6 @@ export function OpenBBInsightsPanel({ ticker }: OpenBBInsightsPanelProps) {
         {subTab === 'filings' && <FilingsPanel ticker={ticker} />}
         {subTab === 'transcript' && <TranscriptSummary ticker={ticker} />}
         {subTab === 'management' && <ManagementTeam ticker={ticker} />}
-        {subTab === 'notes' && <NotesPanel ticker={ticker} />}
       </div>
     </div>
   );

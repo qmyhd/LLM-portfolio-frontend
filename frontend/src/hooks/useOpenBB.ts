@@ -10,7 +10,6 @@ import type {
   FundamentalsResponse,
   FilingsResponse,
   NewsResponse,
-  NotesResponse,
 } from '@/types/api';
 
 const fetcher = async (url: string) => {
@@ -81,10 +80,3 @@ export function useNews(ticker: string | null, limit = 10) {
   });
 }
 
-export function useNotes(ticker: string | null) {
-  const url = ticker ? `/api/stocks/${ticker.toUpperCase()}/notes` : null;
-  return useSWR<NotesResponse>(url, fetcher, {
-    dedupingInterval: 5000,
-    revalidateOnFocus: true,
-  });
-}

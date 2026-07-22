@@ -11,7 +11,6 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { formatNumber } from '@/lib/format';
 import { useBucket, withBucket } from '@/contexts/BucketContext';
 import { CredibilityDelta } from '@/components/stock/CredibilityDelta';
-import { StockTopicTagsEditor } from '@/components/stock/StockTopicTagsEditor';
 import type { ConsensusReport, AgentSignal } from '@/types/api';
 import type { CredibilityBreakdown } from '@/types/credibility';
 
@@ -225,14 +224,6 @@ export function AnalysisPanel({ ticker }: AnalysisPanelProps) {
       <CredibilityDelta breakdown={credibility} />
 
       {/* Topic tags (credibility routing) */}
-      <details className="card p-3">
-        <summary className="cursor-pointer text-xs uppercase tracking-wider text-foreground-muted hover:text-foreground">
-          Topic tags (credibility routing)
-        </summary>
-        <div className="mt-3">
-          <StockTopicTagsEditor ticker={ticker} />
-        </div>
-      </details>
 
       {/* Metadata */}
       <div className="text-[10px] text-foreground-subtle space-y-0.5 pt-2 border-t border-border">
