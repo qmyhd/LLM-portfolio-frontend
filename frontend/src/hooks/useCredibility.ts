@@ -14,7 +14,6 @@ import type {
   PersonRevision,
   UnmatchedIdentity,
   CredibilityCategory,
-  TopicTag,
 } from '@/types/credibility';
 
 const fetcher = async <T>(url: string): Promise<T> => {
@@ -95,14 +94,3 @@ export function useTierMultipliers() {
   return { multipliers: data?.multipliers ?? {}, error, isLoading, refresh: () => mutate() };
 }
 
-export function useTopicTags(ticker: string | null) {
-  const url = ticker ? `/api/stocks/${ticker}/topic-tags` : null;
-
-  const { data, error, isLoading, mutate } = useSWR<{ symbol: string; tags: TopicTag[] }>(
-    url,
-    fetcher,
-    swrConfig,
-  );
-
-  return { tags: data?.tags ?? [], error, isLoading, refresh: () => mutate() };
-}

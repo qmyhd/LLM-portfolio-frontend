@@ -13,7 +13,6 @@ import { RobinhoodStockHeader } from './RobinhoodStockHeader';
 import { FundamentalsCard } from './FundamentalsCard';
 import { OpenBBInsightsPanel } from './OpenBBInsightsPanel';
 import { TradesPanel } from './TradesPanel';
-import { NotesPanel } from './NotesPanel';
 import { ProfilePanel } from './ProfilePanel';
 import { AnalysisPanel } from './AnalysisPanel';
 import {
@@ -28,7 +27,7 @@ import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'reac
 import { BucketBadge } from '@/components/portfolio/BucketBadge';
 
 type ChartProvider = 'lightweight' | 'tradingview';
-type TabKey = 'chat' | 'profile' | 'ideas' | 'analysis' | 'raw' | 'insights' | 'notes';
+type TabKey = 'chat' | 'profile' | 'ideas' | 'analysis' | 'raw' | 'insights';
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'chat', label: 'Chat' },
@@ -37,7 +36,6 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'analysis', label: 'Analysis' },
   { key: 'raw', label: 'Raw' },
   { key: 'insights', label: 'Insights' },
-  { key: 'notes', label: 'Notes' },
 ];
 
 interface StockHubContentProps {
@@ -174,7 +172,6 @@ function TabsSection({ ticker, refreshKey, activeTab, onTabChange }: TabsSection
           {activeTab === 'analysis' && <AnalysisPanel ticker={ticker} key={`analysis-${refreshKey}`} />}
           {activeTab === 'raw' && <RawMessagesPanel ticker={ticker} key={`raw-${refreshKey}`} />}
           {activeTab === 'insights' && <OpenBBInsightsPanel ticker={ticker} key={`insights-${refreshKey}`} />}
-          {activeTab === 'notes' && <NotesPanel ticker={ticker} key={`notes-${refreshKey}`} />}
           {activeTab === 'profile' && <ProfilePanel ticker={ticker} key={`profile-${refreshKey}`} />}
         </Suspense>
       </div>

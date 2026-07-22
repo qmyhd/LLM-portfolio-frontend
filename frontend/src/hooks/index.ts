@@ -17,10 +17,10 @@ export { useTimeRange, type TimeRange } from './useTimeRange';
 export { useLiveUpdates } from './useLiveUpdates';
 export {
   useTranscript, useManagement, useFundamentals,
-  useFilings, useNews, useNotes,
+  useFilings, useNews,
 } from './useOpenBB';
 export {
   usePeople, usePerson, usePersonRevisions, useUnmatchedIdentities,
-  useCredibilityCategories, useTierMultipliers, useTopicTags,
+  useCredibilityCategories, useTierMultipliers,
 } from './useCredibility';
 export { useResolveVideo, useQuotes } from './useResearch';
