@@ -32,7 +32,7 @@ import NextAuth, { type NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import type { AppRole } from "@/types/next-auth";
-import { forgetRole, freshRole } from "@/lib/session-role";
+import { refreshRole } from "@/lib/session-role";
 
 const APP_ROLES: readonly string[] = ["owner", "family", "guest", "pending"];
 
@@ -217,9 +217,8 @@ const authConfig: NextAuthConfig = {
 
       const appUserId = token.appUserId as string | undefined;
       if (trigger === "update" && appUserId) {
-        forgetRole(appUserId);
         try {
-          token.role = await freshRole(appUserId);
+          token.role = await refreshRole(appUserId);
         } catch {
           // Backend unavailable: keep the role we have.
         }
