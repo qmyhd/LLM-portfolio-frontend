@@ -7,7 +7,7 @@ import { forwardBucket } from '@/lib/bucket';
 // GET /api/profiles?queue=1&bucket=long_term -> backend GET /profiles
 export async function GET(request: NextRequest) {
   try {
-    await requireRole('viewer');
+    await requireRole('guest');
     const qs = new URLSearchParams();
     const queue = request.nextUrl.searchParams.get('queue');
     if (queue) qs.set('queue', queue);

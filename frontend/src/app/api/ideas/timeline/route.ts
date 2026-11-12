@@ -7,7 +7,10 @@ import { backendFetch, requireRole } from '@/lib/api-client';
 /** Chronological story/timeline view across imported and journal ideas. */
 export async function GET(request: NextRequest) {
   try {
-    await requireRole('viewer');
+    // A truthy refresh forces a backend recompute, which only the owner may trigger.
+    const wantsRefresh = /^(1|true|yes|on)$/i.test(request.nextUrl.searchParams.get('refresh') ?? '');
+    if (wantsRefresh) await requireRole('owner');
+    else await requireRole('guest');
 
     const { searchParams } = new URL(request.url);
     const qs = searchParams.toString();

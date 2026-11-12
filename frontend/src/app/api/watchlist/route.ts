@@ -25,7 +25,7 @@ interface ValidationResponse {
 export async function GET(request: NextRequest) {
   try {
     // Verify user is authenticated
-    await requireRole('viewer');
+    await requireRole('guest');
 
     const { searchParams } = new URL(request.url);
     const tickers = searchParams.get('tickers') || '';
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     const response = await backendFetch(
       `/watchlist?tickers=${encodeURIComponent(tickers)}`,
       {
-        next: { revalidate: 30 }, // Refresh every 30 seconds for price updates
+        cache: 'no-store',
       }
     );
     
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Verify user is authenticated
-    await requireRole('editor');
+    await requireRole('owner');
 
     const body = await request.json();
     const { ticker } = body;

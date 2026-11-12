@@ -7,7 +7,7 @@ import { forwardBucket } from '@/lib/bucket';
 
 export async function GET(request: NextRequest) {
   try {
-    await requireRole('viewer');
+    await requireRole('guest');
 
     const { searchParams } = new URL(request.url);
     const params = new URLSearchParams();
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     forwardBucket(request, params);
 
     const response = await backendFetch(`/portfolio/movers?${params.toString()}`, {
-      next: { revalidate: 30 },
+      cache: 'no-store',
     });
 
     if (!response.ok) {

@@ -8,7 +8,7 @@ import { forwardBucket } from '@/lib/bucket';
 // Proxies to backend GET /portfolio/return-series (flow-free % return curve).
 export async function GET(request: NextRequest) {
   try {
-    await requireRole('viewer');
+    await requireRole('guest');
 
     const params = new URLSearchParams();
     params.set('period', request.nextUrl.searchParams.get('period') || '1M');
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
 
     const response = await backendFetch(
       `/portfolio/return-series?${params.toString()}`,
-      { next: { revalidate: 300 } },
+      { cache: 'no-store'},
     );
 
     if (!response.ok) {

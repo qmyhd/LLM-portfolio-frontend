@@ -7,7 +7,10 @@ import { forwardBucket } from '@/lib/bucket';
 // GET /api/portfolio/risk - Portfolio-wide risk analysis
 export async function GET(request: NextRequest) {
   try {
-    await requireRole('viewer');
+    // A truthy refresh forces a backend recompute, which only the owner may trigger.
+    const wantsRefresh = /^(1|true|yes|on)$/i.test(request.nextUrl.searchParams.get('refresh') ?? '');
+    if (wantsRefresh) await requireRole('owner');
+    else await requireRole('guest');
 
     const { searchParams } = new URL(request.url);
     const params = new URLSearchParams();
@@ -15,7 +18,7 @@ export async function GET(request: NextRequest) {
     forwardBucket(request, params);
 
     const response = await backendFetch(`/portfolio/risk?${params.toString()}`, {
-      next: { revalidate: 120 },
+      cache: 'no-store',
     });
 
     if (!response.ok) {

@@ -9,7 +9,7 @@ import { parseBucket } from '@/lib/bucket';
 // 400s at the BFF tier rather than blame-mapping a backend rejection.
 export async function GET(request: NextRequest) {
   try {
-    await requireRole('viewer');
+    await requireRole('guest');
 
     const incoming = request.nextUrl.searchParams;
     // Reject obviously bad bucket values here so the backend never has to.
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     const path = `/activities${qs ? `?${qs}` : ''}`;
 
     const response = await backendFetch(path, {
-      next: { revalidate: 30 },
+      cache: 'no-store',
     });
 
     if (!response.ok) {

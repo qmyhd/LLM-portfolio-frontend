@@ -10,7 +10,7 @@ interface RouteParams {
 
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    await requireRole('editor');
+    await requireRole('owner');
     const { id } = await params;
 
     // Forward apply query param if present

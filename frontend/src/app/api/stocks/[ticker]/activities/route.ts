@@ -12,7 +12,7 @@ interface RouteParams {
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     // Verify user is authenticated
-    await requireRole('viewer');
+    await requireRole('guest');
 
     const { ticker } = await params;
     const normalizedTicker = ticker.toUpperCase();
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     const response = await backendFetch(
       `/stocks/${seg(normalizedTicker)}/activities?${qs.toString()}`,
-      { next: { revalidate: 60 } },
+      { cache: 'no-store'},
     );
 
     if (!response.ok) {

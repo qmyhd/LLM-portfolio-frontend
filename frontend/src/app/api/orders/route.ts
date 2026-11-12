@@ -8,7 +8,7 @@ import { forwardBucket } from '@/lib/bucket';
 export async function GET(request: NextRequest) {
   try {
     // Verify user is authenticated
-    await requireRole('viewer');
+    await requireRole('guest');
 
     const { searchParams } = new URL(request.url);
     const limit = searchParams.get('limit') || '50';
@@ -25,8 +25,7 @@ export async function GET(request: NextRequest) {
     forwardBucket(request, params);
 
     const response = await backendFetch(`/orders?${params.toString()}`, {
-      // Cache for 30 seconds
-      next: { revalidate: 30 },
+      cache: 'no-store',
     });
 
     if (!response.ok) {

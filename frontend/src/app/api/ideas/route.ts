@@ -6,7 +6,10 @@ import { backendFetch, requireRole } from '@/lib/api-client';
 
 export async function GET(request: NextRequest) {
   try {
-    await requireRole('viewer');
+    // A truthy refresh forces a backend recompute, which only the owner may trigger.
+    const wantsRefresh = /^(1|true|yes|on)$/i.test(request.nextUrl.searchParams.get('refresh') ?? '');
+    if (wantsRefresh) await requireRole('owner');
+    else await requireRole('guest');
 
     // Forward all query params to the backend
     const { searchParams } = new URL(request.url);
@@ -31,7 +34,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireRole('editor');
+    await requireRole('owner');
     const body = await request.json();
 
     const response = await backendFetch('/ideas', {

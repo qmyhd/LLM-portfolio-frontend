@@ -10,7 +10,7 @@ interface RouteParams {
 // DELETE /api/people/{id}/identities/{sid} -> backend DELETE /people/{id}/identities/{sid}
 export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   try {
-    await requireRole('editor');
+    await requireRole('owner');
     const { id, sid } = await params;
     const response = await backendFetch(`/people/${seg(id)}/identities/${seg(sid)}`, { method: 'DELETE' });
     if (!response.ok) {

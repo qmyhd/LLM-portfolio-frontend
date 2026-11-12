@@ -11,7 +11,10 @@ interface RouteParams {
 // GET /api/stocks/[ticker]/analysis - Multi-agent stock analysis
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    await requireRole('viewer');
+    // A truthy refresh forces a backend recompute, which only the owner may trigger.
+    const wantsRefresh = /^(1|true|yes|on)$/i.test(request.nextUrl.searchParams.get('refresh') ?? '');
+    if (wantsRefresh) await requireRole('owner');
+    else await requireRole('guest');
 
     const { ticker } = await params;
     const normalizedTicker = ticker.toUpperCase();
@@ -25,7 +28,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     const response = await backendFetch(
       `/stocks/${seg(normalizedTicker)}/analysis?${qs.toString()}`,
-      { next: { revalidate: 60 } },
+      { cache: 'no-store'},
     );
 
     if (!response.ok) {

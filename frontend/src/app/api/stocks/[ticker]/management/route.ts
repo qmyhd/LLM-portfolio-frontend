@@ -9,12 +9,12 @@ interface RouteParams {
 
 export async function GET(_request: NextRequest, { params }: RouteParams) {
   try {
-    await requireRole('viewer');
+    await requireRole('guest');
     const { ticker } = await params;
 
     const response = await backendFetch(
       `/stocks/${seg(ticker.toUpperCase())}/management`,
-      { next: { revalidate: 3600 } }
+      { cache: 'no-store'}
     );
 
     if (!response.ok) {

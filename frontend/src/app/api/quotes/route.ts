@@ -6,7 +6,10 @@ import { backendFetch, requireRole } from '@/lib/api-client';
 // GET /api/quotes -> backend GET /quotes
 export async function GET(request: NextRequest) {
   try {
-    await requireRole('viewer');
+    // A truthy refresh forces a backend recompute, which only the owner may trigger.
+    const wantsRefresh = /^(1|true|yes|on)$/i.test(request.nextUrl.searchParams.get('refresh') ?? '');
+    if (wantsRefresh) await requireRole('owner');
+    else await requireRole('guest');
     const qs = request.nextUrl.search;
     const response = await backendFetch(`/quotes${qs}`, { cache: 'no-store' });
     if (!response.ok) {
@@ -26,7 +29,7 @@ export async function GET(request: NextRequest) {
 // POST /api/quotes -> backend POST /quotes
 export async function POST(request: NextRequest) {
   try {
-    await requireRole('editor');
+    await requireRole('owner');
     const body = await request.json();
     const response = await backendFetch('/quotes', {
       method: 'POST',

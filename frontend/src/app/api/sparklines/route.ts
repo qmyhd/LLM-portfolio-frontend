@@ -7,14 +7,14 @@ import { forwardBucket } from '@/lib/bucket';
 // GET /api/sparklines?period=1M&bucket=long_term — proxy to backend GET /portfolio/sparklines
 export async function GET(request: NextRequest) {
   try {
-    await requireRole('viewer');
+    await requireRole('guest');
 
     const params = new URLSearchParams();
     params.set('period', request.nextUrl.searchParams.get('period') || '1M');
     forwardBucket(request, params);
 
     const response = await backendFetch(`/portfolio/sparklines?${params.toString()}`, {
-      next: { revalidate: 300 }, // Cache 5 minutes
+      cache: 'no-store',
     });
 
     if (!response.ok) {

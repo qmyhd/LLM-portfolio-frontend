@@ -17,7 +17,7 @@ function withBucketQs(path: string, request: NextRequest): string {
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    await requireRole('viewer');
+    await requireRole('guest');
     const { ticker } = await params;
     const response = await backendFetch(
       withBucketQs(`/stocks/${seg(ticker.toUpperCase())}/profile`, request),
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
-    await requireRole('editor');
+    await requireRole('owner');
     const { ticker } = await params;
     const body = await request.json();
     const response = await backendFetch(
@@ -62,7 +62,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    await requireRole('editor');
+    await requireRole('owner');
     const { ticker } = await params;
     const response = await backendFetch(
       withBucketQs(`/stocks/${seg(ticker.toUpperCase())}/profile`, request),

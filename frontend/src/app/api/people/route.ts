@@ -6,7 +6,7 @@ import { backendFetch, requireRole } from '@/lib/api-client';
 // GET /api/people?status=&category=&tier= -> backend GET /people
 export async function GET(request: NextRequest) {
   try {
-    await requireRole('viewer');
+    await requireRole('guest');
     const qs = new URLSearchParams();
     const status = request.nextUrl.searchParams.get('status');
     const category = request.nextUrl.searchParams.get('category');
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 // POST /api/people -> backend POST /people
 export async function POST(request: NextRequest) {
   try {
-    await requireRole('editor');
+    await requireRole('owner');
     const body = await request.json();
     const response = await backendFetch('/people', {
       method: 'POST',

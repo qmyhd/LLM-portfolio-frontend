@@ -5,7 +5,7 @@ import { backendFetch, requireRole } from '@/lib/api-client';
 // GET /api/sentiment?ticker=NVDA&window=30d - Get sentiment summary
 export async function GET(request: NextRequest) {
   try {
-    await requireRole('viewer');
+    await requireRole('guest');
 
     const { searchParams } = new URL(request.url);
     const ticker = searchParams.get('ticker') || '';
@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
 
     const response = await backendFetch(
       `/sentiment/summary?ticker=${encodeURIComponent(ticker)}&window=${encodeURIComponent(window)}`,
-      { next: { revalidate: 60 } }
+      { cache: 'no-store'}
     );
 
     if (!response.ok) {

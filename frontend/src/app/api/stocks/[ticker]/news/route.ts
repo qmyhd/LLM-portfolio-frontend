@@ -9,14 +9,14 @@ interface RouteParams {
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    await requireRole('viewer');
+    await requireRole('guest');
     const { ticker } = await params;
     const { searchParams } = new URL(request.url);
     const limit = searchParams.get('limit') || '10';
 
     const response = await backendFetch(
       `/stocks/${seg(ticker.toUpperCase())}/news?limit=${limit}`,
-      { next: { revalidate: 300 } }
+      { cache: 'no-store'}
     );
 
     if (!response.ok) {
