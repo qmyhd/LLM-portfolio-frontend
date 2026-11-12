@@ -25,9 +25,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     const response = await backendFetch(
       `/stocks/${seg(normalizedTicker)}/ohlcv?${qs.toString()}`,
-      {
-        next: { revalidate: 300 }, // public-market-data
-      }
+      { cache: 'no-store' }
     );
 
     if (!response.ok) {

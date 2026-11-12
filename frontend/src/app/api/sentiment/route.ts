@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
 
     const response = await backendFetch(
       `/sentiment/summary?ticker=${encodeURIComponent(ticker)}&window=${encodeURIComponent(window)}`,
-      { cache: 'no-store'}
+      { cache: 'no-store' }
     );
 
     if (!response.ok) {

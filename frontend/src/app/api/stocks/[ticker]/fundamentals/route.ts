@@ -14,7 +14,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
 
     const response = await backendFetch(
       `/stocks/${seg(ticker.toUpperCase())}/fundamentals`,
-      { cache: 'no-store'}
+      { cache: 'no-store' }
     );
 
     if (!response.ok) {

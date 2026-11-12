@@ -14,7 +14,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     const response = await backendFetch(
       `/stocks/${seg(ticker)}/ideas/${seg(messageId)}/context`,
-      { cache: 'no-store'}, // 5 min cache — context doesn't change
+      { cache: 'no-store' },
     );
 
     if (!response.ok) {

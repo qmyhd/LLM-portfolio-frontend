@@ -16,9 +16,7 @@ export async function GET(request: NextRequest) {
 
     const response = await backendFetch(
       `/portfolio/equity-curve?${params.toString()}`,
-      // 5-minute edge cache — equity curves only change once a day after
-      // the nightly snapshot pipeline runs.
-      { cache: 'no-store'},
+      { cache: 'no-store' },
     );
 
     if (!response.ok) {

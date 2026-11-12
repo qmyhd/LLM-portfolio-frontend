@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
 
     const response = await backendFetch(
       `/portfolio/return-series?${params.toString()}`,
-      { cache: 'no-store'},
+      { cache: 'no-store' },
     );
 
     if (!response.ok) {

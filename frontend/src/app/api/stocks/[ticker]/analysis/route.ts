@@ -29,7 +29,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     const response = await backendFetch(
       `/stocks/${seg(normalizedTicker)}/analysis?${qs.toString()}`,
-      { cache: 'no-store'},
+      { cache: 'no-store' },
     );
 
     if (!response.ok) {
