@@ -29,7 +29,7 @@ const fetcher = async <T,>(url: string): Promise<T> => {
  * review"), which is hidden from read-only viewers who can't act on it.
  */
 export function HomeSummary() {
-  const { hideSizes, isViewer, canWrite } = usePrivacy();
+  const { hideSizes, isGuestView, canWrite } = usePrivacy();
 
   const { data: series } = useSWR<ReturnSeriesResponse>(
     '/api/portfolio/return-series?period=ALL',
@@ -105,8 +105,8 @@ export function HomeSummary() {
         )}
       </Link>
 
-      {/* Research awaiting review — owner/editor only (viewers can't curate) */}
-      {!isViewer && (
+      {/* Research awaiting review — owner only (guests and family can't curate) */}
+      {!isGuestView && (
         <Link
           href="/timeline"
           className="card p-3 hover:border-primary/30 transition-colors"

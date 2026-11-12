@@ -36,7 +36,7 @@ export function ChatWidget({ ticker }: ChatWidgetProps) {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { canWrite } = usePrivacy();
+  const { canChat } = usePrivacy();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const bucket = useBucket();
@@ -176,8 +176,8 @@ export function ChatWidget({ ticker }: ChatWidgetProps) {
         </div>
       )}
 
-      {/* Input area — read-only accounts can't run the (paid) chat model */}
-      {canWrite ? (
+      {/* Input area — pending accounts can't run the (paid) chat model */}
+      {canChat ? (
         <form onSubmit={handleSubmit} className="p-4 border-t border-border">
           <div className="flex gap-2">
             <input

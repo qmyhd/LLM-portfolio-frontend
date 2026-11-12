@@ -187,7 +187,7 @@ export function TopBar({ currentTicker }: TopBarProps) {
   }, [accountOpen]);
 
   const userEmail = session?.user?.email ?? '';
-  const userRole = session?.user?.role ?? 'viewer';
+  const userRole = session?.user?.role ?? 'pending';
   const avatarInitial = (userEmail.trim()[0] || 'U').toUpperCase();
 
   const handleRefresh = async () => {
@@ -374,14 +374,14 @@ export function TopBar({ currentTicker }: TopBarProps) {
                       'mt-1 inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-medium capitalize',
                       userRole === 'owner'
                         ? 'bg-primary/15 text-primary'
-                        : userRole === 'editor'
+                        : userRole === 'family'
                         ? 'bg-sky-500/15 text-sky-400'
                         : 'bg-foreground-muted/15 text-foreground-muted',
                     )}
                   >
                     {userRole}
                   </span>
-                  {userRole === 'viewer' && (
+                  {(userRole === 'guest' || userRole === 'family') && (
                     <p className="mt-1.5 text-2xs text-foreground-subtle leading-snug">
                       Read-only access — portfolio sizes are hidden; you&apos;re
                       seeing research, timing, and percentage performance.
