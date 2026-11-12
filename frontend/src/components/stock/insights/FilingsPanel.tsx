@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useFilings } from '@/hooks/useOpenBB';
 import { DocumentTextIcon, ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline';
 import { FILING_FORM_COLORS } from '@/lib/colors';
+import { safeExternalUrl } from '@/lib/safe-url';
 
 interface FilingsPanelProps {
   ticker: string;
@@ -85,9 +86,9 @@ export function FilingsPanel({ ticker }: FilingsPanelProps) {
                 <p className="text-xs text-foreground-muted mt-1 line-clamp-2">{filing.description}</p>
               )}
             </div>
-            {filing.reportUrl && (
+            {safeExternalUrl(filing.reportUrl) && (
               <a
-                href={filing.reportUrl}
+                href={safeExternalUrl(filing.reportUrl) ?? undefined}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-1 rounded hover:bg-background-tertiary transition-colors flex-shrink-0"

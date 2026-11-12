@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { StockProfileCurrent, ApiError } from '@/types/api';
-import { backendFetch, authGuard } from '@/lib/api-client';
+import { backendFetch, requireRole, seg } from '@/lib/api-client';
 import { forwardBucket } from '@/lib/bucket';
 
 interface RouteParams {
@@ -12,7 +12,7 @@ interface RouteParams {
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     // Verify user is authenticated
-    await authGuard();
+    await requireRole('viewer');
 
     const { ticker } = await params;
     const normalizedTicker = ticker.toUpperCase();
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const qsStr = qs.toString();
 
     const response = await backendFetch(
-      `/stocks/${normalizedTicker}${qsStr ? `?${qsStr}` : ''}`,
+      `/stocks/${seg(normalizedTicker)}${qsStr ? `?${qsStr}` : ''}`,
       {
         // Cache for 60 seconds
         next: { revalidate: 60 },

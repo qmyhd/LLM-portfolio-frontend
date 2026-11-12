@@ -1,12 +1,12 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { ApiError } from '@/types/api';
-import { backendFetch, authGuard } from '@/lib/api-client';
+import { backendFetch, requireRole } from '@/lib/api-client';
 
 // GET /api/credibility/categories -> backend GET /credibility/categories
 export async function GET() {
   try {
-    await authGuard();
+    await requireRole('viewer');
     const response = await backendFetch('/credibility/categories', { cache: 'no-store' });
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
@@ -25,7 +25,7 @@ export async function GET() {
 // PUT /api/credibility/categories -> backend PUT /credibility/categories
 export async function PUT(request: NextRequest) {
   try {
-    await authGuard();
+    await requireRole('editor');
     const body = await request.json();
     const response = await backendFetch('/credibility/categories', {
       method: 'PUT',

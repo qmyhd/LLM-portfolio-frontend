@@ -1,12 +1,12 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { ApiError } from '@/types/api';
-import { backendFetch, authGuard } from '@/lib/api-client';
+import { backendFetch, requireRole } from '@/lib/api-client';
 
 // GET /api/quotes -> backend GET /quotes
 export async function GET(request: NextRequest) {
   try {
-    await authGuard();
+    await requireRole('viewer');
     const qs = request.nextUrl.search;
     const response = await backendFetch(`/quotes${qs}`, { cache: 'no-store' });
     if (!response.ok) {
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 // POST /api/quotes -> backend POST /quotes
 export async function POST(request: NextRequest) {
   try {
-    await authGuard();
+    await requireRole('editor');
     const body = await request.json();
     const response = await backendFetch('/quotes', {
       method: 'POST',

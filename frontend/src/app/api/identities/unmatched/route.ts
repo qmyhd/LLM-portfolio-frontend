@@ -1,12 +1,12 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import type { ApiError } from '@/types/api';
-import { backendFetch, authGuard } from '@/lib/api-client';
+import { backendFetch, requireRole } from '@/lib/api-client';
 
 // GET /api/identities/unmatched -> backend GET /identities/unmatched
 export async function GET() {
   try {
-    await authGuard();
+    await requireRole('viewer');
     const response = await backendFetch('/identities/unmatched', { cache: 'no-store' });
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));

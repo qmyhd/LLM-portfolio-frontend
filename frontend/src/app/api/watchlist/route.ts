@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-import { backendFetch, authGuard } from '@/lib/api-client';
+import { backendFetch, requireRole } from '@/lib/api-client';
 
 // Watchlist item from backend
 interface WatchlistItem {
@@ -25,7 +25,7 @@ interface ValidationResponse {
 export async function GET(request: NextRequest) {
   try {
     // Verify user is authenticated
-    await authGuard();
+    await requireRole('viewer');
 
     const { searchParams } = new URL(request.url);
     const tickers = searchParams.get('tickers') || '';
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Verify user is authenticated
-    await authGuard();
+    await requireRole('editor');
 
     const body = await request.json();
     const { ticker } = body;

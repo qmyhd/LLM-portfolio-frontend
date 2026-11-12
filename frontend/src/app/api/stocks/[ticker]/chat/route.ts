@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { ChatResponse, ApiError } from '@/types/api';
-import { backendFetch, authGuard } from '@/lib/api-client';
+import { backendFetch, requireRole, seg } from '@/lib/api-client';
 import { forwardBucket } from '@/lib/bucket';
 
 interface RouteParams {
@@ -10,7 +10,7 @@ interface RouteParams {
 
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    await authGuard();
+    await requireRole('editor');
     const { ticker } = await params;
 
     const body = await request.json();
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const qsStr = qs.toString();
 
     const response = await backendFetch(
-      `/stocks/${ticker}/chat${qsStr ? `?${qsStr}` : ''}`,
+      `/stocks/${seg(ticker)}/chat${qsStr ? `?${qsStr}` : ''}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

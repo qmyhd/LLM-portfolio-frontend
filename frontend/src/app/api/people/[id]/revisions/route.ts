@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { ApiError } from '@/types/api';
-import { backendFetch, authGuard } from '@/lib/api-client';
+import { backendFetch, requireRole, seg } from '@/lib/api-client';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -10,9 +10,9 @@ interface RouteParams {
 // GET /api/people/{id}/revisions -> backend GET /people/{id}/revisions
 export async function GET(_request: NextRequest, { params }: RouteParams) {
   try {
-    await authGuard();
+    await requireRole('viewer');
     const { id } = await params;
-    const response = await backendFetch(`/people/${id}/revisions`, { cache: 'no-store' });
+    const response = await backendFetch(`/people/${seg(id)}/revisions`, { cache: 'no-store' });
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
       return NextResponse.json(

@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { ApiError } from '@/types/api';
-import { backendFetch, authGuard } from '@/lib/api-client';
+import { backendFetch, requireRole } from '@/lib/api-client';
 
 // Response types for search
 interface SearchResult {
@@ -21,7 +21,7 @@ interface SearchResponse {
 export async function GET(request: NextRequest) {
   try {
     // Verify user is authenticated
-    await authGuard();
+    await requireRole('viewer');
 
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q') || '';

@@ -4,6 +4,7 @@ import { useNews } from '@/hooks/useOpenBB';
 import { ArrowTopRightOnSquareIcon, NewspaperIcon } from '@heroicons/react/24/outline';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { formatRelativeTime } from '@/lib/format';
+import { safeExternalUrl } from '@/lib/safe-url';
 
 interface NewsPanelProps {
   ticker: string;
@@ -40,10 +41,12 @@ export function NewsPanel({ ticker }: NewsPanelProps) {
 
   return (
     <div className="p-3 space-y-2">
-      {data.articles.map((article, i) => (
+      {data.articles.map((article, i) => {
+        const href = safeExternalUrl(article.url);
+        return (
         <a
           key={i}
-          href={article.url || '#'}
+          href={href ?? '#'}
           target="_blank"
           rel="noopener noreferrer"
           className="block p-3 rounded-lg border border-border/50 hover:border-border hover:bg-background-tertiary transition-colors group"
@@ -52,7 +55,7 @@ export function NewsPanel({ ticker }: NewsPanelProps) {
             <h4 className="text-sm font-medium text-foreground leading-snug line-clamp-2 group-hover:text-primary transition-colors">
               {article.title}
             </h4>
-            {article.url && (
+            {href && (
               <ArrowTopRightOnSquareIcon className="h-3.5 w-3.5 text-foreground-muted flex-shrink-0 mt-0.5" />
             )}
           </div>
@@ -73,7 +76,8 @@ export function NewsPanel({ ticker }: NewsPanelProps) {
             </p>
           )}
         </a>
-      ))}
+        );
+      })}
     </div>
   );
 }

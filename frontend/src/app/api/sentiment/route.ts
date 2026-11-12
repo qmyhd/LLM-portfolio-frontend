@@ -1,11 +1,11 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-import { backendFetch, authGuard } from '@/lib/api-client';
+import { backendFetch, requireRole } from '@/lib/api-client';
 
 // GET /api/sentiment?ticker=NVDA&window=30d - Get sentiment summary
 export async function GET(request: NextRequest) {
   try {
-    await authGuard();
+    await requireRole('viewer');
 
     const { searchParams } = new URL(request.url);
     const ticker = searchParams.get('ticker') || '';

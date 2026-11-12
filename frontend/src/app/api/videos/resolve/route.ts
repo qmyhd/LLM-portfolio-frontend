@@ -1,12 +1,12 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { ApiError } from '@/types/api';
-import { backendFetch, authGuard } from '@/lib/api-client';
+import { backendFetch, requireRole } from '@/lib/api-client';
 
 // POST /api/videos/resolve -> backend POST /videos/resolve
 export async function POST(request: NextRequest) {
   try {
-    await authGuard();
+    await requireRole('editor');
     const body = await request.json();
     const response = await backendFetch('/videos/resolve', {
       method: 'POST',

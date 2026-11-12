@@ -1,13 +1,13 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { PortfolioRiskReport, ApiError } from '@/types/api';
-import { backendFetch, authGuard } from '@/lib/api-client';
+import { backendFetch, requireRole } from '@/lib/api-client';
 import { forwardBucket } from '@/lib/bucket';
 
 // GET /api/portfolio/risk - Portfolio-wide risk analysis
 export async function GET(request: NextRequest) {
   try {
-    await authGuard();
+    await requireRole('viewer');
 
     const { searchParams } = new URL(request.url);
     const params = new URLSearchParams();

@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { RefineResponse } from '@/types/ideas';
 import type { ApiError } from '@/types/api';
-import { backendFetch, authGuard } from '@/lib/api-client';
+import { backendFetch, requireRole, seg } from '@/lib/api-client';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -10,7 +10,7 @@ interface RouteParams {
 
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    await authGuard();
+    await requireRole('editor');
     const { id } = await params;
 
     // Forward apply query param if present
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const apply = searchParams.get('apply');
     const qs = apply === 'true' ? '?apply=true' : '';
 
-    const response = await backendFetch(`/ideas/${id}/refine${qs}`, {
+    const response = await backendFetch(`/ideas/${seg(id)}/refine${qs}`, {
       method: 'POST',
     });
 

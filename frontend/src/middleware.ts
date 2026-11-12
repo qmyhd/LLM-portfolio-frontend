@@ -18,6 +18,7 @@
  */
 
 import { auth } from "@/auth";
+import { hasRole } from "@/lib/roles";
 import { NextResponse } from "next/server";
 
 const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
@@ -25,21 +26,29 @@ const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 // Routes that don't require authentication
 const publicRoutes = ["/login"];
 
-// Patterns for static assets and API routes that should be excluded
+// Paths that skip auth entirely. Next.js internals and NextAuth's own
+// endpoints only.
 const excludePatterns = [
-  /^\/_next/,           // Next.js internals
-  /^\/api\/auth/,       // NextAuth endpoints
+  /^\/_next\//,         // Next.js internals
+  /^\/api\/auth(\/|$)/, // NextAuth endpoints
   /^\/favicon\.ico$/,   // Favicon
   /^\/robots\.txt$/,    // Robots.txt
   /^\/sitemap\.xml$/,   // Sitemap
-  /\.(png|jpg|jpeg|gif|svg|ico|webp)$/i,  // Images
 ];
+
+// Static files by extension. This rule NEVER applies under /api/: a route
+// param can end in ".png" (e.g. /api/people/x.png), and skipping the role
+// check there was part of the role-bypass chain found in the 11/2026 review.
+const STATIC_FILE = /\.(png|jpe?g|gif|svg|ico|webp|avif|css|js|map|txt|xml|woff2?|ttf|otf|webmanifest)$/i;
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
 
   // Check if path should be excluded from auth
   if (excludePatterns.some((pattern) => pattern.test(pathname))) {
+    return NextResponse.next();
+  }
+  if (!pathname.startsWith("/api/") && STATIC_FILE.test(pathname)) {
     return NextResponse.next();
   }
 
@@ -62,10 +71,18 @@ export default auth((req) => {
 
   // Role enforcement for mutating API calls (NextAuth's own /api/auth/*
   // endpoints were already excluded above).
-  if (pathname.startsWith("/api/") && MUTATING_METHODS.has(req.method)) {
-    const role = req.auth.user?.role ?? "viewer";
+  const role = req.auth.user?.role;
 
-    if (role === "viewer") {
+  // A role the app doesn't know (rank 0) gets no API access at all.
+  if (pathname.startsWith("/api/") && !hasRole(role, "viewer")) {
+    return NextResponse.json(
+      { error: "This account has no access yet - ask the owner" },
+      { status: 403 }
+    );
+  }
+
+  if (pathname.startsWith("/api/") && MUTATING_METHODS.has(req.method)) {
+    if (!hasRole(role, "editor")) {
       return NextResponse.json(
         { error: "Read-only account - ask the owner for editor access" },
         { status: 403 }
@@ -74,7 +91,7 @@ export default auth((req) => {
 
     // Brokerage connection management (SnapTrade portal, bucket
     // reassignment) is owner-only.
-    if (pathname.startsWith("/api/connections") && role !== "owner") {
+    if (pathname.startsWith("/api/connections") && !hasRole(role, "owner")) {
       return NextResponse.json(
         { error: "Connection management requires the owner role" },
         { status: 403 }
@@ -86,6 +103,10 @@ export default auth((req) => {
 });
 
 export const config = {
-  // Match all routes except static files
-  matcher: ["/((?!_next/static|_next/image|.*\\..*).*)"],
+  // Run on everything except Next's build output. The old matcher also
+  // skipped ANY path containing a dot, so /api/stocks/BRK.B/... and crafted
+  // dotted paths never reached the role checks above. Static files by
+  // extension are now let through inside the middleware instead (never
+  // under /api/).
+  matcher: ["/((?!_next/static|_next/image|favicon\\.ico).*)"],
 };

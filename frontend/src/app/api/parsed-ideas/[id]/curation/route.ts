@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { ApiError } from '@/types/api';
-import { backendFetch, authGuard } from '@/lib/api-client';
+import { backendFetch, requireRole, seg } from '@/lib/api-client';
 
 /** Human-correct labels, attribution, and 13F bucketing for an NLP idea. */
 export async function PUT(
@@ -9,10 +9,10 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    await authGuard();
+    await requireRole('editor');
     const body = await request.json();
 
-    const response = await backendFetch(`/ideas/discord-parsed/${params.id}/curation`, {
+    const response = await backendFetch(`/ideas/discord-parsed/${seg(params.id)}/curation`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),

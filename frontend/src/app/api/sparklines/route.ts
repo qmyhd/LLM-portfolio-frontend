@@ -1,13 +1,13 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { SparklineResponse, ApiError } from '@/types/api';
-import { backendFetch, authGuard } from '@/lib/api-client';
+import { backendFetch, requireRole } from '@/lib/api-client';
 import { forwardBucket } from '@/lib/bucket';
 
 // GET /api/sparklines?period=1M&bucket=long_term — proxy to backend GET /portfolio/sparklines
 export async function GET(request: NextRequest) {
   try {
-    await authGuard();
+    await requireRole('viewer');
 
     const params = new URLSearchParams();
     params.set('period', request.nextUrl.searchParams.get('period') || '1M');

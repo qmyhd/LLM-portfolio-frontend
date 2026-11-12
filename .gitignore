@@ -113,8 +113,10 @@ node_modules/
 **/node_modules/
 web/**/dist/
 web/**/build/
-package-lock.json
-**/package-lock.json
+# frontend/package-lock.json IS committed: Vercel runs `npm ci` against it so
+# every deploy installs the exact same versions. Only the dependency-free root
+# package.json's lockfile is ignored.
+/package-lock.json
 
 ###############################################################################
 # 7) Logs & temp

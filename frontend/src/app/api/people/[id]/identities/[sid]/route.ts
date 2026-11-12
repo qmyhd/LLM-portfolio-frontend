@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { ApiError } from '@/types/api';
-import { backendFetch, authGuard } from '@/lib/api-client';
+import { backendFetch, requireRole, seg } from '@/lib/api-client';
 
 interface RouteParams {
   params: Promise<{ id: string; sid: string }>;
@@ -10,9 +10,9 @@ interface RouteParams {
 // DELETE /api/people/{id}/identities/{sid} -> backend DELETE /people/{id}/identities/{sid}
 export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   try {
-    await authGuard();
+    await requireRole('editor');
     const { id, sid } = await params;
-    const response = await backendFetch(`/people/${id}/identities/${sid}`, { method: 'DELETE' });
+    const response = await backendFetch(`/people/${seg(id)}/identities/${seg(sid)}`, { method: 'DELETE' });
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
       return NextResponse.json(

@@ -1,14 +1,14 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { ApiError } from '@/types/api';
-import { backendFetch, authGuard } from '@/lib/api-client';
+import { backendFetch, requireRole } from '@/lib/api-client';
 
 // GET /api/sentiment/feed?limit=30&days=30&channel_type=trading&source=parsed
 // Recent feed (parsed ideas + raw Discord messages) across all tickers —
 // powers the home research feed and the per-stock activity view.
 export async function GET(request: NextRequest) {
   try {
-    await authGuard();
+    await requireRole('viewer');
 
     const params = new URLSearchParams();
     params.set('limit', request.nextUrl.searchParams.get('limit') || '30');

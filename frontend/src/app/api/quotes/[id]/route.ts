@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { ApiError } from '@/types/api';
-import { backendFetch, authGuard } from '@/lib/api-client';
+import { backendFetch, requireRole, seg } from '@/lib/api-client';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -10,9 +10,9 @@ interface RouteParams {
 // GET /api/quotes/{id} -> backend GET /quotes/{id}
 export async function GET(_request: NextRequest, { params }: RouteParams) {
   try {
-    await authGuard();
+    await requireRole('viewer');
     const { id } = await params;
-    const response = await backendFetch(`/quotes/${id}`, { cache: 'no-store' });
+    const response = await backendFetch(`/quotes/${seg(id)}`, { cache: 'no-store' });
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
       return NextResponse.json(
@@ -30,10 +30,10 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
 // PUT /api/quotes/{id} -> backend PUT /quotes/{id}
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
-    await authGuard();
+    await requireRole('editor');
     const { id } = await params;
     const body = await request.json();
-    const response = await backendFetch(`/quotes/${id}`, {
+    const response = await backendFetch(`/quotes/${seg(id)}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -55,9 +55,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 // DELETE /api/quotes/{id} -> backend DELETE /quotes/{id}
 export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   try {
-    await authGuard();
+    await requireRole('editor');
     const { id } = await params;
-    const response = await backendFetch(`/quotes/${id}`, { method: 'DELETE' });
+    const response = await backendFetch(`/quotes/${seg(id)}`, { method: 'DELETE' });
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
       return NextResponse.json(

@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { ApiError } from '@/types/api';
-import { backendFetch, authGuard } from '@/lib/api-client';
+import { backendFetch, requireRole, seg } from '@/lib/api-client';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -11,10 +11,10 @@ interface RouteParams {
 // Backend may return 409 (conflict) — forward status verbatim.
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    await authGuard();
+    await requireRole('editor');
     const { id } = await params;
     const body = await request.json();
-    const response = await backendFetch(`/people/${id}/identities`, {
+    const response = await backendFetch(`/people/${seg(id)}/identities`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),

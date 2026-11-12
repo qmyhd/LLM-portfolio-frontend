@@ -1,13 +1,13 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { ApiError } from '@/types/api';
-import { backendFetch, authGuard } from '@/lib/api-client';
+import { backendFetch, requireRole, seg } from '@/lib/api-client';
 import { parseBucket } from '@/lib/bucket';
 
 // GET /api/connections — List brokerage connections with status + bucket
 export async function GET() {
   try {
-    await authGuard();
+    await requireRole('viewer');
 
     const response = await backendFetch('/connections');
 
@@ -36,7 +36,7 @@ export async function GET() {
 // call surface flat.
 export async function PATCH(request: NextRequest) {
   try {
-    await authGuard();
+    await requireRole('owner');
 
     const body = await request.json().catch(() => ({}));
     const accountId = typeof body.accountId === 'string' ? body.accountId : '';
@@ -59,7 +59,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const response = await backendFetch(
-      `/connections/${encodeURIComponent(accountId)}/bucket`,
+      `/connections/${seg(accountId)}/bucket`,
       {
         method: 'PATCH',
         body: JSON.stringify({ bucket }),

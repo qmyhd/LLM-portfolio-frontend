@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { ConsensusReport, ApiError } from '@/types/api';
-import { backendFetch, authGuard } from '@/lib/api-client';
+import { backendFetch, requireRole, seg } from '@/lib/api-client';
 import { forwardBucket } from '@/lib/bucket';
 
 interface RouteParams {
@@ -11,7 +11,7 @@ interface RouteParams {
 // GET /api/stocks/[ticker]/analysis - Multi-agent stock analysis
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    await authGuard();
+    await requireRole('viewer');
 
     const { ticker } = await params;
     const normalizedTicker = ticker.toUpperCase();
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     forwardBucket(request, qs);
 
     const response = await backendFetch(
-      `/stocks/${normalizedTicker}/analysis?${qs.toString()}`,
+      `/stocks/${seg(normalizedTicker)}/analysis?${qs.toString()}`,
       { next: { revalidate: 60 } },
     );
 
