@@ -203,7 +203,7 @@ export function ChatWidget({ ticker }: ChatWidgetProps) {
         </form>
       ) : (
         <div className="p-4 border-t border-border">
-          <ReadOnlyNotice hint="Sign in with editor access to ask questions about this stock." />
+          <ReadOnlyNotice hint="Your account is waiting for approval before you can ask questions about this stock." />
         </div>
       )}
     </div>

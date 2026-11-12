@@ -26,3 +26,9 @@ export function roleRank(role: string | null | undefined): number {
 export function hasRole(role: string | null | undefined, min: AppRole): boolean {
   return roleRank(role) >= ROLE_RANK[min];
 }
+
+/** Chat is open to owner, family and guest; never while the session is loading. */
+export function canChatFor(role: string | null | undefined, loading: boolean): boolean {
+  if (loading) return false;
+  return role === "owner" || role === "family" || role === "guest";
+}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
+import { canChatFor } from '@/lib/roles';
 import type { AppRole } from '@/types/next-auth';
 
 export interface Privacy {
@@ -50,6 +51,6 @@ export function usePrivacy(): Privacy {
     isGuestView,
     hideSizes: loading ? true : isGuestView,
     canWrite: loading ? false : isOwner,
-    canChat: loading ? false : isOwner || role === 'guest' || role === 'family',
+    canChat: canChatFor(role, loading),
   };
 }

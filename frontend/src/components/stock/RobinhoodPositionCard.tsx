@@ -127,7 +127,7 @@ export function RobinhoodPositionCard({ ticker }: RobinhoodPositionCardProps) {
       </div>
 
       {/* Stats grid (no $ totals; avg cost kept as a factual price).
-          Viewers don't see the share count — it reveals position size. */}
+          Guests and family don't see the share count — it reveals position size. */}
       <div className="grid grid-cols-2 gap-px bg-border rounded-lg overflow-hidden mb-3">
         {!hideSizes && (
           <div className="bg-background p-3">
@@ -161,7 +161,7 @@ export function RobinhoodPositionCard({ ticker }: RobinhoodPositionCardProps) {
       </div>
 
       {/* Per-account breakdown (only if multiple accounts) — shares only, no $.
-          Hidden from viewers since share counts reveal size. */}
+          Hidden from guests and family since share counts reveal size. */}
       {!hideSizes && agg.accounts.length > 1 && (
         <div className="pt-3 mt-3 border-t border-border">
           <p className="text-xs text-foreground-muted mb-2">Accounts</p>

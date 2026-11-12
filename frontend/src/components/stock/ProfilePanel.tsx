@@ -171,11 +171,11 @@ export function ProfilePanel({ ticker, onSaved }: ProfilePanelProps) {
     return <SavedView profile={profile} ticker={ticker} bucket={bucket} onRefresh={refresh} />;
   }
 
-  // Viewers can't run the (paid, write) build flow — show a read-only state.
+  // Non-owners can't run the (paid, write) build flow — show a read-only state.
   if (!canWrite) {
     return (
       <div className="p-4">
-        <ReadOnlyNotice hint="No thesis profile has been built for this stock yet. Editors can generate one." />
+        <ReadOnlyNotice hint="No thesis profile has been built for this stock yet. Only the owner can generate one." />
       </div>
     );
   }

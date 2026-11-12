@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 
 /**
  * Client-side NextAuth session context so components can read the signed-in
- * user's role (owner / editor / viewer) via useSession() / usePrivacy().
+ * user's role (owner / family / guest / pending) via useSession() / usePrivacy().
  *
  * refetchOnWindowFocus is off: the role only changes on re-login, so there's
  * no reason to re-hit /api/auth/session every time the tab regains focus.
