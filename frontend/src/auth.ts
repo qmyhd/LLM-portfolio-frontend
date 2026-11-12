@@ -1,16 +1,18 @@
 /**
  * NextAuth.js v5 Configuration
  *
- * Implements Credentials login (username/password) and Google OAuth, and
- * syncs Google sign-ins to the FastAPI backend (`POST /auth/google`) which
- * verifies the Google ID token and upserts the user into `app_users`. The
- * backend's `app_users.role` is the source of truth for Google users' roles;
- * credentials users get their role from the AUTH_USERS entry.
+ * Both sign-in methods go through the FastAPI backend, which owns the user
+ * table (`app_users`) and their roles:
+ * - Credentials: `POST /auth/password` checks the username and password
+ *   (hashing, lockout and rate limits live there).
+ * - Google: `POST /auth/google` verifies the ID token and upserts the user.
+ *
+ * The JWT carries `appUserId` (`app_users.id`) and a role that is only a
+ * hint for the UI. API routes ask the backend for the current role on every
+ * call (see `requireRole` in src/lib/api-client.ts).
  *
  * Required Environment Variables:
  * - NEXTAUTH_SECRET: Secret for JWT signing (generate with: openssl rand -base64 32)
- * - AUTH_USERS: Comma-separated username:password[:role] triples
- *   (e.g., admin:pass,friend1:pass2:viewer — role defaults to owner)
  * - API_SECRET_KEY: Backend API key for FastAPI authentication
  * - NEXT_PUBLIC_API_URL: Backend API URL (e.g., https://api.yourdomain.com)
  *
@@ -19,50 +21,32 @@
  * - GOOGLE_CLIENT_SECRET: Google OAuth client secret
  * - OWNER_EMAILS: Emails promoted to 'owner'. Also the fallback owner grant
  *   when the backend is unreachable during sign-in (mirror the backend value).
+ *   That owner has no user id until they sign in again, and API calls answer
+ *   503 until then.
  *
- * Signup is OPEN: any Google account with a verified email may sign in and is
- * created as a 'viewer'. There is no ALLOWED_EMAILS gate anymore.
+ * A new Google account is created as 'pending' and waits for the owner's
+ * approval.
  */
 
 import NextAuth, { type NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import type { AppRole } from "@/types/next-auth";
+import { forgetRole, freshRole } from "@/lib/session-role";
 
-const APP_ROLES: readonly string[] = ["owner", "editor", "viewer"];
+const APP_ROLES: readonly string[] = ["owner", "family", "guest", "pending"];
 
-interface AuthUser {
-  password: string;
-  role: AppRole;
-}
+const isAppRole = (value: unknown): value is AppRole =>
+  typeof value === "string" && APP_ROLES.includes(value);
 
-// Parse credentials from AUTH_USERS env var.
-// Format: "user1:pass1,user2:pass2:viewer". The trailing segment is treated
-// as a role only when it is exactly owner/editor/viewer; otherwise it stays
-// part of the password. Credentials users default to 'owner' (they are
-// defined by the deployer) — give friend accounts an explicit :viewer/:editor.
-const getAuthUsers = (): Map<string, AuthUser> => {
-  const raw = process.env.AUTH_USERS || "";
-  const users = new Map<string, AuthUser>();
-  raw.split(",").forEach((pair) => {
-    const parts = pair.split(":");
-    if (parts.length < 2) return;
-    const username = parts[0].trim().toLowerCase();
+const apiBase = () => process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-    let role: AppRole = "owner";
-    let passwordParts = parts.slice(1);
-    const last = parts[parts.length - 1].trim().toLowerCase();
-    if (parts.length >= 3 && APP_ROLES.includes(last)) {
-      role = last as AppRole;
-      passwordParts = parts.slice(1, -1);
-    }
-
-    const password = passwordParts.join(":").trim();
-    if (username && password) {
-      users.set(username, { password, role });
-    }
-  });
-  return users;
+const backendHeaders = (): Record<string, string> => {
+  const apiKey = process.env.API_SECRET_KEY || "";
+  return {
+    "Content-Type": "application/json",
+    ...(apiKey && { Authorization: `Bearer ${apiKey}` }),
+  };
 };
 
 // Parse a comma-separated email list from an env var
@@ -75,20 +59,16 @@ const parseEmailList = (raw: string | undefined): string[] =>
 /**
  * Report the Google sign-in to the FastAPI backend, which verifies the ID
  * token against GOOGLE_CLIENT_ID and upserts the user into app_users.
- * Returns the backend-assigned role, or null when the backend is
- * unavailable/misconfigured (callers fall back to OWNER_EMAILS / viewer).
+ * Returns the user's id and role, or null when the backend is
+ * unavailable/misconfigured (callers fall back to OWNER_EMAILS / pending).
  */
-async function syncGoogleUserWithBackend(idToken: string): Promise<AppRole | null> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-  const apiKey = process.env.API_SECRET_KEY || "";
-
+async function syncGoogleUserWithBackend(
+  idToken: string
+): Promise<{ id: string; role: AppRole } | null> {
   try {
-    const res = await fetch(`${apiUrl}/auth/google`, {
+    const res = await fetch(`${apiBase()}/auth/google`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(apiKey && { Authorization: `Bearer ${apiKey}` }),
-      },
+      headers: backendHeaders(),
       body: JSON.stringify({ idToken }),
       signal: AbortSignal.timeout(5000),
     });
@@ -98,8 +78,11 @@ async function syncGoogleUserWithBackend(idToken: string): Promise<AppRole | nul
       return null;
     }
 
-    const user = (await res.json()) as { role?: string };
-    return APP_ROLES.includes(user.role || "") ? (user.role as AppRole) : null;
+    const user = (await res.json()) as { id?: unknown; role?: unknown };
+    if (typeof user.id !== "string" || !user.id || !isAppRole(user.role)) {
+      return null;
+    }
+    return { id: user.id, role: user.role };
   } catch (error) {
     console.error("Backend /auth/google sync failed:", error);
     return null;
@@ -118,23 +101,39 @@ const providers: NextAuthConfig["providers"] = [
       const username = ((credentials?.username as string) || "")
         .trim()
         .toLowerCase();
-      const password = ((credentials?.password as string) || "").trim();
+      const password = (credentials?.password as string) || "";
 
       if (!username || !password) return null;
 
-      const users = getAuthUsers();
-      const entry = users.get(username);
+      try {
+        const res = await fetch(`${apiBase()}/auth/password`, {
+          method: "POST",
+          headers: backendHeaders(),
+          body: JSON.stringify({ username, password }),
+          signal: AbortSignal.timeout(5000),
+        });
+        // 401 wrong credentials, 423 locked, 429 rate limited, 5xx: no session.
+        if (res.status !== 200) return null;
 
-      if (!entry || entry.password !== password) {
+        const user = (await res.json()) as {
+          id?: unknown;
+          email?: unknown;
+          role?: unknown;
+        };
+        if (typeof user.id !== "string" || !user.id || !isAppRole(user.role)) {
+          return null;
+        }
+
+        return {
+          id: user.id,
+          name: username,
+          email: typeof user.email === "string" ? user.email : undefined,
+          role: user.role,
+        };
+      } catch (error) {
+        console.error("Backend /auth/password failed:", error);
         return null;
       }
-
-      return {
-        id: username,
-        name: username,
-        email: `${username}@local`,
-        role: entry.role,
-      };
     },
   }),
 ];
@@ -156,13 +155,13 @@ const authConfig: NextAuthConfig = {
     async signIn({ user, account, profile }) {
       const email = user.email?.toLowerCase() || "";
 
-      // Credentials users are already validated in authorize()
-      if (email.endsWith("@local")) return true;
+      // Credentials users are already validated by the backend in authorize()
+      if (account?.provider === "credentials") return true;
 
-      // Open Google signup: any Google account with a verified email may
-      // sign in. New users are created in app_users as 'viewer' by the
-      // backend /auth/google sync — never elevated automatically. Owner
-      // promotion is gated solely by OWNER_EMAILS on the backend.
+      // Any Google account with a verified email may sign in. New users are
+      // created in app_users as 'pending' by the backend /auth/google sync
+      // and wait for the owner's approval. Owner promotion is gated solely
+      // by OWNER_EMAILS on the backend.
       if (account?.provider === "google") {
         const emailVerified = (profile as { email_verified?: boolean } | undefined)
           ?.email_verified;
@@ -178,46 +177,64 @@ const authConfig: NextAuthConfig = {
       return true;
     },
 
-    // Include email + role in JWT token. Runs once at sign-in (when `user`
-    // and `account` are present) — the role is then carried by the JWT for
-    // the session's 24h lifetime; role changes apply on next sign-in.
-    async jwt({ token, user, account }) {
+    // Runs at sign-in (when `user` and `account` are present) and on session
+    // update(). The role in the token is only a UI hint; API routes ask the
+    // backend for the current role on every call.
+    async jwt({ token, user, account, trigger }) {
       if (user) {
         token.email = user.email;
         token.name = user.name;
         if (user.role) token.role = user.role;
+        if (account?.provider === "credentials" && user.id) {
+          token.appUserId = user.id;
+        }
       }
 
       if (account?.provider === "google") {
-        let role: AppRole | null = null;
+        let synced: { id: string; role: AppRole } | null = null;
 
         if (account.id_token) {
-          role = await syncGoogleUserWithBackend(account.id_token);
+          synced = await syncGoogleUserWithBackend(account.id_token);
         } else {
           console.error("Google sign-in without id_token - cannot sync backend");
         }
 
-        if (!role) {
+        if (synced) {
+          token.appUserId = synced.id;
+          token.role = synced.role;
+        } else {
           // Backend unreachable/misconfigured: fall back to the frontend's
-          // OWNER_EMAILS mirror so the owner isn't locked out, else viewer.
+          // OWNER_EMAILS mirror so the owner isn't locked out, else pending.
+          // With no appUserId, requireRole answers 503 for this owner (and
+          // 403 for anyone else) until they sign in again.
           const owners = parseEmailList(process.env.OWNER_EMAILS);
           const email = (token.email || "").toLowerCase();
-          role = owners.includes(email) ? "owner" : "viewer";
-          console.warn(`Using fallback role '${role}' for ${email}`);
+          delete token.appUserId;
+          token.role = owners.includes(email) ? "owner" : "pending";
+          console.warn(`Using fallback role '${token.role}' for ${email}`);
         }
+      }
 
-        token.role = role;
+      const appUserId = token.appUserId as string | undefined;
+      if (trigger === "update" && appUserId) {
+        forgetRole(appUserId);
+        try {
+          token.role = await freshRole(appUserId);
+        } catch {
+          // Backend unavailable: keep the role we have.
+        }
       }
 
       return token;
     },
 
-    // Include email + role in session
+    // Include email + role + app user id in session
     async session({ session, token }) {
       if (session.user) {
         if (token.email) session.user.email = token.email as string;
         if (token.name) session.user.name = token.name as string;
         session.user.role = token.role as AppRole | undefined;
+        if (token.appUserId) session.user.id = token.appUserId as string;
       }
       return session;
     },
