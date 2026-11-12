@@ -13,7 +13,6 @@ export async function GET(request: NextRequest) {
     if (wantsRefresh) await requireRole('owner');
     else await requireRole('guest');
 
-    const { searchParams } = new URL(request.url);
     const params = new URLSearchParams();
     params.set('refresh', wantsRefresh ? 'true' : 'false');
     forwardBucket(request, params);

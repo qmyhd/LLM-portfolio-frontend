@@ -20,7 +20,6 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const { ticker } = await params;
     const normalizedTicker = ticker.toUpperCase();
 
-    const { searchParams } = new URL(request.url);
     const qs = new URLSearchParams();
     qs.set('refresh', wantsRefresh ? 'true' : 'false');
     forwardBucket(request, qs);
