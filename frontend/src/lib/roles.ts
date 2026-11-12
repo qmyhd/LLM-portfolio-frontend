@@ -32,3 +32,16 @@ export function canChatFor(role: string | null | undefined, loading: boolean): b
   if (loading) return false;
   return role === "owner" || role === "family" || role === "guest";
 }
+
+const REFRESH_FALSY = new Set(["", "0", "false", "no", "off", "f", "n"]);
+
+/**
+ * True when a `refresh` query parameter asks for a backend recompute, which
+ * only the owner may trigger. Fails closed: only absent, empty or one of
+ * 0/false/no/off/f/n (trimmed, case-insensitive) is "not requested"; any other
+ * value, and any non-falsy occurrence among repeated parameters, counts.
+ * Pass `searchParams.getAll('refresh')`.
+ */
+export function refreshRequested(values: string[]): boolean {
+  return values.some((v) => !REFRESH_FALSY.has(v.trim().toLowerCase()));
+}

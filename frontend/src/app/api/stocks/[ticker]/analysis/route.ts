@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { ConsensusReport, ApiError } from '@/types/api';
 import { backendFetch, requireRole, seg } from '@/lib/api-client';
+import { refreshRequested } from '@/lib/roles';
 import { forwardBucket } from '@/lib/bucket';
 
 interface RouteParams {
@@ -11,8 +12,8 @@ interface RouteParams {
 // GET /api/stocks/[ticker]/analysis - Multi-agent stock analysis
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    // A truthy refresh forces a backend recompute, which only the owner may trigger.
-    const wantsRefresh = /^(1|true|yes|on)$/i.test(request.nextUrl.searchParams.get('refresh') ?? '');
+    // Any refresh that is not clearly off forces a backend recompute, which only the owner may trigger.
+    const wantsRefresh = refreshRequested(request.nextUrl.searchParams.getAll('refresh'));
     if (wantsRefresh) await requireRole('owner');
     else await requireRole('guest');
 
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     const { searchParams } = new URL(request.url);
     const qs = new URLSearchParams();
-    qs.set('refresh', searchParams.get('refresh') || 'false');
+    qs.set('refresh', wantsRefresh ? 'true' : 'false');
     const agents = searchParams.get('agents');
     if (agents) qs.set('agents', agents);
     forwardBucket(request, qs);

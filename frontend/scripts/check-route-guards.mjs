@@ -10,7 +10,8 @@
  *        every method under connections/ and users/ -> 'owner'
  *        portfolio/equity-curve/      -> 'owner' on every method
  *        a GET that reads a `refresh` search parameter (or forwards the raw
- *        query string) must call requireRole('owner') for the refresh case
+ *        query string) must decide it with refreshRequested() and call
+ *        requireRole('owner') for the refresh case
  *   2. still uses the old authGuard()
  *   3. puts an interpolated value in a backend path segment without seg(),
  *      e.g. `/people/${id}` instead of `/people/${seg(id)}`
@@ -92,9 +93,13 @@ function checkSource(rel, src) {
     // A refresh forces a backend recompute: owner only. Reading the
     // `refresh` parameter, or forwarding the raw query string, needs an owner branch.
     const forwardsRefresh =
-      /get\(\s*['"]refresh['"]\s*\)/.test(body) || /searchParams\.toString\(\)|nextUrl\.search\b/.test(body);
+      /get(?:All)?\(\s*['"]refresh['"]\s*\)/.test(body) || /searchParams\.toString\(\)|nextUrl\.search\b/.test(body);
     if (method === "GET" && forwardsRefresh && !/requireRole\(\s*['"]owner['"]\s*\)/.test(body)) {
       problems.push(`${rel} GET: forwards a refresh parameter but has no requireRole('owner') branch`);
+    }
+    // The owner branch must come from refreshRequested() (fails closed), not an ad-hoc test.
+    if (method === "GET" && forwardsRefresh && !/refreshRequested\(/.test(body)) {
+      problems.push(`${rel} GET: forwards a refresh parameter but does not decide it with refreshRequested()`);
     }
   });
 
@@ -183,8 +188,14 @@ const SAMPLES = [
   {
     name: "refresh with owner branch ok",
     rel: "stocks/[ticker]/analysis/route.ts",
-    src: "export async function GET(request) { const r = request.nextUrl.searchParams.get('refresh'); if (r) await requireRole('owner'); else await requireRole('guest'); }",
+    src: "export async function GET(request) { const r = refreshRequested(request.nextUrl.searchParams.getAll('refresh')); if (r) await requireRole('owner'); else await requireRole('guest'); }",
     expectBad: false,
+  },
+  {
+    name: "refresh decided by an ad-hoc test rejected",
+    rel: "stocks/[ticker]/analysis/route.ts",
+    src: "export async function GET(request) { const r = /^(1|true)$/.test(request.nextUrl.searchParams.get('refresh') ?? ''); if (r) await requireRole('owner'); else await requireRole('guest'); }",
+    expectBad: true,
   },
   {
     name: "editor role rejected",

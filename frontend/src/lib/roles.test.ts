@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canChatFor, hasRole, roleRank } from "@/lib/roles";
+import { canChatFor, hasRole, refreshRequested, roleRank } from "@/lib/roles";
 
 describe("roleRank", () => {
   it("ranks a missing role 0", () => {
@@ -60,5 +60,24 @@ describe("canChatFor", () => {
     expect(canChatFor("owner", true)).toBe(false);
     expect(canChatFor("guest", true)).toBe(false);
     expect(canChatFor("family", true)).toBe(false);
+  });
+});
+
+describe("refreshRequested", () => {
+  it.each(["t", "y", "T", "2", "maybe", "true", " TRUE ", "on", "yes", "1"])("requires owner for %j", (v) => {
+    expect(refreshRequested([v])).toBe(true);
+  });
+
+  it.each(["f", "n", "off", "no", "", "0", "false", " False "])("does not for %j", (v) => {
+    expect(refreshRequested([v])).toBe(false);
+  });
+
+  it("is false when the parameter is absent", () => {
+    expect(refreshRequested([])).toBe(false);
+  });
+
+  it("is true when any repeated occurrence is non-falsy", () => {
+    expect(refreshRequested(["false", "true"])).toBe(true);
+    expect(refreshRequested(["false", "0"])).toBe(false);
   });
 });
