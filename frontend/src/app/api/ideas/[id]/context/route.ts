@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { ApiError } from '@/types/api';
-import { backendFetch, authGuard } from '@/lib/api-client';
+import { backendFetch, requireRole, seg } from '@/lib/api-client';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -9,10 +9,10 @@ interface RouteParams {
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    await authGuard();
+    await requireRole('viewer');
     const { id } = await params;
 
-    const response = await backendFetch(`/ideas/${id}/context`, {
+    const response = await backendFetch(`/ideas/${seg(id)}/context`, {
       next: { revalidate: 60 },
     });
 

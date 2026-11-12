@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { FundamentalsResponse, ApiError } from '@/types/api';
-import { backendFetch, authGuard } from '@/lib/api-client';
+import { backendFetch, requireRole, seg } from '@/lib/api-client';
 
 interface RouteParams {
   params: Promise<{ ticker: string }>;
@@ -9,11 +9,11 @@ interface RouteParams {
 
 export async function GET(_request: NextRequest, { params }: RouteParams) {
   try {
-    await authGuard();
+    await requireRole('viewer');
     const { ticker } = await params;
 
     const response = await backendFetch(
-      `/stocks/${ticker.toUpperCase()}/fundamentals`,
+      `/stocks/${seg(ticker.toUpperCase())}/fundamentals`,
       { next: { revalidate: 300 } }
     );
 

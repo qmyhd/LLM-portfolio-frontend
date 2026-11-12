@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { ActivitiesResponse, ApiError } from '@/types/api';
-import { backendFetch, authGuard } from '@/lib/api-client';
+import { backendFetch, requireRole } from '@/lib/api-client';
 import { parseBucket } from '@/lib/bucket';
 
 // GET /api/activities — proxy to backend GET /activities. All client query
@@ -9,7 +9,7 @@ import { parseBucket } from '@/lib/bucket';
 // 400s at the BFF tier rather than blame-mapping a backend rejection.
 export async function GET(request: NextRequest) {
   try {
-    await authGuard();
+    await requireRole('viewer');
 
     const incoming = request.nextUrl.searchParams;
     // Reject obviously bad bucket values here so the backend never has to.

@@ -1,12 +1,12 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import type { ApiError } from '@/types/api';
-import { backendFetch, authGuard } from '@/lib/api-client';
+import { backendFetch, requireRole } from '@/lib/api-client';
 
 // POST /api/connections/portal — Generate SnapTrade Connect redirect URL
 export async function POST() {
   try {
-    await authGuard();
+    await requireRole('owner');
 
     const response = await backendFetch('/connections/portal', {
       method: 'POST',

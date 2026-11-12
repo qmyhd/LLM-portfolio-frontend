@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { OHLCVSeries, ApiError } from '@/types/api';
-import { backendFetch, authGuard } from '@/lib/api-client';
+import { backendFetch, requireRole, seg } from '@/lib/api-client';
 import { forwardBucket } from '@/lib/bucket';
 
 interface RouteParams {
@@ -12,7 +12,7 @@ interface RouteParams {
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     // Verify user is authenticated
-    await authGuard();
+    await requireRole('viewer');
 
     const { ticker } = await params;
     const normalizedTicker = ticker.toUpperCase();
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     forwardBucket(request, qs);
 
     const response = await backendFetch(
-      `/stocks/${normalizedTicker}/ohlcv?${qs.toString()}`,
+      `/stocks/${seg(normalizedTicker)}/ohlcv?${qs.toString()}`,
       {
         // Cache for 5 minutes (OHLCV data updates less frequently)
         next: { revalidate: 300 },

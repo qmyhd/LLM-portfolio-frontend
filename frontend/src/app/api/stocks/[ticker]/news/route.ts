@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { NewsResponse, ApiError } from '@/types/api';
-import { backendFetch, authGuard } from '@/lib/api-client';
+import { backendFetch, requireRole, seg } from '@/lib/api-client';
 
 interface RouteParams {
   params: Promise<{ ticker: string }>;
@@ -9,13 +9,13 @@ interface RouteParams {
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    await authGuard();
+    await requireRole('viewer');
     const { ticker } = await params;
     const { searchParams } = new URL(request.url);
     const limit = searchParams.get('limit') || '10';
 
     const response = await backendFetch(
-      `/stocks/${ticker.toUpperCase()}/news?limit=${limit}`,
+      `/stocks/${seg(ticker.toUpperCase())}/news?limit=${limit}`,
       { next: { revalidate: 300 } }
     );
 

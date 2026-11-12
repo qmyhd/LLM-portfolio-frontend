@@ -1,14 +1,14 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { ApiError } from '@/types/api';
-import { backendFetch, authGuard } from '@/lib/api-client';
+import { backendFetch, requireRole } from '@/lib/api-client';
 import { forwardBucket } from '@/lib/bucket';
 
 // GET /api/portfolio/equity-curve?days=90&bucket=long_term
 // Proxies to backend GET /portfolio/equity-curve for the daily equity time-series.
 export async function GET(request: NextRequest) {
   try {
-    await authGuard();
+    await requireRole('viewer');
 
     const params = new URLSearchParams();
     params.set('days', request.nextUrl.searchParams.get('days') || '90');

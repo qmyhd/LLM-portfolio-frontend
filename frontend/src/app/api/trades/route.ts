@@ -1,14 +1,14 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { EnrichedTradesResponse, ApiError } from '@/types/api';
-import { backendFetch, authGuard } from '@/lib/api-client';
+import { backendFetch, requireRole } from '@/lib/api-client';
 import { forwardBucket } from '@/lib/bucket';
 
 // GET /api/trades - Get recent enriched trades across all stocks
 export async function GET(request: NextRequest) {
   try {
     // Verify user is authenticated
-    await authGuard();
+    await requireRole('viewer');
 
     // Forward query params
     const { searchParams } = new URL(request.url);

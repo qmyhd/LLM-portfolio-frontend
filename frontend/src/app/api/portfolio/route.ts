@@ -1,14 +1,14 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { PortfolioResponse, ApiError } from '@/types/api';
-import { backendFetch, authGuard } from '@/lib/api-client';
+import { backendFetch, requireRole } from '@/lib/api-client';
 import { forwardBucket } from '@/lib/bucket';
 
 // GET /api/portfolio - Get portfolio summary and positions
 export async function GET(request: NextRequest) {
   try {
     // Verify user is authenticated
-    await authGuard();
+    await requireRole('viewer');
 
     // Forward supported query params to backend
     const params = new URLSearchParams();
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     const data: PortfolioResponse = await response.json();
     return NextResponse.json(data);
   } catch (error) {
-    // Check if it's an auth error (Response object thrown by authGuard)
+    // Check if it's an auth error (Response object thrown by requireRole)
     if (error instanceof Response) {
       return error;
     }
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Verify user is authenticated
-    await authGuard();
+    await requireRole('editor');
 
     const body = await request.json().catch(() => ({}));
 
