@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
 import {
@@ -9,12 +11,15 @@ import {
   ExclamationTriangleIcon,
   CheckCircleIcon,
   XCircleIcon,
+  UsersIcon,
+  ChevronRightIcon,
 } from '@heroicons/react/24/outline';
 import useSWR from 'swr';
-import type { ConnectionsResponse } from '@/types/api';
+import type { ConnectionsResponse, UsersResponse } from '@/types/api';
 import { BUCKET_NAMES, BUCKET_LABELS, type BucketName } from '@/lib/bucket';
 import { usePrivacy } from '@/hooks/usePrivacy';
-import { ReadOnlyNotice } from '@/components/ui/ReadOnlyNotice';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { USERS_KEY, fetchUsers } from '@/components/settings/usersApi';
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -43,10 +48,17 @@ const STATUS_CONFIG = {
 
 export default function SettingsPage() {
   const { isOwner } = usePrivacy();
+  const { status: sessionStatus } = useSession();
+  // Owner only: a guest or family member never fires either request.
   const { data, error, isLoading, mutate } = useSWR<ConnectionsResponse>(
-    '/api/connections',
+    isOwner ? '/api/connections' : null,
     fetcher,
   );
+  const { data: usersData } = useSWR<UsersResponse>(
+    isOwner ? USERS_KEY : null,
+    fetchUsers,
+  );
+  const pendingCount = usersData?.pendingCount ?? 0;
 
   // Track per-account bucket-update state so we can show a spinner / error
   // inline next to the dropdown.
@@ -115,6 +127,38 @@ export default function SettingsPage() {
               <h1 className="text-2xl font-bold text-foreground">Settings</h1>
             </div>
 
+            {sessionStatus === 'loading' && <Skeleton.Card />}
+
+            {sessionStatus !== 'loading' && !isOwner && (
+              <p className="text-sm text-foreground-muted">
+                Settings are managed by the site owner.
+              </p>
+            )}
+
+            {isOwner && (
+              <>
+            {/* Users and access */}
+            <section className="mb-8">
+              <Link
+                href="/settings/users"
+                className="card flex items-center gap-3 p-4 transition-colors hover:border-border-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary min-h-[56px]"
+              >
+                <UsersIcon className="h-6 w-6 flex-shrink-0 text-foreground-muted" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-foreground">Users and access</p>
+                  <p className="text-sm text-foreground-muted">
+                    Approve sign-ins and manage who can see the site.
+                  </p>
+                </div>
+                {pendingCount > 0 && (
+                  <span className="inline-flex flex-shrink-0 items-center px-2 py-0.5 rounded-full text-xs font-medium bg-status-warning/10 text-status-warning">
+                    {pendingCount} waiting
+                  </span>
+                )}
+                <ChevronRightIcon className="h-4 w-4 flex-shrink-0 text-foreground-subtle" />
+              </Link>
+            </section>
+
             {/* Brokerage Connections */}
             <section className="mb-8">
               <h2 className="text-lg font-semibold text-foreground mb-4">
@@ -169,8 +213,7 @@ export default function SettingsPage() {
                     <div className="flex flex-wrap items-center gap-3 sm:ml-4 sm:flex-shrink-0">
                       <label className="flex items-center gap-2 text-xs text-foreground-muted">
                         Bucket
-                        {isOwner ? (
-                          <select
+                        <select
                             // Default to 'other' if the backend returns a
                             // null/missing bucket (shouldn't happen with the
                             // server-side COALESCE, but be defensive).
@@ -190,11 +233,6 @@ export default function SettingsPage() {
                               </option>
                             ))}
                           </select>
-                        ) : (
-                          <span className="text-foreground">
-                            {BUCKET_LABELS[(conn.bucket ?? 'other') as BucketName]}
-                          </span>
-                        )}
                       </label>
                       <span
                         className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${config.color}`}
@@ -202,7 +240,7 @@ export default function SettingsPage() {
                         <StatusIcon className="h-3 w-3" />
                         {config.label}
                       </span>
-                      {isOwner && conn.connectionStatus !== 'connected' && (
+                      {conn.connectionStatus !== 'connected' && (
                         <button
                           onClick={handleReconnect}
                           className="text-xs text-primary hover:underline flex items-center gap-1"
@@ -222,7 +260,7 @@ export default function SettingsPage() {
                 retroactive — past data immediately re-labels to the new bucket.
               </p>
 
-              {!isLoading && !data?.connections?.length && !error && isOwner && (
+              {!isLoading && !data?.connections?.length && !error && (
                 <button
                   onClick={handleReconnect}
                   className="w-full p-4 border border-dashed border-border rounded-lg text-foreground-muted hover:border-primary hover:text-primary transition"
@@ -231,13 +269,9 @@ export default function SettingsPage() {
                 </button>
               )}
 
-              {!isOwner && (
-                <ReadOnlyNotice
-                  className="mt-3"
-                  hint="Only the account owner can connect brokerages or change buckets."
-                />
-              )}
             </section>
+              </>
+            )}
           </div>
         </main>
       </div>

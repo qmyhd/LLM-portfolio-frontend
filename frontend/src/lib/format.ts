@@ -162,6 +162,47 @@ export function formatRelativeTime(
   });
 }
 
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/**
+ * Plain-language relative time for "last seen" and "signed in" labels:
+ * "just now", "5 minutes ago", "3 hours ago", "yesterday", "3 days ago",
+ * then a short date ("12 Nov", with the year when it is not this one).
+ * `now` is injectable for tests.
+ */
+export function formatTimeAgo(
+  dateStr: string | null | undefined,
+  now: number = Date.now(),
+  opts?: { placeholder?: string },
+): string {
+  const placeholder = opts?.placeholder ?? '—';
+  if (!dateStr) return placeholder;
+  const then = new Date(dateStr);
+  if (isNaN(then.getTime())) return placeholder;
+
+  const diff = now - then.getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins} minute${mins === 1 ? '' : 's'} ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs} hour${hrs === 1 ? '' : 's'} ago`;
+
+  const today = new Date(now);
+  const dayStart = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const days = Math.round((dayStart(today) - dayStart(then)) / 86400000);
+  if (days <= 1) return 'yesterday';
+  if (days < 7) return `${days} days ago`;
+  const short = `${then.getDate()} ${MONTHS[then.getMonth()]}`;
+  return then.getFullYear() === today.getFullYear() ? short : `${short} ${then.getFullYear()}`;
+}
+
+/** Exact local date and time, for a `title` attribute. */
+export function formatExactDateTime(dateStr: string | null | undefined): string {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  return isNaN(d.getTime()) ? '' : d.toLocaleString();
+}
+
 /**
  * Format a share quantity — strips floating-point noise.
  * Whole numbers → 0 decimals, fractional → up to 4 decimals (trailing zeros stripped).

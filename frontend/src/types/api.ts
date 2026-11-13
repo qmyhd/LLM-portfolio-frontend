@@ -643,3 +643,27 @@ export interface SparklineResponse {
   sparklines: SparklineData[];
   period: string;
 }
+
+// =============================================================================
+// Users and access (owner only)
+// =============================================================================
+
+export type AppUserRole = 'pending' | 'guest' | 'family' | 'owner';
+
+export interface AppUserRow {
+  id: string;
+  provider: 'google' | 'password';
+  username: string | null;
+  email: string;
+  fullName: string | null;
+  avatarUrl: string | null;
+  role: AppUserRole;
+  createdAt: string;
+  lastSeenAt: string;
+  isSelf: boolean;
+}
+
+export interface UsersResponse {
+  users: AppUserRow[];
+  pendingCount: number;
+}
