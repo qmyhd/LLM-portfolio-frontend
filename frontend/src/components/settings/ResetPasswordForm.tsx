@@ -27,12 +27,13 @@ export function ResetPasswordForm({
 
   useEffect(() => {
     first.current?.querySelector('input')?.focus();
-    // Nothing typed here outlives the form.
-    return () => {
-      setPassword('');
-      setConfirm('');
-    };
   }, []);
+
+  const cancel = () => {
+    setPassword('');
+    setConfirm('');
+    onCancel();
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,9 +70,9 @@ export function ResetPasswordForm({
       <p id={`${id}-hint`} className="text-xs text-foreground-muted">
         10+ characters; 14+ for an owner.
       </p>
-      {problem && <p className={errorText}>{problem}</p>}
+      <div aria-live="polite">{problem && <p className={errorText}>{problem}</p>}</div>
       <div className="grid grid-cols-2 gap-2 sm:flex sm:justify-end">
-        <button type="button" onClick={onCancel} disabled={busy} className={btnSecondary}>
+        <button type="button" onClick={cancel} disabled={busy} className={btnSecondary}>
           Cancel
         </button>
         <button type="submit" disabled={busy} className={btnPrimary}>

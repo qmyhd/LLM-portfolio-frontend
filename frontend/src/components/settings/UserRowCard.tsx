@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import { formatExactDateTime, formatTimeAgo } from '@/lib/format';
+import { safeHttpsImageUrl } from '@/lib/safe-url';
 import { initialsFor, type UserView } from '@/lib/users-admin';
 import type { AppUserRole } from '@/types/api';
 import { ResetPasswordForm } from './ResetPasswordForm';
@@ -18,6 +19,10 @@ import {
 } from './styles';
 
 type Confirm = 'decline' | 'delete' | 'revoke';
+type Opener = Confirm | 'reset';
+
+/** What just happened to the row, so the parent can move focus. */
+export type RowOutcome = 'approved' | Confirm;
 
 export interface UserRowActions {
   /** Each resolves true on success. The parent shows any error beside the row. */
@@ -27,13 +32,16 @@ export interface UserRowActions {
 }
 
 function Avatar({ user }: { user: UserView }) {
-  if (user.avatarUrl) {
+  const [failed, setFailed] = useState(false);
+  const src = safeHttpsImageUrl(user.avatarUrl);
+  if (src && !failed) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
-        src={user.avatarUrl}
+        src={src}
         alt=""
         referrerPolicy="no-referrer"
+        onError={() => setFailed(true)}
         className="h-10 w-10 shrink-0 rounded-full bg-background-hover object-cover"
       />
     );
@@ -66,6 +74,7 @@ export function UserRowCard({
   error,
   notice,
   actions,
+  onLeft,
 }: {
   user: UserView;
   variant: 'waiting' | 'access';
@@ -73,30 +82,37 @@ export function UserRowCard({
   error?: string;
   notice?: string;
   actions: UserRowActions;
+  /** The row left or moved to another list; the parent moves focus. */
+  onLeft: (outcome: RowOutcome) => void;
 }) {
   const [confirm, setConfirm] = useState<Confirm | null>(null);
   const [resetting, setResetting] = useState(false);
   const confirmButton = useRef<HTMLButtonElement>(null);
-  const opener = useRef<HTMLElement | null>(null);
+  const triggers = useRef<Partial<Record<Opener, HTMLButtonElement | null>>>({});
+  const focusBack = useRef<Opener | null>(null);
+  const inFlight = useRef(false);
   const who = user.email || user.username || user.name;
 
   useEffect(() => {
     if (confirm) confirmButton.current?.focus();
   }, [confirm]);
 
-  const ask = (kind: Confirm) => {
-    opener.current = document.activeElement as HTMLElement | null;
-    setConfirm(kind);
-  };
-  const cancel = () => {
-    setConfirm(null);
-    opener.current?.focus();
-  };
-  const run = async (task: () => Promise<boolean>) => {
-    const ok = await task();
-    if (!ok) {
-      setConfirm(null);
-      opener.current?.focus();
+  // Once the confirm or reset form has closed, return focus to its opener.
+  useEffect(() => {
+    if (!confirm && !resetting && focusBack.current) {
+      triggers.current[focusBack.current]?.focus();
+      focusBack.current = null;
+    }
+  }, [confirm, resetting]);
+
+  /** One action at a time per row, even if two events land before a render. */
+  const guard = async (task: () => Promise<boolean>): Promise<boolean | null> => {
+    if (inFlight.current) return null;
+    inFlight.current = true;
+    try {
+      return await task();
+    } finally {
+      inFlight.current = false;
     }
   };
 
@@ -114,6 +130,27 @@ export function UserRowCard({
     decline: actions.onDelete,
     delete: actions.onDelete,
     revoke: () => actions.onRole('pending'),
+  };
+
+  const cancel = () => {
+    focusBack.current = confirm;
+    setConfirm(null);
+  };
+  const run = async (kind: Confirm) => {
+    const ok = await guard(confirmTask[kind]);
+    if (ok === null) return;
+    if (ok) {
+      onLeft(kind);
+    } else {
+      focusBack.current = kind;
+      setConfirm(null);
+    }
+  };
+  const approve = async (role: AppUserRole) => {
+    if (await guard(() => actions.onRole(role))) onLeft('approved');
+  };
+  const bind = (key: Opener) => (el: HTMLButtonElement | null) => {
+    triggers.current[key] = el;
   };
 
   return (
@@ -149,7 +186,10 @@ export function UserRowCard({
               value={user.role}
               disabled={busy}
               aria-label={`Role for ${user.name}`}
-              onChange={(e) => void actions.onRole(e.target.value as AppUserRole)}
+              onChange={(e) => {
+                const role = e.target.value as AppUserRole;
+                void guard(() => actions.onRole(role));
+              }}
               className="input min-h-[44px] sm:min-h-[40px] w-auto flex-1 sm:flex-none text-sm disabled:opacity-60"
             >
               <option value="guest">Guest</option>
@@ -174,7 +214,7 @@ export function UserRowCard({
               ref={confirmButton}
               type="button"
               disabled={busy}
-              onClick={() => void run(confirmTask[confirm])}
+              onClick={() => void run(confirm)}
               className={btnDanger}
             >
               {confirmLabel[confirm]}
@@ -186,7 +226,7 @@ export function UserRowCard({
           <button
             type="button"
             disabled={busy}
-            onClick={() => void actions.onRole('guest')}
+            onClick={() => void approve('guest')}
             className={btnPrimary}
           >
             Approve as guest
@@ -194,15 +234,16 @@ export function UserRowCard({
           <button
             type="button"
             disabled={busy}
-            onClick={() => void actions.onRole('family')}
+            onClick={() => void approve('family')}
             className={btnPrimary}
           >
             Approve as family
           </button>
           <button
             type="button"
+            ref={bind('decline')}
             disabled={busy}
-            onClick={() => ask('decline')}
+            onClick={() => setConfirm('decline')}
             className={`${btnDanger} col-span-2 sm:col-span-1`}
           >
             Decline
@@ -212,12 +253,19 @@ export function UserRowCard({
         !user.isYou &&
         !resetting && (
           <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-            <button type="button" disabled={busy} onClick={() => ask('revoke')} className={btnSecondary}>
+            <button
+              type="button"
+              ref={bind('revoke')}
+              disabled={busy}
+              onClick={() => setConfirm('revoke')}
+              className={btnSecondary}
+            >
               Revoke access
             </button>
             {user.provider === 'password' && (
               <button
                 type="button"
+                ref={bind('reset')}
                 disabled={busy}
                 onClick={() => setResetting(true)}
                 className={btnSecondary}
@@ -225,7 +273,13 @@ export function UserRowCard({
                 Reset password
               </button>
             )}
-            <button type="button" disabled={busy} onClick={() => ask('delete')} className={btnDanger}>
+            <button
+              type="button"
+              ref={bind('delete')}
+              disabled={busy}
+              onClick={() => setConfirm('delete')}
+              className={btnDanger}
+            >
               Delete
             </button>
           </div>
@@ -236,11 +290,17 @@ export function UserRowCard({
         <ResetPasswordForm
           user={user}
           busy={busy}
-          onCancel={() => setResetting(false)}
+          onCancel={() => {
+            focusBack.current = 'reset';
+            setResetting(false);
+          }}
           onSave={async (password) => {
-            const ok = await actions.onResetPassword(password);
-            if (ok) setResetting(false);
-            return ok;
+            const ok = await guard(() => actions.onResetPassword(password));
+            if (ok) {
+              focusBack.current = 'reset';
+              setResetting(false);
+            }
+            return !!ok;
           }}
         />
       )}

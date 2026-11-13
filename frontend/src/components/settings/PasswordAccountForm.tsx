@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   normaliseUsername,
   PASSWORD_RULE,
@@ -21,15 +21,6 @@ export function PasswordAccountForm({ onCreated }: { onCreated: () => Promise<un
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
 
-  // Passwords never outlive the form.
-  useEffect(
-    () => () => {
-      setPassword('');
-      setConfirm('');
-    },
-    [],
-  );
-
   const normalised = normaliseUsername(username);
   const showNormalised = username !== '' && normalised !== username;
 
@@ -42,18 +33,24 @@ export function PasswordAccountForm({ onCreated }: { onCreated: () => Promise<un
     setBusy(true);
     try {
       await createAccount({ username: normalised, password, role });
-      setUsername('');
-      setPassword('');
-      setConfirm('');
-      setRole('guest');
-      setProblem(null);
-      setDone(true);
-      await onCreated();
     } catch (err) {
       setProblem(err instanceof Error ? err.message : 'Something went wrong. Try again.');
-    } finally {
       setBusy(false);
+      return;
     }
+    // Created. Clear the secrets and say so, even if the list refresh fails.
+    setUsername('');
+    setPassword('');
+    setConfirm('');
+    setRole('guest');
+    setProblem(null);
+    setDone(true);
+    try {
+      await onCreated();
+    } catch {
+      // The list shows its own refresh banner; the account exists.
+    }
+    setBusy(false);
   };
 
   return (
