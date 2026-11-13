@@ -12,17 +12,21 @@ import { hasRole } from "@/lib/roles";
 export type Decision =
   | { action: "next" }
   | { action: "redirect"; to: string }
-  | { action: "deny"; status: 403; error: string };
+  | { action: "deny"; status: 401 | 403; error: string };
 
 export interface DecideInput {
   pathname: string;
   method: string;
   signedIn: boolean;
+  /** The session carries an app user id. Older cookies do not. */
+  hasUserId: boolean;
   role: string | null | undefined;
 }
 
 const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
+// "/_next/" also covers "/_next/data/", which is safe only while the app has
+// no pages router (no getServerSideProps data to protect).
 // Paths that skip auth entirely: Next.js internals and NextAuth's endpoints.
 const EXCLUDED = [
   /^\/_next\//,
@@ -38,8 +42,9 @@ const EXCLUDED = [
 const STATIC_FILE =
   /\.(png|jpe?g|gif|svg|ico|webp|avif|css|js|map|txt|xml|woff2?|ttf|otf|webmanifest)$/i;
 
-// The one mutation a guest may make: chat about a single ticker.
-const CHAT_PATH = /^\/api\/stocks\/[^/]+\/chat$/;
+// The one mutation a guest may make: POST chat about a single ticker. "%" is
+// excluded so an encoded slash cannot smuggle in a second segment.
+const CHAT_PATH = /^\/api\/stocks\/[^/%]+\/chat$/;
 
 const onPath = (pathname: string, base: string) =>
   pathname === base || pathname.startsWith(`${base}/`);
@@ -50,10 +55,24 @@ const NEEDS_OWNER: Decision = {
   error: "This action needs the owner",
 };
 
-export function decide({ pathname, method, signedIn, role }: DecideInput): Decision {
+export function decide({
+  pathname,
+  method,
+  signedIn: hasSession,
+  hasUserId,
+  role,
+}: DecideInput): Decision {
   if (EXCLUDED.some((p) => p.test(pathname))) return { action: "next" };
   if (!pathname.startsWith("/api/") && STATIC_FILE.test(pathname)) {
     return { action: "next" };
+  }
+
+  // A session without a user id (cookie from before ids existed, or a sign-in
+  // while the backend sync failed) can never be checked against the backend.
+  // Treat it as signed out for pages; API calls are told to sign in again.
+  const signedIn = hasSession && hasUserId;
+  if (hasSession && !hasUserId && pathname.startsWith("/api/")) {
+    return { action: "deny", status: 401, error: "Please sign in again" };
   }
 
   if (pathname === "/login") {
@@ -92,7 +111,8 @@ export function decide({ pathname, method, signedIn, role }: DecideInput): Decis
     if (onPath(pathname, "/api/connections") || onPath(pathname, "/api/users")) {
       return NEEDS_OWNER;
     }
-    if (MUTATING_METHODS.has(method.toUpperCase()) && !CHAT_PATH.test(pathname)) {
+    if (MUTATING_METHODS.has(method.toUpperCase()) &&
+      !(method.toUpperCase() === "POST" && CHAT_PATH.test(pathname))) {
       return NEEDS_OWNER;
     }
     return { action: "next" };

@@ -18,6 +18,7 @@ export default auth((req) => {
     pathname: req.nextUrl.pathname,
     method: req.method,
     signedIn: Boolean(req.auth),
+    hasUserId: Boolean(req.auth?.user?.id),
     role: req.auth?.user?.role,
   });
 

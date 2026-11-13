@@ -28,7 +28,7 @@
  * approval.
  */
 
-import NextAuth, { type NextAuthConfig } from "next-auth";
+import NextAuth, { CredentialsSignin, type NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import type { AppRole } from "@/types/next-auth";
@@ -48,6 +48,22 @@ const backendHeaders = (): Record<string, string> => {
     ...(apiKey && { Authorization: `Bearer ${apiKey}` }),
   };
 };
+
+/**
+ * Sign-in failures the login form words differently. The `code` travels in
+ * the error redirect URL (so it must not hint at anything sensitive) and
+ * reaches signIn(..., { redirect: false }) on the client as `result.code`.
+ * A plain 401 stays the default "invalid credentials" result.
+ */
+class LockedSignin extends CredentialsSignin {
+  code = "locked";
+}
+class RateLimitedSignin extends CredentialsSignin {
+  code = "rate_limited";
+}
+class UnavailableSignin extends CredentialsSignin {
+  code = "unavailable";
+}
 
 // Parse a comma-separated email list from an env var
 const parseEmailList = (raw: string | undefined): string[] =>
@@ -112,7 +128,10 @@ const providers: NextAuthConfig["providers"] = [
           body: JSON.stringify({ username, password }),
           signal: AbortSignal.timeout(5000),
         });
-        // 401 wrong credentials, 423 locked, 429 rate limited, 5xx: no session.
+        // 401 wrong credentials keeps the default result; the rest get a code.
+        if (res.status === 423) throw new LockedSignin();
+        if (res.status === 429) throw new RateLimitedSignin();
+        if (res.status >= 500) throw new UnavailableSignin();
         if (res.status !== 200) return null;
 
         const user = (await res.json()) as {
@@ -131,8 +150,9 @@ const providers: NextAuthConfig["providers"] = [
           role: user.role,
         };
       } catch (error) {
+        if (error instanceof CredentialsSignin) throw error;
         console.error("Backend /auth/password failed:", error);
-        return null;
+        throw new UnavailableSignin();
       }
     },
   }),

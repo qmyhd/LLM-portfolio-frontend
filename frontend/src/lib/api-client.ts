@@ -97,8 +97,8 @@ export function errorResponse(message: string, status: number = 500) {
  * from the sign-in cookie, so a revoked user loses access within seconds.
  * The returned session carries that fresh role in `session.user.role`.
  *
- * @throws Response 401 when signed out, 403 when the role is too low or the
- *   session has no user id, 503 when the role can't be checked right now.
+ * @throws Response 401 when signed out or the session has no user id, 403 when
+ *   the role is too low, 503 when the role can't be checked right now.
  */
 export async function requireRole(min: AppRole) {
   const session = await requireAuth();
@@ -109,12 +109,9 @@ export async function requireRole(min: AppRole) {
 
   const appUserId = session.user.id;
   if (!appUserId) {
-    // An owner who signed in while the backend was down has no user id.
-    // Signing out and in again fixes it once the backend is back.
-    if (session.user.role === "owner") {
-      throw errorResponse("Try again in a moment", 503);
-    }
-    throw errorResponse("This account has no access yet - ask the owner", 403);
+    // Cookies issued before user ids existed, or a sign-in while the backend
+    // sync failed. Signing in again fixes it.
+    throw errorResponse("Please sign in again", 401);
   }
 
   let role: AppRole;

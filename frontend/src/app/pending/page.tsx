@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { signOut, useSession } from 'next-auth/react';
 import { LiquidGradientBackground } from '@/components/ui/LiquidGradientBackground';
-import { hasRole } from '@/lib/roles';
+import { checkAgain, signedInLabel } from '@/lib/check-again';
 
 /**
  * Waiting-for-approval page. Shown to signed-in accounts the owner has not
@@ -19,33 +19,27 @@ const buttonBase =
   'w-full sm:w-auto min-h-[44px] px-6 py-3 rounded-xl font-semibold transition-colors ' +
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-[#5865f2] ' +
   'focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0e1a] ' +
-  'disabled:opacity-60 disabled:cursor-not-allowed motion-reduce:transition-none';
+  'aria-disabled:opacity-60 aria-disabled:cursor-not-allowed motion-reduce:transition-none';
 
 export default function PendingPage() {
   const { data: session, update } = useSession();
   const [checking, setChecking] = useState(false);
   const [message, setMessage] = useState('');
 
-  const email = session?.user?.email;
+  const who = signedInLabel(session?.user);
 
-  async function checkAgain() {
+  async function onCheckAgain() {
+    // aria-disabled keeps keyboard focus on the button, so guard here.
     if (checking) return;
     setChecking(true);
     setMessage('');
-    try {
-      const fresh = await update();
-      if (!fresh) {
-        setMessage(MESSAGE_FAILED);
-      } else if (hasRole(fresh.user?.role, 'guest')) {
-        // Full reload so the middleware sees the refreshed cookie.
-        window.location.assign('/');
-        return;
-      } else {
-        setMessage(MESSAGE_STILL_PENDING);
-      }
-    } catch {
-      setMessage(MESSAGE_FAILED);
+    const step = await checkAgain(update);
+    if (step === 'enter') {
+      // Full reload so the middleware sees the refreshed cookie.
+      window.location.assign('/');
+      return;
     }
+    setMessage(step === 'still-pending' ? MESSAGE_STILL_PENDING : MESSAGE_FAILED);
     setChecking(false);
   }
 
@@ -81,9 +75,9 @@ export default function PendingPage() {
               account by hand. You&apos;ll get in as soon as that&apos;s done.
             </p>
 
-            {email && (
+            {who && (
               <p className="text-foreground-muted text-sm text-center break-words">
-                Signed in as {email}
+                Signed in as {who}
               </p>
             )}
 
@@ -92,14 +86,14 @@ export default function PendingPage() {
               aria-live="polite"
               className="min-h-[1.25rem] text-sm text-center text-foreground-muted"
             >
-              {checking ? 'Checking…' : message}
+              {message}
             </p>
 
             <div className="flex flex-col sm:flex-row sm:justify-center gap-3">
               <button
                 type="button"
-                onClick={checkAgain}
-                disabled={checking}
+                onClick={onCheckAgain}
+                aria-disabled={checking}
                 className={`${buttonBase} text-white shadow-lg`}
                 style={{ background: 'linear-gradient(135deg, #5865f2, #9333ea)' }}
               >

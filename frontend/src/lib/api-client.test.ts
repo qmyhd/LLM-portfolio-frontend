@@ -34,17 +34,14 @@ describe("requireRole", () => {
     expect((await thrown(requireRole("guest"))).status).toBe(401);
   });
 
-  it("403 for a session without user.id", async () => {
-    authMock.mockResolvedValue({ user: { role: "guest" } });
-    expect((await thrown(requireRole("guest"))).status).toBe(403);
+  it("401 for a session without user.id, whatever the cookie role", async () => {
+    for (const role of ["guest", "owner"]) {
+      authMock.mockResolvedValue({ user: { role } });
+      const res = await thrown(requireRole("guest"));
+      expect(res.status).toBe(401);
+      expect(await res.json()).toEqual({ error: "Please sign in again" });
+    }
     expect(freshRoleMock).not.toHaveBeenCalled();
-  });
-
-  it("503 for an owner session without user.id (sync fallback)", async () => {
-    authMock.mockResolvedValue({ user: { role: "owner" } });
-    const res = await thrown(requireRole("guest"));
-    expect(res.status).toBe(503);
-    expect(await res.json()).toEqual({ error: "Try again in a moment" });
   });
 
   it("503 when freshRole throws, ignoring the cookie role", async () => {

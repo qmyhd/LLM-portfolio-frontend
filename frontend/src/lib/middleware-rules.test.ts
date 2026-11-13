@@ -12,14 +12,19 @@ const NEEDS_OWNER = {
   error: "This action needs the owner",
 } as const;
 const NEXT = { action: "next" } as const;
+const SIGN_IN_AGAIN = {
+  action: "deny",
+  status: 401,
+  error: "Please sign in again",
+} as const;
 
 const as =
   (role: string | null | undefined) =>
   (pathname: string, method = "GET") =>
-    decide({ pathname, method, signedIn: true, role });
+    decide({ pathname, method, signedIn: true, hasUserId: true, role });
 
 const signedOut = (pathname: string, method = "GET") =>
-  decide({ pathname, method, signedIn: false, role: null });
+  decide({ pathname, method, signedIn: false, hasUserId: false, role: null });
 
 describe("decide: signed out", () => {
   it("redirects a page to login with callbackUrl", () => {
@@ -39,6 +44,30 @@ describe("decide: signed out", () => {
   });
   it("lets /api/auth/session through", () => {
     expect(signedOut("/api/auth/session")).toEqual(NEXT);
+  });
+});
+
+describe("decide: session without a user id", () => {
+  const noId = (pathname: string, method = "GET") =>
+    decide({ pathname, method, signedIn: true, hasUserId: false, role: "owner" });
+  it("redirects a page to login with callbackUrl", () => {
+    expect(noId("/")).toEqual({ action: "redirect", to: "/login?callbackUrl=%2F" });
+  });
+  it("lets /login render instead of bouncing to /", () => {
+    expect(noId("/login")).toEqual(NEXT);
+  });
+  it("answers /api data routes with 401", () => {
+    expect(noId("/api/portfolio")).toEqual(SIGN_IN_AGAIN);
+    expect(noId("/api/portfolio", "POST")).toEqual(SIGN_IN_AGAIN);
+  });
+  it("lets /api/auth/session through", () => {
+    expect(noId("/api/auth/session")).toEqual(NEXT);
+  });
+  it("redirects /pending to login", () => {
+    expect(noId("/pending")).toEqual({
+      action: "redirect",
+      to: "/login?callbackUrl=%2Fpending",
+    });
   });
 });
 
@@ -63,6 +92,9 @@ describe("decide: pending", () => {
     expect(as("editor")("/api/portfolio")).toEqual(WAITING);
     expect(as("editor")("/")).toEqual({ action: "redirect", to: "/pending" });
   });
+  it("may load a static file", () => {
+    expect(pending("/logo.png")).toEqual(NEXT);
+  });
   it("treats a missing role as pending", () => {
     expect(as(undefined)("/api/portfolio")).toEqual(WAITING);
     expect(as(null)("/")).toEqual({ action: "redirect", to: "/pending" });
@@ -85,6 +117,15 @@ describe("decide: guest", () => {
   });
   it("may not POST chat under a multi-segment ticker", () => {
     expect(guest("/api/stocks/a/b/chat", "POST")).toEqual(NEEDS_OWNER);
+  });
+  it("may not DELETE on the chat path", () => {
+    expect(guest("/api/stocks/NVDA/chat", "DELETE")).toEqual(NEEDS_OWNER);
+  });
+  it("may not use an encoded-slash chat path", () => {
+    expect(guest("/api/stocks/a%2Fb/chat", "POST")).toEqual(NEEDS_OWNER);
+  });
+  it("may not use a trailing-slash chat path", () => {
+    expect(guest("/api/stocks/NVDA/chat/", "POST")).toEqual(NEEDS_OWNER);
   });
   it("may not PUT other stock routes", () => {
     expect(guest("/api/stocks/NVDA/profile", "PUT")).toEqual(NEEDS_OWNER);
