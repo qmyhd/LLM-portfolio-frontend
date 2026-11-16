@@ -8,7 +8,7 @@ import { forwardBucket } from '@/lib/bucket';
 export async function GET(request: NextRequest) {
   try {
     // Verify user is authenticated
-    await requireRole('viewer');
+    await requireRole('guest');
 
     // Forward supported query params to backend
     const params = new URLSearchParams();
@@ -22,8 +22,7 @@ export async function GET(request: NextRequest) {
     const backendPath = qs ? `/portfolio?${qs}` : '/portfolio';
 
     const response = await backendFetch(backendPath, {
-      // Cache for 30 seconds on the edge
-      next: { revalidate: 30 },
+      cache: 'no-store',
     });
 
     if (!response.ok) {
@@ -54,7 +53,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Verify user is authenticated
-    await requireRole('editor');
+    await requireRole('owner');
 
     const body = await request.json().catch(() => ({}));
 

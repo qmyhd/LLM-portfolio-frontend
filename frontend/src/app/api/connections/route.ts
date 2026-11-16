@@ -7,7 +7,7 @@ import { parseBucket } from '@/lib/bucket';
 // GET /api/connections — List brokerage connections with status + bucket
 export async function GET() {
   try {
-    await requireRole('viewer');
+    await requireRole('owner');
 
     const response = await backendFetch('/connections');
 

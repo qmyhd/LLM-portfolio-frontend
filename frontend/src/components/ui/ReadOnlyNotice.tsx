@@ -3,13 +3,13 @@
 import { LockClosedIcon } from '@heroicons/react/24/outline';
 
 /**
- * Consistent inline "read-only" affordance shown to viewers in place of a
+ * Consistent inline "read-only" affordance shown to non-owners in place of a
  * write control (capture form, chat box, curate button, etc.). Keeps the
- * viewer experience clean instead of surfacing buttons that 403 server-side.
+ * read-only experience clean instead of surfacing buttons that 403 server-side.
  */
 export function ReadOnlyNotice({
   label = 'Read-only access',
-  hint = 'Ask the owner for editor access to contribute.',
+  hint = 'Only the owner can make changes here.',
   className = '',
 }: {
   label?: string;

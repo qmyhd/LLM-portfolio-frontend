@@ -1,14 +1,14 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
+import { canChatFor } from '@/lib/roles';
 import type { AppRole } from '@/types/next-auth';
 
 export interface Privacy {
   role: AppRole | undefined;
   isOwner: boolean;
-  isEditor: boolean;
-  /** Read-only account — sees the percentage-only "vague report" view. */
-  isViewer: boolean;
+  /** Anyone who is not the owner: sees the percentage-only "vague report" view. */
+  isGuestView: boolean;
   /**
    * Hide absolute position sizes: share counts, order notionals, cash
    * balances, and any raw dollar total that would reveal portfolio size.
@@ -17,36 +17,40 @@ export interface Privacy {
    */
   hideSizes: boolean;
   /**
-   * Whether this session may perform writes (capture ideas, chat, notes,
-   * curate, edit profiles, manage connections). Owners/editors only. Viewers
-   * get read-only affordances instead of buttons that would 403 server-side.
+   * Whether this session may perform writes (capture ideas, notes, curate,
+   * edit profiles, manage connections). Owner only. Everyone else gets
+   * read-only affordances instead of buttons that would 403 server-side.
    * Defaults to false while the session is loading.
    */
   canWrite: boolean;
+  /**
+   * Whether this session may use chat: owner, family and guest. Defaults to
+   * false while the session is loading.
+   */
+  canChat: boolean;
 }
 
 /**
  * Role-derived privacy posture for the current session.
  *
  * While the session is loading (role unknown) we default to the restricted
- * view so a viewer never briefly sees dollar sizes before the role resolves.
- * Owners and editors are trusted and see everything.
+ * view so a guest never briefly sees dollar sizes before the role resolves.
+ * Only the owner sees everything.
  */
 export function usePrivacy(): Privacy {
   const { data, status } = useSession();
   const role = data?.user?.role;
+  const loading = status === 'loading';
 
   const isOwner = role === 'owner';
-  const isEditor = role === 'editor';
-  // Unknown/loading is treated as viewer (safe default).
-  const isViewer = !isOwner && !isEditor;
+  const isGuestView = !isOwner;
 
   return {
     role,
     isOwner,
-    isEditor,
-    isViewer,
-    hideSizes: status === 'loading' ? true : isViewer,
-    canWrite: status === 'loading' ? false : (isOwner || isEditor),
+    isGuestView,
+    hideSizes: loading ? true : isGuestView,
+    canWrite: loading ? false : isOwner,
+    canChat: canChatFor(role, loading),
   };
 }

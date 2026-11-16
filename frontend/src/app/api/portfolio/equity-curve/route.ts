@@ -8,7 +8,7 @@ import { forwardBucket } from '@/lib/bucket';
 // Proxies to backend GET /portfolio/equity-curve for the daily equity time-series.
 export async function GET(request: NextRequest) {
   try {
-    await requireRole('viewer');
+    await requireRole('owner');
 
     const params = new URLSearchParams();
     params.set('days', request.nextUrl.searchParams.get('days') || '90');
@@ -16,9 +16,7 @@ export async function GET(request: NextRequest) {
 
     const response = await backendFetch(
       `/portfolio/equity-curve?${params.toString()}`,
-      // 5-minute edge cache — equity curves only change once a day after
-      // the nightly snapshot pipeline runs.
-      { next: { revalidate: 300 } },
+      { cache: 'no-store' },
     );
 
     if (!response.ok) {

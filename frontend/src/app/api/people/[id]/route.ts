@@ -10,7 +10,7 @@ interface RouteParams {
 // GET /api/people/{id} -> backend GET /people/{id}
 export async function GET(_request: NextRequest, { params }: RouteParams) {
   try {
-    await requireRole('viewer');
+    await requireRole('guest');
     const { id } = await params;
     const response = await backendFetch(`/people/${seg(id)}`, { cache: 'no-store' });
     if (!response.ok) {
@@ -30,7 +30,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
 // PUT /api/people/{id} -> backend PUT /people/{id}
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
-    await requireRole('editor');
+    await requireRole('owner');
     const { id } = await params;
     const body = await request.json();
     const response = await backendFetch(`/people/${seg(id)}`, {
@@ -55,7 +55,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 // DELETE /api/people/{id} -> backend DELETE /people/{id}
 export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   try {
-    await requireRole('editor');
+    await requireRole('owner');
     const { id } = await params;
     const response = await backendFetch(`/people/${seg(id)}`, { method: 'DELETE' });
     if (!response.ok) {

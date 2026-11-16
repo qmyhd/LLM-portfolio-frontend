@@ -2,20 +2,23 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { PortfolioRiskReport, ApiError } from '@/types/api';
 import { backendFetch, requireRole } from '@/lib/api-client';
+import { refreshRequested } from '@/lib/roles';
 import { forwardBucket } from '@/lib/bucket';
 
 // GET /api/portfolio/risk - Portfolio-wide risk analysis
 export async function GET(request: NextRequest) {
   try {
-    await requireRole('viewer');
+    // Any refresh that is not clearly off forces a backend recompute, which only the owner may trigger.
+    const wantsRefresh = refreshRequested(request.nextUrl.searchParams.getAll('refresh'));
+    if (wantsRefresh) await requireRole('owner');
+    else await requireRole('guest');
 
-    const { searchParams } = new URL(request.url);
     const params = new URLSearchParams();
-    params.set('refresh', searchParams.get('refresh') || 'false');
+    params.set('refresh', wantsRefresh ? 'true' : 'false');
     forwardBucket(request, params);
 
     const response = await backendFetch(`/portfolio/risk?${params.toString()}`, {
-      next: { revalidate: 120 },
+      cache: 'no-store',
     });
 
     if (!response.ok) {

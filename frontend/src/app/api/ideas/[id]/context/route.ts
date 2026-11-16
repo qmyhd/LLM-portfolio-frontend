@@ -9,11 +9,11 @@ interface RouteParams {
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    await requireRole('viewer');
+    await requireRole('guest');
     const { id } = await params;
 
     const response = await backendFetch(`/ideas/${seg(id)}/context`, {
-      next: { revalidate: 60 },
+      cache: 'no-store',
     });
 
     if (!response.ok) {

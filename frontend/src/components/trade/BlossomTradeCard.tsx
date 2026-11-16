@@ -92,7 +92,7 @@ function getTradeStyle(trade: EnrichedTrade): TradeStyle {
 
 /**
  * Build the action description, e.g. "Bought 10 shares @ $150.25".
- * When `hideSizes` is set (viewers), the share count and dividend $ amount
+ * When `hideSizes` is set (guests and family), the share count and dividend $ amount
  * are dropped — only the direction and execution price remain.
  */
 function buildActionText(trade: EnrichedTrade, hideSizes: boolean): string {

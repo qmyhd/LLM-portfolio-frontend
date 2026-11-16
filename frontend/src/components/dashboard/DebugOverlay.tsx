@@ -9,7 +9,7 @@ export function DebugOverlay() {
   const { hideSizes } = usePrivacy();
 
   if (process.env.NEXT_PUBLIC_DEBUG_UI !== '1') return null;
-  // Never expose the raw dollar debug dump to viewers.
+  // Never expose the raw dollar debug dump to non-owners.
   if (hideSizes) return null;
   if (isLoading || !data) return null;
 

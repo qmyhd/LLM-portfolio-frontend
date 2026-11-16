@@ -12,7 +12,7 @@ interface RouteParams {
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     // Verify user is authenticated
-    await requireRole('viewer');
+    await requireRole('guest');
 
     const { ticker } = await params;
     const normalizedTicker = ticker.toUpperCase();
@@ -25,10 +25,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     const response = await backendFetch(
       `/stocks/${seg(normalizedTicker)}/ohlcv?${qs.toString()}`,
-      {
-        // Cache for 5 minutes (OHLCV data updates less frequently)
-        next: { revalidate: 300 },
-      }
+      { cache: 'no-store' }
     );
 
     if (!response.ok) {

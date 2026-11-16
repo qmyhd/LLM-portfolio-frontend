@@ -25,11 +25,11 @@ const fetcher = async <T,>(url: string): Promise<T> => {
  * Personalized "today" strip for the research home page.
  *
  * Percentage-first and size-free by construction, so it's identical for
- * viewers and owners — the only difference is the curation card ("awaiting
- * review"), which is hidden from read-only viewers who can't act on it.
+ * guests, family and owners — the only difference is the curation card ("awaiting
+ * review"), which is hidden from guests and family, who can't act on it.
  */
 export function HomeSummary() {
-  const { hideSizes, isViewer, canWrite } = usePrivacy();
+  const { hideSizes, isGuestView, canWrite } = usePrivacy();
 
   const { data: series } = useSWR<ReturnSeriesResponse>(
     '/api/portfolio/return-series?period=ALL',
@@ -41,7 +41,7 @@ export function HomeSummary() {
     fetcher,
     { revalidateOnFocus: false, dedupingInterval: 120_000 },
   );
-  // Only owners/editors can curate, so only they need the review count.
+  // Only the owner can curate, so only they need the review count.
   const { data: review } = useSWR<ParsedIdeasListResponse>(
     hideSizes ? null : '/api/parsed-ideas?review_status=unreviewed&limit=1',
     fetcher,
@@ -105,8 +105,8 @@ export function HomeSummary() {
         )}
       </Link>
 
-      {/* Research awaiting review — owner/editor only (viewers can't curate) */}
-      {!isViewer && (
+      {/* Research awaiting review — owner only (guests and family can't curate) */}
+      {!isGuestView && (
         <Link
           href="/timeline"
           className="card p-3 hover:border-primary/30 transition-colors"

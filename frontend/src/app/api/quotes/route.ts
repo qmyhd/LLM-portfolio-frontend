@@ -2,12 +2,19 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { ApiError } from '@/types/api';
 import { backendFetch, requireRole } from '@/lib/api-client';
+import { refreshRequested } from '@/lib/roles';
 
 // GET /api/quotes -> backend GET /quotes
 export async function GET(request: NextRequest) {
   try {
-    await requireRole('viewer');
-    const qs = request.nextUrl.search;
+    // Any refresh that is not clearly off forces a backend recompute, which only the owner may trigger.
+    const wantsRefresh = refreshRequested(request.nextUrl.searchParams.getAll('refresh'));
+    if (wantsRefresh) await requireRole('owner');
+    else await requireRole('guest');
+    const forwarded = new URLSearchParams(request.nextUrl.searchParams);
+    forwarded.delete('refresh');
+    if (wantsRefresh) forwarded.set('refresh', 'true');
+    const qs = forwarded.toString() ? `?${forwarded.toString()}` : '';
     const response = await backendFetch(`/quotes${qs}`, { cache: 'no-store' });
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
@@ -26,7 +33,7 @@ export async function GET(request: NextRequest) {
 // POST /api/quotes -> backend POST /quotes
 export async function POST(request: NextRequest) {
   try {
-    await requireRole('editor');
+    await requireRole('owner');
     const body = await request.json();
     const response = await backendFetch('/quotes', {
       method: 'POST',

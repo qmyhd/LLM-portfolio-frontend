@@ -10,7 +10,7 @@ interface RouteParams {
 
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
-    await requireRole('editor');
+    await requireRole('owner');
     const { id } = await params;
     const body = await request.json();
 
@@ -36,7 +36,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
 export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   try {
-    await requireRole('editor');
+    await requireRole('owner');
     const { id } = await params;
 
     const response = await backendFetch(`/ideas/${seg(id)}`, { method: 'DELETE' });

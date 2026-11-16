@@ -13,6 +13,7 @@
 
 import { auth } from "@/auth";
 import { hasRole } from "@/lib/roles";
+import { freshRole } from "@/lib/session-role";
 import type { AppRole } from "@/types/next-auth";
 
 // API Configuration
@@ -48,10 +49,14 @@ export async function backendFetch(
   assertSafeBackendPath(path);
   const url = `${API_URL}${path}`;
 
-  const headers = {
-    ...getAuthHeaders(),
-    ...(options.headers || {}),
-  };
+  const headers = new Headers(getAuthHeaders());
+  new Headers(options.headers).forEach((value, key) => headers.set(key, value));
+
+  // Identity of the signed-in user. Always the session's value: a header
+  // passed by the caller never overrides it.
+  const session = await auth();
+  if (session?.user?.id) headers.set("X-App-User", session.user.id);
+  else headers.delete("X-App-User");
 
   return fetch(url, {
     ...options,
@@ -88,12 +93,12 @@ export function errorResponse(message: string, status: number = 500) {
  * check, so a middleware gap (like the old dotted-path skip) can't open a
  * route on its own.
  *
- * Convention (scripts/check-route-guards.mjs enforces it at build time):
- * - GET handlers:                      requireRole("viewer")
- * - POST/PUT/PATCH/DELETE handlers:    requireRole("editor") or stricter
- * - /api/connections mutations:        requireRole("owner")
+ * The role is asked of the backend on every call (cached 30 s), never taken
+ * from the sign-in cookie, so a revoked user loses access within seconds.
+ * The returned session carries that fresh role in `session.user.role`.
  *
- * @throws Response 401 when signed out, 403 when the role is too low.
+ * @throws Response 401 when signed out or the session has no user id, 403 when
+ *   the role is too low, 503 when the role can't be checked right now.
  */
 export async function requireRole(min: AppRole) {
   const session = await requireAuth();
@@ -102,24 +107,39 @@ export async function requireRole(min: AppRole) {
     throw errorResponse("Unauthorized - please sign in", 401);
   }
 
-  if (!hasRole(session.user?.role, min)) {
+  const appUserId = session.user.id;
+  if (!appUserId) {
+    // Cookies issued before user ids existed, or a sign-in while the backend
+    // sync failed. Signing in again fixes it.
+    throw errorResponse("Please sign in again", 401);
+  }
+
+  let role: AppRole;
+  try {
+    role = await freshRole(appUserId);
+  } catch {
+    throw errorResponse("Try again in a moment", 503);
+  }
+
+  if (!hasRole(role, min)) {
     throw errorResponse(
-      min === "viewer"
+      role === "pending"
         ? "This account has no access yet - ask the owner"
         : `This action requires the ${min} role`,
       403
     );
   }
 
+  session.user.role = role;
   return session;
 }
 
 /**
- * @deprecated Use requireRole("viewer" | "editor" | "owner"). Kept so any
- * stray caller still gets at least a viewer-level check.
+ * @deprecated Use requireRole("guest" | "family" | "owner"). Kept so any
+ * stray caller still gets at least a guest-level check.
  */
 export async function authGuard() {
-  return requireRole("viewer");
+  return requireRole("guest");
 }
 
 // ---------------------------------------------------------------------------

@@ -8,7 +8,7 @@ import { backendFetch, requireRole } from '@/lib/api-client';
 // powers the home research feed and the per-stock activity view.
 export async function GET(request: NextRequest) {
   try {
-    await requireRole('viewer');
+    await requireRole('guest');
 
     const params = new URLSearchParams();
     params.set('limit', request.nextUrl.searchParams.get('limit') || '30');
@@ -24,8 +24,7 @@ export async function GET(request: NextRequest) {
 
     const response = await backendFetch(
       `/sentiment/feed?${params.toString()}`,
-      // Cache 60s on the edge; feed turns over slowly
-      { next: { revalidate: 60 } },
+      { cache: 'no-store' },
     );
 
     if (!response.ok) {

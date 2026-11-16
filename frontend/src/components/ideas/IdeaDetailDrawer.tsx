@@ -307,7 +307,7 @@ export function IdeaDetailDrawer({
         {/* Footer actions — read-only accounts can view but not edit */}
         {!canWrite ? (
           <div className="px-6 py-4 border-t border-border">
-            <ReadOnlyNotice hint="Editors can edit, refine, or delete this idea." />
+            <ReadOnlyNotice hint="Only the owner can edit, refine, or delete this idea." />
           </div>
         ) : (
         <div className="px-6 py-4 border-t border-border flex items-center justify-between">

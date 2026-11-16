@@ -91,7 +91,7 @@ export function ReconPanel() {
   }, [recon]);
 
   if (!isRecon || !RECON_ENABLED) return null;
-  // Reconciliation exposes raw cash/equity dollars — owner/editor only.
+  // Reconciliation exposes raw cash/equity dollars — owner only.
   if (hideSizes) return null;
 
   return (

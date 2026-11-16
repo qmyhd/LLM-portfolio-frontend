@@ -4,7 +4,7 @@ import { backendFetch, requireRole } from '@/lib/api-client';
 
 export async function GET(request: NextRequest) {
   try {
-    await requireRole('viewer');
+    await requireRole('guest');
 
     const { searchParams } = new URL(request.url);
     const ticker = searchParams.get('ticker') || '';

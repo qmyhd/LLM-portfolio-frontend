@@ -10,7 +10,7 @@ interface RouteParams {
 
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    await requireRole('editor');
+    await requireRole('owner');
     const { ticker } = await params;
     const body = await request.json().catch(() => ({}));
     const qs = new URLSearchParams();

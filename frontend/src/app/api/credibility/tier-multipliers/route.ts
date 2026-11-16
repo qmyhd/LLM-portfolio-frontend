@@ -6,7 +6,7 @@ import { backendFetch, requireRole } from '@/lib/api-client';
 // GET /api/credibility/tier-multipliers -> backend GET /credibility/tier-multipliers
 export async function GET() {
   try {
-    await requireRole('viewer');
+    await requireRole('guest');
     const response = await backendFetch('/credibility/tier-multipliers', { cache: 'no-store' });
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
@@ -25,7 +25,7 @@ export async function GET() {
 // PUT /api/credibility/tier-multipliers -> backend PUT /credibility/tier-multipliers
 export async function PUT(request: NextRequest) {
   try {
-    await requireRole('editor');
+    await requireRole('owner');
     const body = await request.json();
     const response = await backendFetch('/credibility/tier-multipliers', {
       method: 'PUT',

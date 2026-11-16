@@ -141,7 +141,7 @@ export function IdeasPageContent() {
 
   return (
     <div className="space-y-6">
-      {/* Header with car ride mode toggle (owners/editors only) */}
+      {/* Header with car ride mode toggle (owner only) */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Ideas</h1>
         {canWrite && (
@@ -175,7 +175,7 @@ export function IdeasPageContent() {
       ) : (
         <ReadOnlyNotice
           label="Read-only"
-          hint="You can browse the research ideas below, but capturing new ones needs editor access."
+          hint="You can browse the research ideas below, but capturing new ones is for the owner only."
         />
       )}
 

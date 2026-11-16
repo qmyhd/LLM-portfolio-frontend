@@ -8,7 +8,7 @@ import { forwardBucket } from '@/lib/bucket';
 export async function GET(request: NextRequest) {
   try {
     // Verify user is authenticated
-    await requireRole('viewer');
+    await requireRole('guest');
 
     // Forward query params
     const { searchParams } = new URL(request.url);
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
 
     const response = await backendFetch(
       `/trades/recent?${params.toString()}`,
-      { next: { revalidate: 30 } },
+      { cache: 'no-store' },
     );
 
     if (!response.ok) {

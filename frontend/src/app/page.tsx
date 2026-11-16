@@ -26,7 +26,7 @@ export default function ResearchHome() {
         <main className="flex-1 overflow-y-auto p-4 sm:p-6">
           <div className="max-w-5xl mx-auto space-y-6">
             {/* Personalized "today" strip: performance %, top mover,
-                awaiting-review (owner/editor), capture shortcut. */}
+                awaiting-review (owner only), capture shortcut. */}
             <HomeSummary />
 
             {/* Primary surface: recent Discord ideas + research */}

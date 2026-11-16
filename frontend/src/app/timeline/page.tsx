@@ -22,7 +22,7 @@ type Tab = 'timeline' | 'review';
 export default function TimelinePage() {
   const { canWrite } = usePrivacy();
   const [tab, setTab] = useState<Tab>('timeline');
-  // Viewers can read the story timeline but not the curation queue.
+  // Guests and family can read the story timeline but not the curation queue.
   const activeTab: Tab = canWrite ? tab : 'timeline';
 
   const tabClass = (t: Tab) =>

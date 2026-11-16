@@ -9,7 +9,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    await requireRole('editor');
+    await requireRole('owner');
     const body = await request.json();
 
     const response = await backendFetch(`/ideas/discord-parsed/${seg(params.id)}/curation`, {

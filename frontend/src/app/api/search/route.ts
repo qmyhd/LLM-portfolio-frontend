@@ -21,7 +21,7 @@ interface SearchResponse {
 export async function GET(request: NextRequest) {
   try {
     // Verify user is authenticated
-    await requireRole('viewer');
+    await requireRole('guest');
 
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q') || '';
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     const response = await backendFetch(
       `/search?q=${encodeURIComponent(query)}&limit=${limit}`,
       {
-        next: { revalidate: 60 }, // Cache for 1 minute (symbol data is static)
+        next: { revalidate: 60 }, // public-market-data
       }
     );
     

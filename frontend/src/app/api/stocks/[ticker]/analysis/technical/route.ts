@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import type { ConsensusReport, ApiError } from '@/types/api';
 import { backendFetch, requireRole, seg } from '@/lib/api-client';
+import { refreshRequested } from '@/lib/roles';
 import { forwardBucket } from '@/lib/bucket';
 
 interface RouteParams {
@@ -11,19 +12,21 @@ interface RouteParams {
 // GET /api/stocks/[ticker]/analysis/technical - Technical analysis only
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    await requireRole('viewer');
+    // Any refresh that is not clearly off forces a backend recompute, which only the owner may trigger.
+    const wantsRefresh = refreshRequested(request.nextUrl.searchParams.getAll('refresh'));
+    if (wantsRefresh) await requireRole('owner');
+    else await requireRole('guest');
 
     const { ticker } = await params;
     const normalizedTicker = ticker.toUpperCase();
 
-    const { searchParams } = new URL(request.url);
     const qs = new URLSearchParams();
-    qs.set('refresh', searchParams.get('refresh') || 'false');
+    qs.set('refresh', wantsRefresh ? 'true' : 'false');
     forwardBucket(request, qs);
 
     const response = await backendFetch(
       `/stocks/${seg(normalizedTicker)}/analysis/technical?${qs.toString()}`,
-      { next: { revalidate: 60 } }
+      { cache: 'no-store' }
     );
 
     if (!response.ok) {

@@ -6,7 +6,7 @@ import { backendFetch, requireRole } from '@/lib/api-client';
 // GET /api/identities/unmatched -> backend GET /identities/unmatched
 export async function GET() {
   try {
-    await requireRole('viewer');
+    await requireRole('guest');
     const response = await backendFetch('/identities/unmatched', { cache: 'no-store' });
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));

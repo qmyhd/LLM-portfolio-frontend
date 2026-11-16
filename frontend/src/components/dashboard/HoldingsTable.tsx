@@ -109,7 +109,7 @@ export function HoldingsTable() {
   const { hideSizes } = usePrivacy();
   const { sparklinesMap } = useSparklines('1M');
 
-  // Viewers see a size-free view: the Shares column is dropped (share count
+  // Guests and family see a size-free view: the Shares column is dropped (share count
   // reveals position size). Weight %, P/L %, price, and avg cost remain.
   const columns = hideSizes ? COLUMNS.filter((c) => c.key !== 'quantity') : COLUMNS;
 
@@ -366,7 +366,7 @@ export function HoldingsTable() {
                     )}
                   </td>
 
-                  {/* Quantity (hidden from viewers — reveals position size) */}
+                  {/* Quantity (hidden from guests and family — reveals position size) */}
                   {!hideSizes && (
                     <td className="hidden sm:table-cell px-3 py-2.5 text-right font-mono text-sm tabular-nums text-foreground-muted">
                       {formatQuantity(position.quantity)}

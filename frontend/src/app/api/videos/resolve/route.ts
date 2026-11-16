@@ -6,7 +6,7 @@ import { backendFetch, requireRole } from '@/lib/api-client';
 // POST /api/videos/resolve -> backend POST /videos/resolve
 export async function POST(request: NextRequest) {
   try {
-    await requireRole('editor');
+    await requireRole('owner');
     const body = await request.json();
     const response = await backendFetch('/videos/resolve', {
       method: 'POST',

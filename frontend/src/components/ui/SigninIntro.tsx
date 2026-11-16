@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { signIn } from 'next-auth/react';
+import { useEffect, useRef, useState } from 'react';
+import { signIn, signOut, useSession } from 'next-auth/react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Suspense } from 'react';
 import { UserIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 import { QQQLoader } from '@/components/ui/QQQLoader';
 import { LiquidGradientBackground } from '@/components/ui/LiquidGradientBackground';
+import { buildCredentials, loginErrorMessage } from '@/lib/login-form';
 
 /**
  * SigninIntro — Login page with animated liquid gradient background
@@ -27,6 +28,17 @@ function SigninIntroContent() {
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // A cookie with no user id (issued before ids existed, or after a failed
+  // backend sync) can never work. Clear it once so signing in starts clean.
+  const { data: session, status } = useSession();
+  const clearedStale = useRef(false);
+  useEffect(() => {
+    if (status === 'authenticated' && !session?.user?.id && !clearedStale.current) {
+      clearedStale.current = true;
+      void signOut({ redirect: false });
+    }
+  }, [status, session]);
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#0a0e1a]">
@@ -87,17 +99,16 @@ function SigninIntroContent() {
             <form
               onSubmit={async (e) => {
                 e.preventDefault();
-                if (!username.trim() || !password.trim() || isSubmitting) return;
+                if (!username.trim() || !password || isSubmitting) return;
                 setLoginError('');
                 setIsSubmitting(true);
                 try {
                   const result = await signIn('credentials', {
-                    username: username.trim(),
-                    password: password.trim(),
+                    ...buildCredentials(username, password),
                     redirect: false,
                   });
                   if (result?.error) {
-                    setLoginError('Invalid username or password');
+                    setLoginError(loginErrorMessage(result.code));
                   } else if (result?.ok) {
                     router.push(callbackUrl);
                   }
@@ -152,7 +163,7 @@ function SigninIntroContent() {
               {/* Submit */}
               <button
                 type="submit"
-                disabled={isSubmitting || !username.trim() || !password.trim()}
+                disabled={isSubmitting || !username.trim() || !password}
                 className="w-full py-3 rounded-xl font-semibold text-white transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed"
                 style={{
                   background: 'linear-gradient(135deg, #5865f2, #9333ea)',
@@ -219,6 +230,9 @@ function SigninIntroContent() {
               </svg>
               <span>Continue with Google</span>
             </button>
+            <p className="text-center text-xs text-white/50">
+              New here? Sign in with Google, then the owner approves your account.
+            </p>
           </div>
 
           <p className="text-center text-gray-600 text-xs">

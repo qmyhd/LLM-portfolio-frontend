@@ -3,13 +3,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { ParsedIdeasListResponse } from '@/types/ideas';
 import type { ApiError } from '@/types/api';
 import { backendFetch, requireRole } from '@/lib/api-client';
+import { refreshRequested } from '@/lib/roles';
 
 /** Parsed Discord ideas with their source message, for the review queue. */
 export async function GET(request: NextRequest) {
   try {
-    await requireRole('viewer');
+    // Any refresh that is not clearly off forces a backend recompute, which only the owner may trigger.
+    const wantsRefresh = refreshRequested(request.nextUrl.searchParams.getAll('refresh'));
+    if (wantsRefresh) await requireRole('owner');
+    else await requireRole('guest');
 
     const { searchParams } = new URL(request.url);
+    searchParams.delete('refresh');
+    if (wantsRefresh) searchParams.set('refresh', 'true');
     const qs = searchParams.toString();
     const path = `/ideas/discord-parsed${qs ? `?${qs}` : ''}`;
 

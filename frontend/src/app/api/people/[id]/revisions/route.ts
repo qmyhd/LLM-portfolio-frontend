@@ -10,7 +10,7 @@ interface RouteParams {
 // GET /api/people/{id}/revisions -> backend GET /people/{id}/revisions
 export async function GET(_request: NextRequest, { params }: RouteParams) {
   try {
-    await requireRole('viewer');
+    await requireRole('guest');
     const { id } = await params;
     const response = await backendFetch(`/people/${seg(id)}/revisions`, { cache: 'no-store' });
     if (!response.ok) {

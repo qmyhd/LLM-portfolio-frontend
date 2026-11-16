@@ -9,7 +9,7 @@ interface RouteParams {
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    await requireRole('viewer');
+    await requireRole('guest');
     const { ticker } = await params;
     const { searchParams } = new URL(request.url);
     const qs = new URLSearchParams();
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     const response = await backendFetch(
       `/stocks/${seg(ticker.toUpperCase())}/filings${qsStr ? `?${qsStr}` : ''}`,
-      { next: { revalidate: 3600 } }
+      { cache: 'no-store' }
     );
 
     if (!response.ok) {
